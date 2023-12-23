@@ -1,13 +1,10 @@
 import 'package:dio/dio.dart';
 import '../models/category.dart'; // Make sure you have a Category model
-import '../services/locator.dart';
 
 class CategoriesRepository {
   final Dio dio;
 
   CategoriesRepository(this.dio);
-
-  // TODO refactor to use category model
 
   Future<List<Category>> getCategories() async {
     try {
@@ -18,8 +15,8 @@ class CategoriesRepository {
       return categories;
     } on DioException catch (e) {
       throw Exception('Failed to load categories: ${e.message}');
-    } on FormatException catch (e) {
-      throw Exception('Data parsing error: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to load categories: ${e.toString()}');
     }
   }
 
@@ -29,6 +26,8 @@ class CategoriesRepository {
       return Category.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception('Failed to create category: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to create category: ${e.toString()}');
     }
   }
 
@@ -38,6 +37,8 @@ class CategoriesRepository {
       return Category.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception('Failed to update category: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to update category: ${e.toString()}');
     }
   }
 
@@ -46,6 +47,8 @@ class CategoriesRepository {
       await dio.delete('/api/categories/$id');
     } on DioException catch (e) {
       throw Exception('Failed to delete category: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to delete category: ${e.toString()}');
     }
   }
 }

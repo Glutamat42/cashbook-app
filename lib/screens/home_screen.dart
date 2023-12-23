@@ -1,17 +1,30 @@
+import 'package:cashbook/widgets/sorting_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import '../stores/category_store.dart';
+import '../widgets/entry_item.dart';
 import '../stores/entry_store.dart';
 import '../stores/auth_store.dart';
-import '../widgets/entry_item.dart';
 import '../services/locator.dart';
 import '../constants/route_names.dart';
+import '../widgets/filter_dialog.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final AuthStore _authStore = locator<AuthStore>();
   final EntryStore _entryStore = locator<EntryStore>();
+  final CategoryStore _categoryStore = locator<CategoryStore>();
+  bool _isSearchVisible = false;
 
-  HomeScreen({super.key}) {
-    _entryStore.loadEntries(); // Load entries when the screen is created
+  @override
+  void initState() {
+    _entryStore.loadEntries();
+    _categoryStore.loadCategories();
+    super.initState();
   }
 
   @override
@@ -21,57 +34,168 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Home'),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement filtering functionality
+              setState(() {
+                _isSearchVisible = !_isSearchVisible;
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.filter_list),
+            onPressed: () {
+              _showFilterDialog();
             },
           ),
           IconButton(
             icon: const Icon(Icons.sort),
             onPressed: () {
-              // TODO: Implement sorting functionality
+              _showSortingDialog();
             },
           ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
               _authStore.logout();
-              Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen);
+              Navigator.of(context)
+                  .pushReplacementNamed(RouteNames.loginScreen);
             },
           ),
         ],
       ),
       body: Column(
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                suffixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) {
-                // TODO: Implement search functionality
-              },
-            ),
-          ),
+          _isSearchVisible ? _buildSearchBar() : Container(),
+          _buildFilterInfoBar(),
           Expanded(
             child: Observer(
-              builder: (_) => ListView.builder(
-                itemCount: _entryStore.entries.length,
-                itemBuilder: (context, index) {
-                  final entry = _entryStore.entries[index];
-                  return EntryItem(
-                    description: entry.description,
-                    recipientSender: entry.recipientSender,
-                    amount: entry.amount,
-                  );
-                },
+              builder: (_) => RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: ListView.builder(
+                  itemCount: _entryStore.visibleEntries.length + 1,
+                  // +1 for the sort criteria bar
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _buildSortCriteriaBar(); // Sort criteria at the top
+                    }
+                    final entry = _entryStore.visibleEntries[
+                        index - 1]; // Adjust index for entry item
+                    return EntryItem(
+                      description: entry.description,
+                      recipientSender: entry.recipientSender,
+                      amount: entry.amount,
+                    );
+                  },
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildFilterInfoBar() {
+    return Observer(
+      builder: (_) {
+        List<String> activeFilters = [];
+
+        if (_entryStore.currentFilters[FilterField.category] != null) {
+          activeFilters.add(
+              'Category: ${_entryStore.currentFilters[FilterField.category]}');
+        }
+        if (_entryStore.currentFilters[FilterField.invoiceMissing] == true) {
+          activeFilters.add('Invoice Missing');
+        }
+        if (_entryStore.currentFilters[FilterField.searchText] != null) {
+          activeFilters.add(
+              'Search: ${_entryStore.currentFilters[FilterField.searchText]}');
+        }
+
+        if (activeFilters.isEmpty) {
+          return const SizedBox.shrink(); // No active filters
+        }
+
+        return Container(
+          width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.all(8),
+          color: Colors.blue[100], // Example color for the info bar
+          child: Text('Active Filters: ${activeFilters.join(', ')}',
+              style: const TextStyle(fontSize: 16)),
+        );
+      },
+    );
+  }
+
+  Future<void> _onRefresh() async {
+    await Future.wait([
+      _entryStore.loadEntries(),
+      _categoryStore.loadCategories(),
+    ]);
+  }
+
+  Widget _buildSortCriteriaBar() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      color: Colors.blue[100], // Just an example color
+      child: Observer(
+        builder: (_) => Text(
+          'Sorted by ${_entryStore.currentSortField.toString().split('.').last} '
+          'in ${_entryStore.currentSortOrder.toString().split('.').last} order',
+          style: const TextStyle(fontSize: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: EdgeInsets.all(8.0),
+      child: TextField(
+        decoration: const InputDecoration(
+          labelText: 'Search',
+          suffixIcon: Icon(Icons.search),
+        ),
+        controller: TextEditingController()
+          ..text = _entryStore.currentFilters[FilterField.searchText] ?? '',
+        onChanged: (value) {
+          final newFilters =
+              Map<FilterField, dynamic>.from(_entryStore.currentFilters);
+          newFilters[FilterField.searchText] = value.isNotEmpty ? value : null;
+          _entryStore.applyFilters(newFilters);
+        },
+      ),
+    );
+  }
+
+  Future<void> _showSortingDialog() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) => SortingDialog(
+        initialSortField: _entryStore.currentSortField,
+        initialSortOrder: _entryStore.currentSortOrder,
+      ),
+    );
+
+    if (result != null) {
+      SortField field = result['field'];
+      SortOrder order = result['order'];
+      _entryStore.sortEntries(field, order);
+    }
+  }
+
+  Future<void> _showFilterDialog() async {
+    // Assuming you have a way to get current filters from EntryStore
+    final currentFilters = _entryStore.currentFilters;
+
+    final result = await showDialog<Map<FilterField, dynamic>>(
+      context: context,
+      builder: (BuildContext context) =>
+          FilterDialog(currentFilters: _entryStore.currentFilters),
+    );
+
+    if (result != null) {
+      _entryStore.applyFilters(result);
+    }
   }
 }

@@ -1,5 +1,7 @@
 # cashbook
 
+generate mobx files: flutter packages pub run build_runner build
+
 dev.markus-heck
 
 ## Getting Started

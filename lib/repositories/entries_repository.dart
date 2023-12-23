@@ -8,14 +8,18 @@ class EntriesRepository {
   EntriesRepository(this.dio);
 
   Future<List<Entry>> getEntries() async {
+    Response response;
     try {
-      final response = await dio.get('/api/entries');
+      response = await dio.get('/api/entries');
+    } on DioException catch (e) {
+      throw Exception('Failed to load entries: ${e.message}');
+    }
+
+    try {
       List<Entry> entries = (response.data as List)
           .map((entryData) => Entry.fromJson(entryData))
           .toList();
       return entries;
-    } on DioException catch (e) {
-      throw Exception('Failed to load entries: ${e.message}');
     } on FormatException catch (e) {
       throw Exception('Data parsing error: ${e.message}');
     }
@@ -27,6 +31,8 @@ class EntriesRepository {
       return Entry.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception('Failed to create entry: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to create entry: ${e.toString()}');
     }
   }
 
@@ -36,6 +42,8 @@ class EntriesRepository {
       return Entry.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception('Failed to update entry: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to update entry: ${e.toString()}');
     }
   }
 
@@ -44,6 +52,8 @@ class EntriesRepository {
       await dio.delete('/api/entries/$id');
     } on DioException catch (e) {
       throw Exception('Failed to delete entry: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to delete entry: ${e.toString()}');
     }
   }
 }
