@@ -1,6 +1,14 @@
+import 'package:cashbook/config/app_config.dart';
+import 'package:cashbook/screens/home_screen.dart';
+import 'package:cashbook/services/locator.dart';
 import 'package:flutter/material.dart';
+import 'constants/route_names.dart';
+import 'screens/login_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure plugin services are initialized
+  await AppConfig.loadConfig(); // Load the configuration
+  setupLocator();
   runApp(const MyApp());
 }
 
@@ -11,7 +19,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Cashbook',
+      initialRoute: RouteNames.loginScreen,
+      routes: {
+        RouteNames.loginScreen: (context) => LoginScreen(),
+        RouteNames.homeScreen: (context) => HomeScreen(),
+        // Define other routes
+      },
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -31,7 +45,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: LoginScreen()
     );
   }
 }
