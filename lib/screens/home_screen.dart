@@ -53,16 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
               _showSortingDialog();
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              _authStore.logout();
-              Navigator.of(context)
-                  .pushReplacementNamed(RouteNames.loginScreen);
-            },
-          ),
         ],
       ),
+      drawer: _buildDrawer(),
       body: Column(
         children: <Widget>[
           _isSearchVisible ? _buildSearchBar() : Container(),
@@ -78,13 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (index == 0) {
                       return _buildSortCriteriaBar(); // Sort criteria at the top
                     }
-                    final entry = _entryStore.visibleEntries[
-                        index - 1]; // Adjust index for entry item
-                    return EntryItem(
-                      description: entry.description,
-                      recipientSender: entry.recipientSender,
-                      amount: entry.amount,
-                    );
+                    final entry = _entryStore.visibleEntries[index - 1];
+                    return EntryItem(entry: entry);
                   },
                 ),
               ),
@@ -94,6 +82,36 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          UserAccountsDrawerHeader(
+            accountName: Text(_authStore.user?.username ?? 'User'), // Replace with actual user data
+            accountEmail: const Text(''),
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout'),
+            onTap: () {
+              _authStore.logout();
+              Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.description),
+            title: const Text('Licenses'),
+            onTap: () {
+              showLicensePage(context: context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildFilterInfoBar() {
     return Observer(

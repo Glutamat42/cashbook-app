@@ -23,7 +23,7 @@ void setupLocator() {
       // Skip adding token for login requests
       if (!options.path.endsWith('/api/login')) {
         final authStore = locator<AuthStore>();
-        final apiToken = authStore.authToken;
+        final apiToken = authStore.user?.token;
         if (apiToken != null) {
           options.headers['Authorization'] = apiToken;
         }

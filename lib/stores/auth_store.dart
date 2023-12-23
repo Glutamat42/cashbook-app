@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobx/mobx.dart';
+import '../models/user.dart';
 import '../repositories/auth_repository.dart';
 import '../services/locator.dart';
 
@@ -14,7 +15,7 @@ abstract class _AuthStore with Store {
   bool isLoggedIn = false;
 
   @observable
-  String? authToken;
+  User? user;
 
   _AuthStore() {
     _loadAuthToken();
@@ -22,7 +23,14 @@ abstract class _AuthStore with Store {
 
   Future<void> _loadAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
-    authToken = prefs.getString('authToken');
+    String? authToken = prefs.getString('authToken');
+    int? userId = prefs.getInt('userId');
+    String? username = prefs.getString('username');
+
+    if (authToken != null && userId != null && username != null) {
+      user = User(id: userId, username: username);
+    }
+
     isLoggedIn = authToken != null && authToken!.isNotEmpty;
 
   //   TODO: validate token still valid
@@ -31,26 +39,30 @@ abstract class _AuthStore with Store {
   @action
   Future<void> login(String username, String password) async {
     try {
-      authToken = await _authRepository.login(username, password);
-      isLoggedIn = authToken != null;
+      User user = await _authRepository.login(username, password);
+
+      isLoggedIn = user.token != null;
       if (isLoggedIn) {
+        this.user = user;
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('authToken', authToken!);
+        await prefs.setString('authToken', user.token!);
+        await prefs.setInt('userId', user.id);
+        await prefs.setString('username', user.username);
       }
     } catch (e) {
-      // Handle error, e.g., show an error message
       isLoggedIn = false;
-      authToken = null;
-      throw e; // Re-throw the error
+      user = null;
+      rethrow; // Re-throw the error
     }
   }
 
   @action
   Future<void> logout() async {
     isLoggedIn = false;
-    authToken = null;
+    user = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('authToken');
-    // Clear stored token and any other cleanup
+    await prefs.remove('userId');
+    await prefs.remove('username');
   }
 }

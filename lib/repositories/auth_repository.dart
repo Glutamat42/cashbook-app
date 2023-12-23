@@ -1,3 +1,4 @@
+import 'package:cashbook/models/user.dart';
 import 'package:dio/dio.dart';
 
 class AuthRepository {
@@ -5,19 +6,18 @@ class AuthRepository {
 
   AuthRepository(this.dio);
 
-  Future<String> login(String username, String password) async {
+  Future<User> login(String username, String password) async {
     try {
       final response = await dio.post(
         '/api/login',
         data: {'username': username, 'password': password},
       );
-      // Assuming the token is returned in response data
-      return response.data['token'];
+      User user = User.fromJson(response.data);
+      return user;
     } on DioException catch (e) {
-      // Handle Dio errors here (e.g., network errors, invalid response)
-      throw Exception('Failed to login: ${e.message}');
+      throw Exception('Failed to load categories: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to load categories: ${e.toString()}');
     }
   }
-
-// Additional methods for other authentication-related operations can be added here
 }
