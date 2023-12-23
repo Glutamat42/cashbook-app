@@ -55,12 +55,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _usernameController,
                 decoration: const InputDecoration(labelText: 'Username'),
                 keyboardType: TextInputType.emailAddress,
+                onChanged: (value) => setState(() {}), // Update UI on text change
                 validator: (value) => value?.trim().isEmpty == true ? 'Username is required' : null,
                 onFieldSubmitted: (_) => _performLogin()),
             TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
+                onChanged: (value) => setState(() {}), // Update UI on text change
                 validator: (value) => value?.trim().isEmpty == true ? 'Password is required' : null,
                 onFieldSubmitted: (_) => _performLogin()),
             ElevatedButton(
@@ -72,11 +74,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _performLogin() async {
+    ScaffoldMessengerState scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       await _authStore.login(
           _usernameController.text, _passwordController.text);
     } catch (e) {
-      _showLoginError(e, context);
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Login Failed: ${e.toString()}')),
+      );
     }
   }
 
