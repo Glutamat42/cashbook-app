@@ -2,14 +2,56 @@ import 'package:cashbook/config/app_config.dart';
 import 'package:cashbook/screens/home_screen.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'constants/route_names.dart';
 import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure plugin services are initialized
   await AppConfig.loadConfig(); // Load the configuration
+  _setupLogging(AppConfig().logLevel);
   setupLocator();
   runApp(const MyApp());
+}
+
+void _setupLogging(String level) {
+  Level logLevel;
+  bool invalidLevel = false;
+
+  switch (level.toUpperCase()) {
+    case 'ALL':
+      logLevel = Level.ALL;
+      break;
+    case 'FINE':
+      logLevel = Level.FINE;
+      break;
+    case 'INFO':
+      logLevel = Level.INFO;
+      break;
+    case 'WARNING':
+      logLevel = Level.WARNING;
+      break;
+    case 'SEVERE':
+      logLevel = Level.SEVERE;
+      break;
+    case 'OFF':
+      logLevel = Level.OFF;
+      break;
+    default:
+      logLevel = Level.INFO; // Default level
+      invalidLevel = true;
+      break;
+  }
+
+  Logger.root.level = logLevel; // Set this level as per your need
+  Logger.root.onRecord.listen((record) {
+    // Use `print` or other mechanisms to output logs
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
+
+  if (invalidLevel) {
+    Logger.root.warning('Invalid log level: $level. Defaulting to INFO.');
+  }
 }
 
 class MyApp extends StatelessWidget {

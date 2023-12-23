@@ -3,6 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class AppConfig {
   late final String apiBaseUrl;
+  late final String logLevel;
 
   AppConfig._internal();
 
@@ -14,5 +15,6 @@ class AppConfig {
     String jsonString = await rootBundle.loadString('assets/config.json');
     Map<String, dynamic> jsonMap = json.decode(jsonString);
     _instance.apiBaseUrl = jsonMap['apiBaseUrl'];
+    _instance.logLevel = jsonMap['logLevel'];
   }
 }

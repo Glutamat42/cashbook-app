@@ -6,7 +6,5 @@ part 'app_store.g.dart';
 class AppStore = _AppStore with _$AppStore;
 
 abstract class _AppStore with Store {
-  final AuthStore authStore = AuthStore();
-
 // Any other application-wide state and actions can be added here
 }
