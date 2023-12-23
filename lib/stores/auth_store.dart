@@ -28,7 +28,7 @@ abstract class _AuthStore with Store {
     String? username = prefs.getString('username');
 
     if (authToken != null && userId != null && username != null) {
-      user = User(id: userId, username: username);
+      user = User(id: userId, username: username, token: authToken);
     }
 
     isLoggedIn = authToken != null && authToken!.isNotEmpty;

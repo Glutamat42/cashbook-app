@@ -2,6 +2,7 @@ import 'package:cashbook/widgets/sorting_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import '../stores/category_store.dart';
+import '../stores/user_store.dart';
 import '../widgets/entry_item.dart';
 import '../stores/entry_store.dart';
 import '../stores/auth_store.dart';
@@ -18,12 +19,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthStore _authStore = locator<AuthStore>();
   final EntryStore _entryStore = locator<EntryStore>();
   final CategoryStore _categoryStore = locator<CategoryStore>();
+  final UserStore _userStore = locator<UserStore>();
   bool _isSearchVisible = false;
 
   @override
   void initState() {
     _entryStore.loadEntries();
     _categoryStore.loadCategories();
+    _userStore.loadUsers();
     super.initState();
   }
 
@@ -42,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list),
             onPressed: () {
               _showFilterDialog();
             },
@@ -149,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await Future.wait([
       _entryStore.loadEntries(),
       _categoryStore.loadCategories(),
+      _userStore.loadUsers(),
     ]);
   }
 

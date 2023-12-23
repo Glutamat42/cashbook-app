@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/entry.dart';
+import '../screens/details_screen.dart';
 
 class EntryItem extends StatelessWidget {
   final Entry entry;
 
-  const EntryItem({Key? key, required this.entry}) : super(key: key);
+  EntryItem({Key? key, required this.entry}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: _getBackgroundColor(), // Highlight for no invoice
       child: ListTile(
+        // In your ListView.builder:
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailsScreen(entry: entry),
+            ),
+          );
+        },
         title: Text(
           entry.recipientSender,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -25,7 +35,11 @@ class EntryItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(_formatAmount(entry.amount), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _amountColor(entry.amount))),
+            Text(_formatAmount(entry.amount),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _amountColor(entry.amount))),
             const SizedBox(height: 4),
             Text(_formatDate(entry.date)),
           ],
@@ -50,7 +64,8 @@ class EntryItem extends StatelessWidget {
   Color _getBackgroundColor() {
     if (entry.noInvoice == false) {
       // TODO: check document exists
-      return Colors.orange.withOpacity(0.3); // Color for entries with no invoice
+      return Colors.orange
+          .withOpacity(0.3); // Color for entries with no invoice
     }
     return Colors.transparent;
   }

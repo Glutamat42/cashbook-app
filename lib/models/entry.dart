@@ -8,6 +8,7 @@ class Entry {
   final String paymentMethod;
   final bool noInvoice;
   final int? userId;
+  final int? userIdLastModified;
   final String? updatedAt;
   final String? createdAt;
 
@@ -21,6 +22,7 @@ class Entry {
     required this.paymentMethod,
     required this.noInvoice,
     this.userId,
+    this.userIdLastModified,
     this.updatedAt,
     this.createdAt,
   });
@@ -37,6 +39,7 @@ class Entry {
       paymentMethod: json['payment_method'],
       noInvoice: json['no_invoice'] == 1,
       userId: json['user_id'],
+      userIdLastModified: json['user_id_last_modified'],
       updatedAt: json['updated_at'],
       createdAt: json['created_at'],
     );
@@ -51,8 +54,9 @@ class Entry {
       'date': date.toIso8601String(),
       'category_id': categoryId,
       'payment_method': paymentMethod,
-      'no_invoice': noInvoice,
+      'no_invoice': noInvoice ? 1 : 0,
       'user_id': userId,
+      'user_id_last_modified': userIdLastModified,
       'updated_at': updatedAt,
       'created_at': createdAt,
     };

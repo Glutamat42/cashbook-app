@@ -7,7 +7,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['user_id'],
+      id: json['id'],
       username: json['username'],
       token: json['token'],
     );
@@ -15,7 +15,7 @@ class User {
 
   Map<String, dynamic> toJson() {
     return {
-      'user_id': id,
+      'id': id,
       'username': username,
       'token': token,
     };
