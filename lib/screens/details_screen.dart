@@ -1,3 +1,4 @@
+import 'package:cashbook/stores/entry_store.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
@@ -6,6 +7,7 @@ import '../models/user.dart';
 import '../stores/user_store.dart';
 import '../stores/category_store.dart';
 import '../services/locator.dart';
+import '../widgets/detail_item_view.dart';
 import '../widgets/document_section.dart';
 import '../widgets/dual_mode_amount_widget.dart';
 import '../widgets/dual_mode_category_widget.dart';
@@ -26,137 +28,186 @@ class DetailsScreen extends StatefulWidget {
 // TODO: if edit mode: warn on back button
 
 class _DetailsScreenState extends State<DetailsScreen> {
+  late Entry _editableEntry;
   final Logger _log = Logger('DetailsScreen');
-  late Entry entry;
   bool _isEditMode = false;
   final UserStore _userStore = locator<UserStore>();
   final CategoryStore _categoryStore = locator<CategoryStore>();
+  final EntryStore _entryStore = locator<EntryStore>();
 
   @override
   void initState() {
     super.initState();
-    entry = widget.entry;
+    _editableEntry = Entry.fromJson(widget.entry.toJson());
   }
 
   @override
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Entry Details'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(_isEditMode ? Icons.check : Icons.edit),
-            onPressed: () {
-              if (_isEditMode) {
-                // TODO: Handle save logic
-              }
-              setState(() => _isEditMode = !_isEditMode);
-            },
+    return PopScope(
+        canPop: !_isEditMode,
+        onPopInvoked: (bool canPop) async {
+          if (_isEditMode) {
+            bool shouldClose = await _showSaveChangesDialog(context);
+            if (shouldClose) {
+              setState(() {
+                _isEditMode = false;
+              });
+            }
+          }
+        },
+        //     () async {
+        //   if (_isEditMode) {
+        //     return await _showSaveChangesDialog(context);
+        //   }
+        //   return true;
+        // } ,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Entry Details'),
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(_isEditMode ? Icons.check : Icons.edit),
+                onPressed: () async {
+                  if (_isEditMode) {
+                    _saveEntry();
+                  } else {
+                    setState(() => _isEditMode = !_isEditMode);
+                  }
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: <Widget>[
-            DualModeTextWidget(
-              isEditMode: _isEditMode,
-              value: widget.entry.recipientSender,
-              onChanged: (val) => setState(() => widget.entry.recipientSender = val),
-              label: 'Recipient/Sender',
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView(
+              children: <Widget>[
+                DualModeTextWidget(
+                  isEditMode: _isEditMode,
+                  value: _editableEntry.recipientSender,
+                  onChanged: (val) => setState(() => _editableEntry.recipientSender = val),
+                  label: 'Recipient/Sender',
+                ),
+                DualModeTextWidget(
+                  isEditMode: _isEditMode,
+                  value: _editableEntry.description,
+                  onChanged: (val) => setState(() => _editableEntry.description = val),
+                  label: 'Description',
+                ),
+                DualModeAmountWidget(
+                  isEditMode: _isEditMode,
+                  amount: _editableEntry.amount,
+                  onChanged: (val) => setState(() => _editableEntry.amount = val),
+                ),
+                DualModeDateWidget(
+                  isEditMode: _isEditMode,
+                  date: _editableEntry.date,
+                  onChanged: (val) => setState(() => _editableEntry.date = val),
+                ),
+                const DocumentSection(),
+                DualModeInvoiceCheckbox(
+                  isEditMode: _isEditMode,
+                  noInvoice: _editableEntry.noInvoice,
+                  onChanged: (val) => setState(() => _editableEntry.noInvoice = val),
+                ),
+                DualModeCategoryWidget(
+                  isEditMode: _isEditMode,
+                  categoryId: _editableEntry.categoryId,
+                  onChanged: (val) => setState(() => _editableEntry.categoryId = val),
+                ),
+                DualModePaymentMethodWidget(
+                  isEditMode: _isEditMode,
+                  paymentMethod: _editableEntry.paymentMethod,
+                  onChanged: (val) => setState(() => _editableEntry.paymentMethod = val),
+                ),
+                ..._buildCreatedModifiedInfo(),
+              ],
             ),
-            DualModeTextWidget(
-              isEditMode: _isEditMode,
-              value: widget.entry.description,
-              onChanged: (val) => setState(() => widget.entry.description = val),
-              label: 'Description',
-            ),
-            DualModeAmountWidget(
-              isEditMode: _isEditMode,
-              amount: widget.entry.amount,
-              onChanged: (val) => setState(() => widget.entry.amount = val),
-            ),
-            DualModeDateWidget(
-              isEditMode: _isEditMode,
-              date: widget.entry.date,
-              onChanged: (val) => setState(() => widget.entry.date = val),
-            ),
-            const DocumentSection(),
-            DualModeInvoiceCheckbox(
-              isEditMode: _isEditMode,
-              noInvoice: widget.entry.noInvoice,
-              onChanged: (val) => setState(() => widget.entry.noInvoice = val),
-            ),
-            DualModeCategoryWidget(
-              isEditMode: _isEditMode,
-              categoryId: widget.entry.categoryId,
-              onChanged: (val) => setState(() => widget.entry.categoryId = val),
-            ),
-            DualModePaymentMethodWidget(
-              isEditMode: _isEditMode,
-              paymentMethod: widget.entry.paymentMethod,
-              onChanged: (val) => setState(() => widget.entry.paymentMethod = val),
-            ),
-            ..._buildCreatedModifiedInfo(),
-          ],
-        ),
-      ),
+          ),
+        ));
+  }
+
+  Future<bool> _showSaveChangesDialog(BuildContext context) async {
+    return (await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Save Changes?'),
+            content: const Text('Do you want to save the changes?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(false), // Close dialog and stay in edit mode
+              ),
+              TextButton(
+                child: const Text('Discard'),
+                onPressed: () {
+                  _discardChanges(); // Discard changes
+                  Navigator.of(context).pop(true);
+                },
+              ),
+              TextButton(
+                child: const Text('Save'),
+                onPressed: () {
+                  _saveEntry();
+                  Navigator.of(context).pop(false); // Proceed with saving logic
+                },
+              ),
+            ],
+          ),
+        )) ??
+        false;
+  }
+
+  void _discardChanges() {
+    setState(() {
+      _editableEntry = Entry.fromJson(widget.entry.toJson()); // Revert to original state
+      _isEditMode = false; // Exit edit mode
+    });
+  }
+
+  void _saveEntry() async {
+    try {
+      await _entryStore.updateEntry(_editableEntry);
+      _showSnackbar(context, 'Changes saved successfully', Colors.green);
+      setState(() {
+        _isEditMode = false;
+      });
+    } catch (error) {
+      _showSnackbar(context, 'Failed to save changes: ${error.toString()}', Colors.red);
+      _log.warning('Error saving entry: $error');
+    }
+  }
+
+  void _showSnackbar(BuildContext context, String message, Color backgroundColor) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: backgroundColor,
     );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   List<Widget> _buildCreatedModifiedInfo() {
-    String createdByUser = _findUserName(entry.userId);
+    String createdByUser = _findUserName(_editableEntry.userId);
     String lastModifiedInfo = _getLastModifiedInfo();
 
     return [
-      _buildDetailItem(
-          'Created:', '${_formatDateTime(entry.createdAt)} by $createdByUser'),
-      _buildDetailItem('Last Modified:', lastModifiedInfo),
+      DetailItemView(
+        title: 'Created:',
+        value: '${_formatDateTime(_editableEntry.createdAt)} by $createdByUser',
+      ),
+      DetailItemView(
+        title: 'Last Modified:',
+        value: lastModifiedInfo,
+      ),
     ];
   }
 
-  Widget _buildDetailItem(String title, String value,
-      {bool isInvoice = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Expanded(
-              flex: 1,
-              child: Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
-            flex: 2,
-            child: isInvoice
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Radio<bool>(
-                        value: true,
-                        groupValue: entry.noInvoice,
-                        onChanged: null, // Disabled
-                      ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(entry.noInvoice ? 'Yes' : 'No'),
-                      ),
-                    ],
-                  )
-                : Text(value),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _getLastModifiedInfo() {
-    if (entry.createdAt == entry.updatedAt) {
+    if (_editableEntry.createdAt == _editableEntry.updatedAt) {
       return 'Not modified since creation';
     } else {
-      String modifiedByUser = _findUserName(entry.userIdLastModified);
-      return 'Last Modified: ${_formatDateTime(entry.updatedAt)} by $modifiedByUser';
+      String modifiedByUser = _findUserName(_editableEntry.userIdLastModified);
+      return 'Last Modified: ${_formatDateTime(_editableEntry.updatedAt)} by $modifiedByUser';
     }
   }
 
@@ -174,17 +225,5 @@ class _DetailsScreenState extends State<DetailsScreen> {
       _log.warning('User with id $userId not found');
     }
     return username;
-  }
-
-  String _findCategoryName(int? categoryId) {
-    String categoryName = 'Unknown';
-    try {
-      final category =
-          _categoryStore.categories.firstWhere((c) => c.id == categoryId);
-      return category.name;
-    } catch (e) {
-      _log.warning('Category with id $categoryId not found');
-    }
-    return categoryName;
   }
 }

@@ -67,7 +67,8 @@ abstract class _EntryStore with Store {
         visibleEntries[index] = entry;
       }
     } catch (e) {
-      // Handle errors
+      _logger.severe('Failed to update entry: $e');
+      throw Exception('Failed to update entry');
     }
   }
 
