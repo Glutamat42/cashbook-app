@@ -1,12 +1,12 @@
 class Entry {
   final int id;
-  final String description;
-  final String recipientSender;
-  final int amount;
-  final DateTime date;
-  final int categoryId;
-  final String paymentMethod;
-  final bool noInvoice;
+  String description;
+  String recipientSender;
+  int amount;
+  DateTime date;
+  int categoryId;
+  String paymentMethod;
+  bool noInvoice;
   final int? userId;
   final int? userIdLastModified;
   final String? updatedAt;

@@ -20,9 +20,9 @@ class CategoriesRepository {
     }
   }
 
-  Future<Category> createCategory(Map<String, dynamic> categoryData) async {
+  Future<Category> createCategory(Category newCategory) async {
     try {
-      final response = await dio.post('/api/categories', data: categoryData);
+      final response = await dio.post('/api/categories', data: newCategory.toJson());
       return Category.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception('Failed to create category: ${e.message}');

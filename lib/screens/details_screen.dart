@@ -7,46 +7,113 @@ import '../stores/user_store.dart';
 import '../stores/category_store.dart';
 import '../services/locator.dart';
 import '../widgets/document_section.dart';
+import '../widgets/dual_mode_amount_widget.dart';
+import '../widgets/dual_mode_category_widget.dart';
+import '../widgets/dual_mode_date_widget.dart';
+import '../widgets/dual_mode_invoice_checkbox.dart';
+import '../widgets/dual_mode_payment_method_widget.dart';
+import '../widgets/dual_mode_text_widget.dart';
 
-class DetailsScreen extends StatelessWidget {
-  final Logger _log = Logger('DetailsScreen');
+class DetailsScreen extends StatefulWidget {
   final Entry entry;
+
+  const DetailsScreen({Key? key, required this.entry}) : super(key: key);
+
+  @override
+  _DetailsScreenState createState() => _DetailsScreenState();
+}
+
+// TODO: if edit mode: warn on back button
+
+class _DetailsScreenState extends State<DetailsScreen> {
+  final Logger _log = Logger('DetailsScreen');
+  late Entry entry;
+  bool _isEditMode = false;
   final UserStore _userStore = locator<UserStore>();
   final CategoryStore _categoryStore = locator<CategoryStore>();
 
-  DetailsScreen({Key? key, required this.entry}) : super(key: key);
+  @override
+  void initState() {
+    super.initState();
+    entry = widget.entry;
+  }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    String createdByUser = _findUserName(entry.userId);
-    String modifiedByUser = _findUserName(entry.userIdLastModified);
-    String categoryName = _findCategoryName(entry.categoryId);
-    String lastModifiedInfo = _getLastModifiedInfo();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Entry Details'),
+        title: Text('Entry Details'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(_isEditMode ? Icons.check : Icons.edit),
+            onPressed: () {
+              if (_isEditMode) {
+                // TODO: Handle save logic
+              }
+              setState(() => _isEditMode = !_isEditMode);
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: <Widget>[
-            _buildDetailItem('Recipient/Sender:', entry.recipientSender),
-            _buildDetailItem('Description:', entry.description),
-            _buildDetailItem('Amount:', _formatAmount(entry.amount)),
-            _buildDetailItem('Category:', categoryName),
-            _buildDetailItem('Date:', _formatDate(entry.date)),
+            DualModeTextWidget(
+              isEditMode: _isEditMode,
+              value: widget.entry.recipientSender,
+              onChanged: (val) => setState(() => widget.entry.recipientSender = val),
+              label: 'Recipient/Sender',
+            ),
+            DualModeTextWidget(
+              isEditMode: _isEditMode,
+              value: widget.entry.description,
+              onChanged: (val) => setState(() => widget.entry.description = val),
+              label: 'Description',
+            ),
+            DualModeAmountWidget(
+              isEditMode: _isEditMode,
+              amount: widget.entry.amount,
+              onChanged: (val) => setState(() => widget.entry.amount = val),
+            ),
+            DualModeDateWidget(
+              isEditMode: _isEditMode,
+              date: widget.entry.date,
+              onChanged: (val) => setState(() => widget.entry.date = val),
+            ),
             const DocumentSection(),
-            _buildDetailItem('No Invoice:', entry.noInvoice ? 'Yes' : 'No',
-                isInvoice: true),
-            _buildDetailItem('Payment Method:', entry.paymentMethod),
-            _buildDetailItem('Created:',
-                '${_formatDateTime(entry.createdAt)} by $createdByUser'),
-            _buildDetailItem('Last Modified:', lastModifiedInfo),
+            DualModeInvoiceCheckbox(
+              isEditMode: _isEditMode,
+              noInvoice: widget.entry.noInvoice,
+              onChanged: (val) => setState(() => widget.entry.noInvoice = val),
+            ),
+            DualModeCategoryWidget(
+              isEditMode: _isEditMode,
+              categoryId: widget.entry.categoryId,
+              onChanged: (val) => setState(() => widget.entry.categoryId = val),
+            ),
+            DualModePaymentMethodWidget(
+              isEditMode: _isEditMode,
+              paymentMethod: widget.entry.paymentMethod,
+              onChanged: (val) => setState(() => widget.entry.paymentMethod = val),
+            ),
+            ..._buildCreatedModifiedInfo(),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildCreatedModifiedInfo() {
+    String createdByUser = _findUserName(entry.userId);
+    String lastModifiedInfo = _getLastModifiedInfo();
+
+    return [
+      _buildDetailItem(
+          'Created:', '${_formatDateTime(entry.createdAt)} by $createdByUser'),
+      _buildDetailItem('Last Modified:', lastModifiedInfo),
+    ];
   }
 
   Widget _buildDetailItem(String title, String value,
@@ -91,15 +158,6 @@ class DetailsScreen extends StatelessWidget {
       String modifiedByUser = _findUserName(entry.userIdLastModified);
       return 'Last Modified: ${_formatDateTime(entry.updatedAt)} by $modifiedByUser';
     }
-  }
-
-  String _formatAmount(int amount) {
-    final double amountInEuros = amount / 100;
-    return '${amount >= 0 ? '+' : ''}${amountInEuros.toStringAsFixed(2)}€';
-  }
-
-  String _formatDate(DateTime date) {
-    return DateFormat('yyyy-MM-dd').format(date);
   }
 
   String _formatDateTime(String? dateTime) {
