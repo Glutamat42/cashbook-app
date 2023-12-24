@@ -1,5 +1,5 @@
 class Entry {
-  final int id;
+  int id;
   String description;
   String recipientSender;
   int amount;
@@ -8,8 +8,8 @@ class Entry {
   String paymentMethod;
   bool noInvoice;
   final int? userId;
-  final int? userIdLastModified;
-  final String? updatedAt;
+  int? userIdLastModified;
+  String? updatedAt;
   final String? createdAt;
 
   Entry({
@@ -60,5 +60,18 @@ class Entry {
       'updated_at': updatedAt,
       'created_at': createdAt,
     };
+  }
+
+  void updateFrom(Entry other) {
+    id = other.id;
+    userIdLastModified = other.userIdLastModified;
+    updatedAt = other.updatedAt;
+    description = other.description;
+    recipientSender = other.recipientSender;
+    amount = other.amount;
+    date = other.date;
+    categoryId = other.categoryId;
+    paymentMethod = other.paymentMethod;
+    noInvoice = other.noInvoice;
   }
 }

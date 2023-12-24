@@ -40,11 +40,7 @@ abstract class _EntryStore with Store {
       _logger.severe('Failed to load entries: $e');
     }
 
-    List<Entry> filteredEntries = _applyFilters(allEntries, currentFilters);
-    List<Entry> sortedEntries =
-        _sortEntries(filteredEntries, currentSortField, currentSortOrder);
-
-    visibleEntries = ObservableList<Entry>.of(sortedEntries);
+    _applyFilterAndSort();
   }
 
   @action
@@ -58,14 +54,16 @@ abstract class _EntryStore with Store {
   }
 
   @action
-  Future<void> updateEntry(Entry updatedEntry) async {
+  Future<Entry> updateEntry(Entry updatedEntry) async {
+    int oldEntryId = updatedEntry.id;
     try {
-      final entry = await _entriesRepository.updateEntry(
-          updatedEntry.id, updatedEntry.toJson());
-      final index = visibleEntries.indexWhere((e) => e.id == entry.id);
+      final entry = await _entriesRepository.updateEntry(updatedEntry.id, updatedEntry.toJson());
+      final index = visibleEntries.indexWhere((e) => e.id == oldEntryId);
       if (index != -1) {
-        visibleEntries[index] = entry;
+        visibleEntries.replaceRange(index, index + 1, [entry]);
+        _applyFilterAndSort();
       }
+      return entry;
     } catch (e) {
       _logger.severe('Failed to update entry: $e');
       throw Exception('Failed to update entry');
@@ -86,7 +84,7 @@ abstract class _EntryStore with Store {
   void sortEntries(SortField field, SortOrder order) {
     List<Entry> sortedList = _sortEntries(allEntries, field, order);
 
-    visibleEntries = ObservableList<Entry>.of(sortedList);
+    visibleEntries = ObservableList<Entry>.of(sortedList); // resorting is enough here
 
     currentSortField = field;
     currentSortOrder = order;
@@ -98,15 +96,17 @@ abstract class _EntryStore with Store {
       currentFilters = newFilters;
     }
 
-    List<Entry> filteredEntries = _applyFilters(allEntries, currentFilters);
-    List<Entry> sortedEntries =
-        _sortEntries(filteredEntries, currentSortField, currentSortOrder);
+    _applyFilterAndSort(); // as new filters are applied and therefore new items might be visible, we need to resort
+  }
 
+  @action
+  _applyFilterAndSort() {
+    List<Entry> filteredEntries = _applyFilters(allEntries, currentFilters);
+    List<Entry> sortedEntries = _sortEntries(filteredEntries, currentSortField, currentSortOrder);
     visibleEntries = ObservableList<Entry>.of(sortedEntries);
   }
 
-  List<Entry> _sortEntries(
-      List<Entry> sourceList, SortField field, SortOrder order) {
+  List<Entry> _sortEntries(List<Entry> sourceList, SortField field, SortOrder order) {
     int Function(Entry, Entry) compare;
 
     switch (field) {
@@ -117,8 +117,7 @@ abstract class _EntryStore with Store {
         compare = (Entry a, Entry b) => a.amount.compareTo(b.amount);
         break;
       case SortField.recipient:
-        compare = (Entry a, Entry b) =>
-            a.recipientSender.compareTo(b.recipientSender);
+        compare = (Entry a, Entry b) => a.recipientSender.compareTo(b.recipientSender);
         break;
     }
 
@@ -131,8 +130,7 @@ abstract class _EntryStore with Store {
     return sourceList;
   }
 
-  List<Entry> _applyFilters(
-      List<Entry> sourceList, Map<FilterField, dynamic>? newFilters) {
+  List<Entry> _applyFilters(List<Entry> sourceList, Map<FilterField, dynamic>? newFilters) {
     var filteredEntries = sourceList; // Assuming this holds all entries
 
     // Filter by Category
@@ -141,24 +139,19 @@ abstract class _EntryStore with Store {
         filteredEntries = filteredEntries;
       } else {
         int categoryId = currentFilters[FilterField.category];
-        filteredEntries = filteredEntries
-            .where((entry) => entry.categoryId == categoryId)
-            .toList();
+        filteredEntries = filteredEntries.where((entry) => entry.categoryId == categoryId).toList();
       }
     }
 
     // Filter for missing invoice
-    if (currentFilters.containsKey(FilterField.invoiceMissing) &&
-        currentFilters[FilterField.invoiceMissing]) {
+    if (currentFilters.containsKey(FilterField.invoiceMissing) && currentFilters[FilterField.invoiceMissing]) {
       // TODO
       // filteredEntries = filteredEntries.where((entry) => entry.noInvoice && entry.documentId == null).toList();
-      filteredEntries =
-          filteredEntries.where((entry) => entry.noInvoice == false).toList();
+      filteredEntries = filteredEntries.where((entry) => entry.noInvoice == false).toList();
     }
 
     // Filter by search text
-    if (currentFilters.containsKey(FilterField.searchText) &&
-        currentFilters[FilterField.searchText] != null) {
+    if (currentFilters.containsKey(FilterField.searchText) && currentFilters[FilterField.searchText] != null) {
       String searchText = currentFilters[FilterField.searchText].toLowerCase();
       filteredEntries = filteredEntries
           .where((entry) =>

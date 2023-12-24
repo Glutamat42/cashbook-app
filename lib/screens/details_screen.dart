@@ -56,12 +56,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
             }
           }
         },
-        //     () async {
-        //   if (_isEditMode) {
-        //     return await _showSaveChangesDialog(context);
-        //   }
-        //   return true;
-        // } ,
         child: Scaffold(
           appBar: AppBar(
             title: Text('Entry Details'),
@@ -167,9 +161,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _saveEntry() async {
     try {
-      await _entryStore.updateEntry(_editableEntry);
+      Entry updatedEntry = await _entryStore.updateEntry(_editableEntry);
       _showSnackbar(context, 'Changes saved successfully', Colors.green);
+      widget.entry.updateFrom(updatedEntry);  // As _editableEntry might get updated from widget.entry it has to be updated
       setState(() {
+        _editableEntry.updateFrom(updatedEntry); // Update _editableEntry to reflect serverside changes (e.g. id, updatedAt, etc.)
         _isEditMode = false;
       });
     } catch (error) {
