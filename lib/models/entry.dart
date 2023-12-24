@@ -27,7 +27,6 @@ class Entry {
     this.createdAt,
   });
 
-
   factory Entry.fromJson(Map<String, dynamic> json) {
     return Entry(
       id: json['id'],

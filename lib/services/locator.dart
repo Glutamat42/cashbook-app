@@ -1,5 +1,6 @@
 import 'package:cashbook/config/app_config.dart';
 import 'package:cashbook/repositories/categories_repository.dart';
+import 'package:cashbook/repositories/documents_repository.dart';
 import 'package:cashbook/repositories/entries_repository.dart';
 import 'package:cashbook/repositories/users_repository.dart';
 import 'package:cashbook/stores/user_store.dart';
@@ -45,4 +46,5 @@ void setupLocator() {
   locator.registerLazySingleton(() => EntriesRepository(locator<Dio>()));
   locator.registerLazySingleton(() => CategoriesRepository(locator<Dio>()));
   locator.registerLazySingleton(() => UsersRepository(locator<Dio>()));
+  locator.registerLazySingleton(() => DocumentsRepository(locator<Dio>()));
 }

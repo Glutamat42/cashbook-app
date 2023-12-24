@@ -1,6 +1,8 @@
 import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
+import '../models/document.dart';
 import '../models/entry.dart';
+import '../repositories/documents_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../services/locator.dart';
 
@@ -17,11 +19,15 @@ class EntryStore = _EntryStore with _$EntryStore;
 abstract class _EntryStore with Store {
   final Logger _logger = Logger('EntryStore');
   final EntriesRepository _entriesRepository = locator<EntriesRepository>();
+  final DocumentsRepository _documentsRepository = locator<DocumentsRepository>();
 
   @observable
   ObservableList<Entry> visibleEntries = ObservableList<Entry>();
 
   List<Entry> allEntries = <Entry>[];
+
+  @observable
+  ObservableMap<int, ObservableList<Document>> entryDocuments = ObservableMap<int, ObservableList<Document>>();
 
   @observable
   SortField currentSortField = SortField.date;
@@ -31,6 +37,20 @@ abstract class _EntryStore with Store {
 
   @observable
   Map<FilterField, dynamic> currentFilters = {};
+
+  @action
+  Future<void> loadDocumentsForEntry(int entryId) async {
+    try {
+      var docs = await _documentsRepository.getDocumentsByEntryId(entryId);
+      entryDocuments[entryId] = ObservableList<Document>.of(docs);
+    } catch (e) {
+      _logger.severe('Failed to load documents for entry $entryId: $e');
+    }
+  }
+
+
+  ObservableList<Document> getDocumentsForEntry(int entryId) =>
+      entryDocuments[entryId] != null ? entryDocuments[entryId]! : ObservableList<Document>.of([]);
 
   @action
   Future<void> loadEntries() async {

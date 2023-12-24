@@ -98,7 +98,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   date: _editableEntry.date,
                   onChanged: (val) => setState(() => _editableEntry.date = val),
                 ),
-                const DocumentSection(),
+                DocumentSection(
+                  isEditable: _isEditMode,
+                  entryId: _editableEntry.id,
+                ),
                 DualModeInvoiceCheckbox(
                   isEditMode: _isEditMode,
                   noInvoice: _editableEntry.noInvoice,
