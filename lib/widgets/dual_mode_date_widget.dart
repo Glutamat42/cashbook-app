@@ -30,14 +30,16 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.isEditMode ? _buildDatePickerEdit() : DetailItemView(
-      title: 'Date:',
-      value: DateFormat('yyyy-MM-dd').format(_selectedDate),
-    );
+    return widget.isEditMode
+        ? _buildDatePickerEdit()
+        : DetailItemView(
+            title: 'Date:',
+            value: DateFormat('yyyy-MM-dd').format(_selectedDate),
+          );
   }
 
   Widget _buildDatePickerEdit() {
-         return FlexibleDetailItemView(
+    return FlexibleDetailItemView(
       title: 'Date:',
       rightWidget: Row(
         mainAxisAlignment: MainAxisAlignment.start, // Aligns children to the end (right)
@@ -50,7 +52,8 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
           Text(DateFormat('yyyy-MM-dd').format(_selectedDate)),
         ],
       ),
-    );;  }
+    );
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(

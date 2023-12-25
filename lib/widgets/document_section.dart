@@ -1,4 +1,3 @@
-import 'package:cashbook/config/app_config.dart';
 import 'package:cashbook/stores/entry_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -40,6 +39,7 @@ class DocumentSection extends StatelessWidget {
                     } else if (!isEditable) {
                       return _buildThumbnailTile(documents, index -indexOffset, context);
                     }
+                    return null;
                   },
                 ),
               );
