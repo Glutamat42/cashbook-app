@@ -6,8 +6,9 @@ class AuthRepository {
 
   AuthRepository(this.dio);
 
-  Future<User> login(String username, String password) async {
+  Future<User> login(String username, String password, server) async {
     try {
+      dio.options.baseUrl = server;
       final response = await dio.post(
         '/api/login',
         data: {'username': username, 'password': password},

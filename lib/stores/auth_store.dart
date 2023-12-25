@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobx/mobx.dart';
 import '../models/user.dart';
@@ -9,10 +10,14 @@ part 'auth_store.g.dart';
 class AuthStore = _AuthStore with _$AuthStore;
 
 abstract class _AuthStore with Store {
+  final Logger _log = Logger('AuthStore');
   final AuthRepository _authRepository = locator<AuthRepository>();
 
   @observable
   bool isLoggedIn = false;
+
+  @observable
+  String? baseUrl;
 
   @observable
   User? user;
@@ -26,9 +31,15 @@ abstract class _AuthStore with Store {
     String? authToken = prefs.getString('authToken');
     int? userId = prefs.getInt('userId');
     String? username = prefs.getString('username');
+    String? baseUrl = prefs.getString('baseUrl');
 
     if (authToken != null && userId != null && username != null) {
       user = User(id: userId, username: username, token: authToken);
+
+      if (baseUrl == null || baseUrl.isEmpty) {
+        _log.severe('No base URL found in shared preferences, logging out');
+        await logout();
+      }
     }
 
     isLoggedIn = authToken != null && authToken!.isNotEmpty;
@@ -37,21 +48,25 @@ abstract class _AuthStore with Store {
   }
 
   @action
-  Future<void> login(String username, String password) async {
+  Future<void> login(String username, String password, String server) async {
+
     try {
-      User user = await _authRepository.login(username, password);
+      User user = await _authRepository.login(username, password, server);
 
       isLoggedIn = user.token != null;
       if (isLoggedIn) {
         this.user = user;
+        this.baseUrl = server;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', user.token!);
         await prefs.setInt('userId', user.id);
         await prefs.setString('username', user.username);
+        await prefs.setString('baseUrl', baseUrl!);
       }
     } catch (e) {
       isLoggedIn = false;
       user = null;
+      baseUrl = null;
       rethrow; // Re-throw the error
     }
   }
@@ -64,5 +79,6 @@ abstract class _AuthStore with Store {
     await prefs.remove('authToken');
     await prefs.remove('userId');
     await prefs.remove('username');
+    await prefs.remove('baseUrl');
   }
 }

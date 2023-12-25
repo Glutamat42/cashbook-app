@@ -64,8 +64,7 @@ class DocumentSection extends StatelessWidget {
     Document document = documents[index];
     AuthStore authStore = locator<AuthStore>();
     String token = authStore.user?.token ?? "";
-    String thumbnailUrl = '${AppConfig().apiBaseUrl}/${document.thumbnailLink}';
-    String fullImageUrl = '${AppConfig().apiBaseUrl}/${document.documentLink}';
+    String thumbnailUrl = '${authStore.baseUrl}/${document.thumbnailLink}';
 
     if (token.isEmpty) {
       throw Exception("Token is empty");
@@ -78,6 +77,7 @@ class DocumentSection extends StatelessWidget {
               initialIndex: index,
               documents: documents,
               token: token,
+              baseUrl: authStore.baseUrl!,
             ),
           ));
         },

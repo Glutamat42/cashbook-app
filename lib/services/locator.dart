@@ -6,6 +6,7 @@ import 'package:cashbook/repositories/users_repository.dart';
 import 'package:cashbook/stores/user_store.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:mobx/mobx.dart';
 import '../stores/auth_store.dart';
 import '../stores/entry_store.dart';
 import '../stores/category_store.dart';
@@ -15,10 +16,9 @@ GetIt locator = GetIt.instance;
 
 void setupLocator() {
   Dio dio = Dio(BaseOptions(
-      baseUrl: AppConfig().apiBaseUrl,
+      baseUrl: "http://localhost:8080",
       connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10)
-  ));
+      receiveTimeout: const Duration(seconds: 10)));
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) {
       // Skip adding token for login requests
@@ -41,10 +41,19 @@ void setupLocator() {
   locator.registerLazySingleton(() => CategoryStore());
   locator.registerLazySingleton(() => UserStore());
 
-
   locator.registerLazySingleton(() => AuthRepository(locator<Dio>()));
   locator.registerLazySingleton(() => EntriesRepository(locator<Dio>()));
   locator.registerLazySingleton(() => CategoriesRepository(locator<Dio>()));
   locator.registerLazySingleton(() => UsersRepository(locator<Dio>()));
   locator.registerLazySingleton(() => DocumentsRepository(locator<Dio>()));
+
+  // Create a reaction to update Dio's base URL when AuthStore's baseUrl changes
+  reaction(
+    (_) => locator<AuthStore>().baseUrl, // React to changes in baseUrl
+    (String? newBaseUrl) {
+      if (newBaseUrl != null && newBaseUrl.isNotEmpty) {
+        locator<Dio>().options.baseUrl = newBaseUrl;
+      }
+    },
+  );
 }
