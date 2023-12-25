@@ -9,6 +9,7 @@ COPY . /app
 
 # Get dependencies and build the web application
 RUN flutter pub get
+RUN flutter packages pub run build_runner build
 RUN flutter build web -v
 
 # Runner stage
