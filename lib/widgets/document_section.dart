@@ -5,7 +5,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import '../models/document.dart';
 import '../services/locator.dart';
 import '../stores/auth_store.dart';
-import 'full_screen_image_viewer.dart';
+import 'document_gallery_viewer.dart';
 
 class DocumentSection extends StatelessWidget {
   final int entryId;
@@ -28,6 +28,7 @@ class DocumentSection extends StatelessWidget {
           Observer(
             builder: (_) {
               int indexOffset = isEditable ? 1 : 0;
+              List<Document> documents = entryStore.getDocumentsForEntry(entryId);
               return Container(
                 height: 100,
                 child: ListView.builder(
@@ -37,8 +38,7 @@ class DocumentSection extends StatelessWidget {
                     if (isEditable && index == 0) {
                       return _buildAddButton();
                     } else if (!isEditable) {
-                      var document = entryStore.getDocumentsForEntry(entryId)[index - indexOffset];
-                      return _buildThumbnailTile(document, context);
+                      return _buildThumbnailTile(documents, index -indexOffset, context);
                     }
                   },
                 ),
@@ -60,7 +60,8 @@ class DocumentSection extends StatelessWidget {
     );
   }
 
-  Widget _buildThumbnailTile(Document document, context) {
+  Widget _buildThumbnailTile(List<Document> documents, int index, context) {
+    Document document = documents[index];
     AuthStore authStore = locator<AuthStore>();
     String token = authStore.user?.token ?? "";
     String thumbnailUrl = '${AppConfig().apiBaseUrl}/${document.thumbnailLink}';
@@ -73,7 +74,11 @@ class DocumentSection extends StatelessWidget {
     return GestureDetector(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => FullScreenImageViewer(imageUrl: fullImageUrl, token: token, filename: document.originalFilename != null ? document.originalFilename! : "Document"),
+            builder: (context) => DocumentGalleryViewer(
+              initialIndex: index,
+              documents: documents,
+              token: token,
+            ),
           ));
         },
         child: Container(
