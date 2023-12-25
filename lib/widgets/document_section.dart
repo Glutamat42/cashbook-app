@@ -5,6 +5,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import '../models/document.dart';
 import '../services/locator.dart';
 import '../stores/auth_store.dart';
+import 'full_screen_image_viewer.dart';
 
 class DocumentSection extends StatelessWidget {
   final int entryId;
@@ -37,7 +38,7 @@ class DocumentSection extends StatelessWidget {
                       return _buildAddButton();
                     } else if (!isEditable) {
                       var document = entryStore.getDocumentsForEntry(entryId)[index - indexOffset];
-                      return _buildThumbnailTile(document);
+                      return _buildThumbnailTile(document, context);
                     }
                   },
                 ),
@@ -59,24 +60,31 @@ class DocumentSection extends StatelessWidget {
     );
   }
 
-  Widget _buildThumbnailTile(Document document) {
+  Widget _buildThumbnailTile(Document document, context) {
     AuthStore authStore = locator<AuthStore>();
     String token = authStore.user?.token ?? "";
     String thumbnailUrl = '${AppConfig().apiBaseUrl}/${document.thumbnailLink}';
+    String fullImageUrl = '${AppConfig().apiBaseUrl}/${document.documentLink}';
 
     if (token.isEmpty) {
       throw Exception("Token is empty");
     }
 
-    return Container(
-      width: 100,
-      margin: const EdgeInsets.only(right: 8),
-      color: Colors.grey[300],
-      child: Image.network(
-          thumbnailUrl,
-          headers: {"Authorization": "Bearer $token"},
-          fit: BoxFit.cover,
-      ),
-    );
+    return GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => FullScreenImageViewer(imageUrl: fullImageUrl, token: token, filename: document.originalFilename != null ? document.originalFilename! : "Document"),
+          ));
+        },
+        child: Container(
+          width: 100,
+          margin: const EdgeInsets.only(right: 8),
+          color: Colors.grey[300],
+          child: Image.network(
+            thumbnailUrl,
+            headers: {"Authorization": "Bearer $token"},
+            fit: BoxFit.cover,
+          ),
+        ));
   }
 }
