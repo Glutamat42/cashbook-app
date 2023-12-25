@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'detail_item_view.dart';
 import '../models/category.dart';
 import '../stores/category_store.dart';
 import '../services/locator.dart';
@@ -35,7 +34,7 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
   Widget build(BuildContext context) {
     return widget.isEditMode
         ? _buildCategoryEdit()
-        : DetailItemView(
+        : FlexibleDetailItemView(
             title: 'Category:',
             value: _findCategoryName(widget.categoryId),
           );

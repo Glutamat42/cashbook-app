@@ -1,19 +1,19 @@
 class Entry {
-  int id;
-  String description;
-  String recipientSender;
-  int amount;
-  DateTime date;
-  int categoryId;
-  String paymentMethod;
-  bool noInvoice;
+  int? id;
+  String? description;
+  String? recipientSender;
+  int? amount;
+  DateTime? date;
+  int? categoryId;
+  String? paymentMethod;
+  bool? noInvoice;
   final int? userId;
   int? userIdLastModified;
   String? updatedAt;
   final String? createdAt;
 
   Entry({
-    required this.id,
+    this.id,
     required this.description,
     required this.recipientSender,
     required this.amount,

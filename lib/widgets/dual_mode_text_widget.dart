@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'detail_item_view.dart';
 
 class DualModeTextWidget extends StatefulWidget {
   final bool isEditMode;
@@ -36,7 +35,7 @@ class _DualModeTextWidgetState extends State<DualModeTextWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.isEditMode ? _buildTextEdit() : DetailItemView(
+    return widget.isEditMode ? _buildTextEdit() : FlexibleDetailItemView(
       title: widget.label,
       value: widget.value,
     );

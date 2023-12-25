@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'detail_item_view.dart';
 import 'flexible_detail_item_view.dart';
 
 class DualModeDateWidget extends StatefulWidget {
@@ -32,7 +31,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
   Widget build(BuildContext context) {
     return widget.isEditMode
         ? _buildDatePickerEdit()
-        : DetailItemView(
+        : FlexibleDetailItemView(
             title: 'Date:',
             value: DateFormat('yyyy-MM-dd').format(_selectedDate),
           );

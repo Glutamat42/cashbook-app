@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'detail_item_view.dart';
 import 'flexible_detail_item_view.dart';
 
 class DualModePaymentMethodWidget extends StatefulWidget {
@@ -29,7 +28,7 @@ class _DualModePaymentMethodWidgetState extends State<DualModePaymentMethodWidge
 
   @override
   Widget build(BuildContext context) {
-    return widget.isEditMode ? _buildPaymentMethodEdit() : DetailItemView(
+    return widget.isEditMode ? _buildPaymentMethodEdit() : FlexibleDetailItemView(
       title: 'Payment Method:',
       value: _currentMethod,
     );

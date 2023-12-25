@@ -48,6 +48,17 @@ abstract class _EntryStore with Store {
     }
   }
 
+  @action
+  Future<Entry> createEntry(Entry newEntry) async {
+    try {
+      final createdEntry = await _entriesRepository.createEntry(newEntry.toJson());
+      visibleEntries.add(createdEntry);
+      return createdEntry;
+    } catch (e) {
+      _logger.severe('Failed to create entry: $e');
+      throw Exception('Failed to create entry');
+    }
+  }
 
   ObservableList<Document> getDocumentsForEntry(int entryId) =>
       entryDocuments[entryId] != null ? entryDocuments[entryId]! : ObservableList<Document>.of([]);

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'detail_item_view.dart';
 import 'flexible_detail_item_view.dart';
 
 class DualModeAmountWidget extends StatefulWidget {
@@ -36,7 +35,7 @@ class _DualModeAmountWidgetState extends State<DualModeAmountWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.isEditMode ? _buildAmountEdit() : DetailItemView(
+    return widget.isEditMode ? _buildAmountEdit() : FlexibleDetailItemView(
       title: 'Amount:',
       value: _formatAmount(widget.amount),
     );

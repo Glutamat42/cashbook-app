@@ -58,6 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _navigateToNewEntry,
+        child: Icon(Icons.add),
+      ),
       drawer: _buildDrawer(),
       body: Column(
         children: <Widget>[
@@ -84,6 +88,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _navigateToNewEntry() {
+    // Navigate to DetailsScreen with a new Entry object
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => DetailsScreen(entry: Entry()), // Implement createNew method in Entry model
+    ));
   }
 
   Widget _buildDrawer() {

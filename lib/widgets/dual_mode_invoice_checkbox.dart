@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'detail_item_view.dart';
 import 'flexible_detail_item_view.dart';
 
 class DualModeInvoiceCheckbox extends StatelessWidget {
@@ -18,7 +17,7 @@ class DualModeInvoiceCheckbox extends StatelessWidget {
   Widget build(BuildContext context) {
     return isEditMode
         ? _buildInvoiceCheckboxEdit()
-        : DetailItemView(
+        : FlexibleDetailItemView(
             title: 'No Invoice:',
             value: noInvoice ? 'Yes' : 'No',
           );
