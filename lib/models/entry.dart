@@ -1,12 +1,13 @@
 class Entry {
-  int? id;
-  String? description;
-  String? recipientSender;
+  int? id;  // only allowed to be null for new entries
+  String description;
+  String recipientSender;
   int? amount;
-  DateTime? date;
+  bool isIncome;
+  DateTime date;
   int? categoryId;
-  String? paymentMethod;
-  bool? noInvoice;
+  String paymentMethod;
+  bool noInvoice;
   final int? userId;
   int? userIdLastModified;
   String? updatedAt;
@@ -14,13 +15,14 @@ class Entry {
 
   Entry({
     this.id,
-    required this.description,
-    required this.recipientSender,
-    required this.amount,
+    this.description = "",
+    this.recipientSender = "",
+    this.amount,
+    this.isIncome = false,
     required this.date,
-    required this.categoryId,
-    required this.paymentMethod,
-    required this.noInvoice,
+    this.categoryId,
+    this.paymentMethod = "not_payed",
+    this.noInvoice = false,
     this.userId,
     this.userIdLastModified,
     this.updatedAt,
@@ -33,6 +35,7 @@ class Entry {
       description: json['description'],
       recipientSender: json['recipient_sender'],
       amount: json['amount'],
+      isIncome: json['is_income'] == 1,
       date: DateTime.parse(json['date']),
       categoryId: json['category_id'],
       paymentMethod: json['payment_method'],
@@ -50,10 +53,11 @@ class Entry {
       'description': description,
       'recipient_sender': recipientSender,
       'amount': amount,
+      'is_income': isIncome == true ? 1 : 0,
       'date': date.toIso8601String(),
       'category_id': categoryId,
       'payment_method': paymentMethod,
-      'no_invoice': noInvoice ? 1 : 0,
+      'no_invoice': noInvoice == true ? 1 : 0,
       'user_id': userId,
       'user_id_last_modified': userIdLastModified,
       'updated_at': updatedAt,

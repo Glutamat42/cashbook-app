@@ -1,6 +1,7 @@
 import 'package:cashbook/widgets/sorting_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import '../models/entry.dart';
 import '../stores/category_store.dart';
 import '../stores/user_store.dart';
 import '../widgets/entry_item.dart';
@@ -9,6 +10,7 @@ import '../stores/auth_store.dart';
 import '../services/locator.dart';
 import '../constants/route_names.dart';
 import '../widgets/filter_dialog.dart';
+import 'details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -93,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToNewEntry() {
     // Navigate to DetailsScreen with a new Entry object
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsScreen(entry: Entry()), // Implement createNew method in Entry model
+      builder: (context) => DetailsScreen(entry: Entry(date: new DateTime.now())), // Implement createNew method in Entry model
     ));
   }
 

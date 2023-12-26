@@ -26,17 +26,18 @@ abstract class _AuthStore with Store {
     _loadAuthToken();
   }
 
+  @action
   Future<void> _loadAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
     String? authToken = prefs.getString('authToken');
     int? userId = prefs.getInt('userId');
     String? username = prefs.getString('username');
-    String? baseUrl = prefs.getString('baseUrl');
+    baseUrl = prefs.getString('baseUrl');
 
     if (authToken != null && userId != null && username != null) {
       user = User(id: userId, username: username, token: authToken);
 
-      if (baseUrl == null || baseUrl.isEmpty) {
+      if (baseUrl == null || baseUrl!.isEmpty) {
         _log.severe('No base URL found in shared preferences, logging out');
         await logout();
       }

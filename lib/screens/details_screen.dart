@@ -14,13 +14,14 @@ import '../widgets/dual_mode_date_widget.dart';
 import '../widgets/dual_mode_invoice_checkbox.dart';
 import '../widgets/dual_mode_payment_method_widget.dart';
 import '../widgets/dual_mode_text_widget.dart';
+import '../widgets/flexible_detail_item_view.dart';
+
+// todo: form validation
 
 class DetailsScreen extends StatefulWidget {
   final Entry entry;
-  final bool isNew;
 
-  const DetailsScreen(
-      {Key? key, required this.entry, required this.isNew = false})
+  const DetailsScreen({Key? key, required this.entry})
       : super(key: key);
 
   @override
@@ -33,6 +34,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   late Entry _editableEntry;
   final Logger _log = Logger('DetailsScreen');
   bool _isEditMode = false;
+  bool _isNew = false;
   final UserStore _userStore = locator<UserStore>();
   final CategoryStore _categoryStore = locator<CategoryStore>();
   final EntryStore _entryStore = locator<EntryStore>();
@@ -40,7 +42,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.isNew) {
+    _isNew = widget.entry.id == null;
+    if (_isNew) {
       _isEditMode = true;
     }
     _editableEntry = Entry.fromJson(widget.entry.toJson());
@@ -55,7 +58,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           if (_isEditMode) {
             bool shouldClose = await _showSaveChangesDialog(context);
             if (shouldClose) {
-              if (widget.isNew) {
+              if (_isNew) {
                 Navigator.of(context).pop();
               } else {
                 setState(() {
@@ -102,8 +105,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 DualModeAmountWidget(
                   isEditMode: _isEditMode,
                   amount: _editableEntry.amount,
-                  onChanged: (val) =>
-                      setState(() => _editableEntry.amount = val),
+                  isIncome: _editableEntry.isIncome,
+                  onChanged: (amount, isIncome) =>
+                      setState(() {
+                        _editableEntry.amount = amount;
+                        _editableEntry.isIncome = isIncome;
+                      }),
                 ),
                 DualModeDateWidget(
                   isEditMode: _isEditMode,
@@ -156,8 +163,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
               TextButton(
                 child: const Text('Discard'),
                 onPressed: () {
-                  _discardChanges(context); // Discard changes
                   Navigator.of(context).pop(true);
+                  _discardChanges(context); // Discard changes
                 },
               ),
               TextButton(
@@ -174,8 +181,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   void _discardChanges(context) {
-    if (widget.isNew) {
-      Navigator.of(context).pop()
+    if (_isNew) {
+      Navigator.of(context).pop();
     } else {
       setState(() {
         _editableEntry =
@@ -187,10 +194,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _saveEntry() async {
     try {
-      if (widget.isNew) {
+      if (_isNew) {
         Entry updatedEntry = await _entryStore.createEntry(_editableEntry);
         _showSnackbar(context, 'Changes saved successfully', Colors.green);
-        Navigator.of(context).pop()
+        Navigator.of(context).pop();
       } else {
         Entry updatedEntry = await _entryStore.updateEntry(_editableEntry);
         _showSnackbar(context, 'Changes saved successfully', Colors.green);
@@ -219,17 +226,22 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   List<Widget> _buildCreatedModifiedInfo() {
+    _log.fine('Building created/modified info, isNew: ${_isNew}');
+    if (_isNew) {
+      return [];
+    }
+
     String createdByUser = _findUserName(_editableEntry.userId);
     String lastModifiedInfo = _getLastModifiedInfo();
 
     return [
       FlexibleDetailItemView(
         title: 'Created:',
-        value: '${_formatDateTime(_editableEntry.createdAt)} by $createdByUser',
+        rightWidget: Text('${_formatDateTime(_editableEntry.createdAt)} by $createdByUser'),
       ),
       FlexibleDetailItemView(
         title: 'Last Modified:',
-        value: lastModifiedInfo,
+        rightWidget: Text(lastModifiedInfo),
       ),
     ];
   }

@@ -17,6 +17,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _serverController = TextEditingController();
 
   bool get _isFormValid => _formKey.currentState?.validate() ?? false;
+  bool _usernameTouched = false;
+  bool _passwordTouched = false;
+  bool _serverTouched = false;
 
   // List of predefined servers
   final List<String> _predefinedServers = [
@@ -63,17 +66,23 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _usernameController,
               decoration: const InputDecoration(labelText: 'Username'),
               keyboardType: TextInputType.emailAddress,
-              onChanged: (value) => setState(() {}),
-              // Update UI on text change
-              validator: (value) => value?.trim().isEmpty == true ? 'Username is required' : null,
+              onChanged: (value) {
+                setState(() {
+                  _usernameTouched = true;
+                });
+              },              // Update UI on text change
+              validator: (value) => _usernameTouched && (value?.trim().isEmpty == true) ? 'Username is required' : null,
               onFieldSubmitted: (_) => _performLogin()),
           TextFormField(
               controller: _passwordController,
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
-              onChanged: (value) => setState(() {}),
-              // Update UI on text change
-              validator: (value) => value?.trim().isEmpty == true ? 'Password is required' : null,
+              onChanged: (value) {
+                setState(() {
+                  _passwordTouched = true;
+                });
+              },              // Update UI on text change
+              validator: (value) => _passwordTouched && (value?.trim().isEmpty == true) ? 'Password is required' : null,
               onFieldSubmitted: (_) => _performLogin()),
           Autocomplete<String>(
             optionsBuilder: (TextEditingValue textEditingValue) {
@@ -94,10 +103,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: fieldTextEditingController,
                 focusNode: fieldFocusNode,
                 decoration: const InputDecoration(labelText: 'Server'),
-                validator: (value) => value?.trim().isEmpty == true ? 'Server is required' : null,
+                validator: (value) => _serverTouched && (value?.trim().isEmpty == true) ? 'Server is required' : null,
                 onChanged: (value) {
-                  // Update the form's state when the server field changes
-                  setState(() {});
+                  setState(() {
+                    _serverTouched = true;
+                  });
                 },
               );
             },

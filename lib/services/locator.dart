@@ -6,6 +6,7 @@ import 'package:cashbook/repositories/users_repository.dart';
 import 'package:cashbook/stores/user_store.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
 import '../stores/auth_store.dart';
 import '../stores/entry_store.dart';
@@ -23,9 +24,12 @@ void setupLocator() {
     onRequest: (options, handler) {
       // Skip adding token for login requests
       if (!options.path.endsWith('/api/login')) {
-        final authStore = locator<AuthStore>();
+        final AuthStore authStore = locator<AuthStore>();
         final apiToken = authStore.user?.token;
-        if (apiToken != null) {
+        if (apiToken == null) {
+          Logger("Dio Interceptor").severe('API token is null, cannot make authenticated request');
+          throw Exception('API token is null, cannot make authenticated request');
+        } else {
           options.headers['Authorization'] = apiToken;
         }
       }

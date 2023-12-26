@@ -23,12 +23,12 @@ class EntryItem extends StatelessWidget {
           );
         },
         title: Text(
-          entry.recipientSender,
+          entry.recipientSender ?? "",
           style: const TextStyle(fontWeight: FontWeight.bold),
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          entry.description,
+          entry.description ?? "",
           overflow: TextOverflow.ellipsis,
         ),
         trailing: Column(
@@ -48,16 +48,22 @@ class EntryItem extends StatelessWidget {
     );
   }
 
-  String _formatAmount(int amount) {
+  String _formatAmount(int? amount) {
+    if (amount == null) {
+      return "";
+    }
     final double amountInEuros = amount / 100;
     return '${amount >= 0 ? '+' : ''}${amountInEuros.toStringAsFixed(2)}€';
   }
 
-  Color _amountColor(int amount) {
-    return amount > 0 ? Colors.green : Colors.red;
+  Color _amountColor(int? amount) {
+    return amount != null && amount > 0 ? Colors.green : Colors.red;
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime? date) {
+    if (date == null) {
+      return "";
+    }
     return DateFormat('yyyy-MM-dd').format(date);
   }
 

@@ -3,10 +3,11 @@ import 'package:logging/logging.dart';
 import '../models/category.dart';
 import '../stores/category_store.dart';
 import '../services/locator.dart';
+import 'flexible_detail_item_view.dart';
 
 class DualModeCategoryWidget extends StatefulWidget {
   final bool isEditMode;
-  final int categoryId;
+  final int? categoryId;
   final Function(int) onChanged;
 
   const DualModeCategoryWidget({
@@ -36,7 +37,7 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
         ? _buildCategoryEdit()
         : FlexibleDetailItemView(
             title: 'Category:',
-            value: _findCategoryName(widget.categoryId),
+            rightWidget: Text(_findCategoryName(widget.categoryId)),
           );
   }
 
@@ -84,12 +85,14 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
                       // TextField for new category
                       TextField(
                         onChanged: (value) => newCategoryName = value,
-                        onSubmitted: (_) => _submitNewCategory(context, newCategoryName) ,
+                        onSubmitted: (_) =>
+                            _submitNewCategory(context, newCategoryName),
                         decoration: InputDecoration(
                           hintText: 'New Category',
                           suffixIcon: IconButton(
                             icon: const Icon(Icons.check),
-                            onPressed: () => _submitNewCategory(context, newCategoryName),
+                            onPressed: () =>
+                                _submitNewCategory(context, newCategoryName),
                           ),
                         ),
                       ),
@@ -108,7 +111,8 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
         });
   }
 
-  void _submitNewCategory(BuildContext scaffoldContext, String newCategoryName) async {
+  void _submitNewCategory(
+      BuildContext scaffoldContext, String newCategoryName) async {
     final categoryStore = locator<CategoryStore>();
     {
       if (newCategoryName.isNotEmpty) {
@@ -116,17 +120,20 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
         SnackBar snackBar;
         try {
           newCategory = await categoryStore.createCategory(newCategoryName);
-          snackBar =
-          const SnackBar(content: Text('Category created and selected for current entry.'));
+          snackBar = const SnackBar(
+              content:
+                  Text('Category created and selected for current entry.'));
           widget.onChanged(newCategory.id!); // Update the parent widget state
         } catch (e) {
           _log.severe('Failed to create category: $e');
           snackBar = const SnackBar(content: Text('Failed to create category'));
         }
 
-        if (context.mounted) { // Check if the widget is still in the widget tree
+        if (context.mounted) {
+          // Check if the widget is still in the widget tree
           Navigator.of(scaffoldContext).pop(); // Close the dialog
-          ScaffoldMessenger.of(scaffoldContext).showSnackBar(snackBar); // Show the snackbar
+          ScaffoldMessenger.of(scaffoldContext)
+              .showSnackBar(snackBar); // Show the snackbar
         }
       }
     }
@@ -154,11 +161,16 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
 
   String _findCategoryName(int? categoryId) {
     String categoryName = 'Unknown';
-    try {
-      final category = _categoryStore.categories.firstWhere((c) => c.id == categoryId);
-      categoryName = category.name;
-    } catch (e) {
-      debugPrint('Category with id $categoryId not found');
+    if (categoryId == null) {
+      categoryName = "";
+    } else {
+      try {
+        final category =
+        _categoryStore.categories.firstWhere((c) => c.id == categoryId);
+        categoryName = category.name;
+      } catch (e) {
+        _log.warning('Category with id $categoryId not found');
+      }
     }
     return categoryName;
   }

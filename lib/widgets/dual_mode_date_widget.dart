@@ -33,7 +33,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
         ? _buildDatePickerEdit()
         : FlexibleDetailItemView(
             title: 'Date:',
-            value: DateFormat('yyyy-MM-dd').format(_selectedDate),
+            rightWidget: Text(DateFormat('yyyy-MM-dd').format(_selectedDate)),
           );
   }
 
@@ -41,8 +41,10 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
     return FlexibleDetailItemView(
       title: 'Date:',
       rightWidget: Row(
-        mainAxisAlignment: MainAxisAlignment.start, // Aligns children to the end (right)
-        mainAxisSize: MainAxisSize.min, // Minimizes the row size to fit children
+        mainAxisAlignment: MainAxisAlignment.start,
+        // Aligns children to the end (right)
+        mainAxisSize: MainAxisSize.min,
+        // Minimizes the row size to fit children
         children: [
           IconButton(
             icon: Icon(Icons.calendar_today),

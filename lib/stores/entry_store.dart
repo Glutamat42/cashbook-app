@@ -75,20 +75,10 @@ abstract class _EntryStore with Store {
   }
 
   @action
-  Future<void> createEntry(Entry entry) async {
-    try {
-      final newEntry = await _entriesRepository.createEntry(entry.toJson());
-      visibleEntries.add(newEntry);
-    } catch (e) {
-      // Handle errors
-    }
-  }
-
-  @action
   Future<Entry> updateEntry(Entry updatedEntry) async {
-    int oldEntryId = updatedEntry.id;
+    int oldEntryId = updatedEntry.id!;
     try {
-      final entry = await _entriesRepository.updateEntry(updatedEntry.id, updatedEntry.toJson());
+      final entry = await _entriesRepository.updateEntry(updatedEntry.id!, updatedEntry.toJson());
       final index = visibleEntries.indexWhere((e) => e.id == oldEntryId);
       if (index != -1) {
         visibleEntries.replaceRange(index, index + 1, [entry]);
@@ -145,7 +135,7 @@ abstract class _EntryStore with Store {
         compare = (Entry a, Entry b) => a.date.compareTo(b.date);
         break;
       case SortField.amount:
-        compare = (Entry a, Entry b) => a.amount.compareTo(b.amount);
+        compare = (Entry a, Entry b) => (a.amount ?? 0).compareTo(b.amount ?? 0);
         break;
       case SortField.recipient:
         compare = (Entry a, Entry b) => a.recipientSender.compareTo(b.recipientSender);

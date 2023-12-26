@@ -7,39 +7,46 @@ import '../stores/auth_store.dart';
 import 'document_gallery_viewer.dart';
 
 class DocumentSection extends StatelessWidget {
-  final int entryId;
+  final int? entryId;
   final bool isEditable;
 
-  const DocumentSection({Key? key, required this.entryId, this.isEditable = false}) : super(key: key);
+  const DocumentSection(
+      {Key? key, required this.entryId, this.isEditable = false})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final EntryStore entryStore = locator<EntryStore>();
-    entryStore.loadDocumentsForEntry(entryId);
+    final isNew = entryId == null;
+
+    if (!isNew) {
+      entryStore.loadDocumentsForEntry(entryId!);
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Text('Documents', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Documents',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Observer(
             builder: (_) {
-              int indexOffset = isEditable ? 1 : 0;
-              List<Document> documents = entryStore.getDocumentsForEntry(entryId);
+              List<Document> documents = isNew ? [] : entryStore.getDocumentsForEntry(entryId!);
+              int itemCount = isEditable ? documents.length + 1 : documents.length; // +1 for add button if editable
+
               return Container(
                 height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: entryStore.getDocumentsForEntry(entryId).length + indexOffset, // +1 for the add button
+                  itemCount: itemCount,
                   itemBuilder: (context, index) {
                     if (isEditable && index == 0) {
                       return _buildAddButton();
-                    } else if (!isEditable) {
-                      return _buildThumbnailTile(documents, index -indexOffset, context);
                     }
-                    return null;
+                    int docIndex = isEditable ? index - 1 : index; // Adjust index if in editable mode
+                    return _buildThumbnailTile(documents, docIndex, context);
                   },
                 ),
               );
@@ -54,6 +61,7 @@ class DocumentSection extends StatelessWidget {
     // TODO: Implement add button logic
     return Container(
       width: 100,
+      height: 100,
       margin: const EdgeInsets.only(right: 8),
       color: Colors.grey[300],
       child: const Center(child: Icon(Icons.add)),

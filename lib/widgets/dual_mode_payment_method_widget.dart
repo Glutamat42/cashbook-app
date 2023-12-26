@@ -14,10 +14,12 @@ class DualModePaymentMethodWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _DualModePaymentMethodWidgetState createState() => _DualModePaymentMethodWidgetState();
+  _DualModePaymentMethodWidgetState createState() =>
+      _DualModePaymentMethodWidgetState();
 }
 
-class _DualModePaymentMethodWidgetState extends State<DualModePaymentMethodWidget> {
+class _DualModePaymentMethodWidgetState
+    extends State<DualModePaymentMethodWidget> {
   late String _currentMethod;
 
   @override
@@ -28,10 +30,12 @@ class _DualModePaymentMethodWidgetState extends State<DualModePaymentMethodWidge
 
   @override
   Widget build(BuildContext context) {
-    return widget.isEditMode ? _buildPaymentMethodEdit() : FlexibleDetailItemView(
-      title: 'Payment Method:',
-      value: _currentMethod,
-    );
+    return widget.isEditMode
+        ? _buildPaymentMethodEdit()
+        : FlexibleDetailItemView(
+            title: 'Payment Method:',
+            rightWidget: Text(_currentMethod),
+          );
   }
 
   Widget _buildPaymentMethodEdit() {
@@ -39,17 +43,30 @@ class _DualModePaymentMethodWidgetState extends State<DualModePaymentMethodWidge
       title: 'Payment Method:',
       rightWidget: Column(
         children: [
-          _buildRadioTile('Cash'),
-          _buildRadioTile('Bank Transfer'),
-          _buildRadioTile('Not Payed'), // New option
+          _buildRadioTile('cash'),
+          _buildRadioTile('bank_transfer'),
+          _buildRadioTile('not_payed'), // New option
         ],
       ),
     );
   }
 
   Widget _buildRadioTile(String method) {
+    String uiText = "";
+    switch (method) {
+      case 'cash':
+        uiText = "Cash";
+        break;
+      case 'bank_transfer':
+        uiText = "Bank transfer";
+        break;
+      case 'not_payed':
+      default:
+        uiText = "Not payed";
+        break;
+    }
     return RadioListTile<String>(
-      title: Text(method),
+      title: Text(uiText),
       value: method,
       groupValue: _currentMethod,
       onChanged: (String? value) {

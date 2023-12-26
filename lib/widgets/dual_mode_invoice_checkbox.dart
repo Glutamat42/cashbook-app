@@ -19,7 +19,7 @@ class DualModeInvoiceCheckbox extends StatelessWidget {
         ? _buildInvoiceCheckboxEdit()
         : FlexibleDetailItemView(
             title: 'No Invoice:',
-            value: noInvoice ? 'Yes' : 'No',
+            rightWidget: Text(noInvoice ? 'Yes' : 'No'),
           );
   }
 

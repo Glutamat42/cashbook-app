@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'flexible_detail_item_view.dart';
+
 class DualModeTextWidget extends StatefulWidget {
   final bool isEditMode;
   final String value;
@@ -35,10 +37,12 @@ class _DualModeTextWidgetState extends State<DualModeTextWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.isEditMode ? _buildTextEdit() : FlexibleDetailItemView(
-      title: widget.label,
-      value: widget.value,
-    );
+    return widget.isEditMode
+        ? _buildTextEdit()
+        : FlexibleDetailItemView(
+            title: widget.label,
+            rightWidget: Text(widget.value),
+          );
   }
 
   Widget _buildTextEdit() {
@@ -46,7 +50,8 @@ class _DualModeTextWidgetState extends State<DualModeTextWidget> {
       controller: _textEditingController,
       decoration: InputDecoration(labelText: widget.label),
       onChanged: widget.onChanged,
-      validator: (value) => value == null || value.isEmpty ? 'This field cannot be empty' : null,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'This field cannot be empty' : null,
     );
   }
 }
