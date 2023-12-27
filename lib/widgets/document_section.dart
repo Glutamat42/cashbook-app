@@ -1,18 +1,23 @@
 import 'package:cashbook/stores/entry_store.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logging/logging.dart';
 import '../models/document.dart';
 import '../services/locator.dart';
 import '../stores/auth_store.dart';
 import 'document_gallery_viewer.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
+import 'dart:io' show Platform;
 
 class DocumentSection extends StatelessWidget {
+  final Logger _log = Logger('DocumentSection');
   final int? entryId;
   final bool isEditable;
 
-  const DocumentSection({Key? key, required this.entryId, this.isEditable = false})
-      : super(key: key);
+  DocumentSection({Key? key, required this.entryId, this.isEditable = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +78,18 @@ class DocumentSection extends StatelessWidget {
   }
 
   Future<void> _addDocument(BuildContext context) async {
+    if (kIsWeb && (defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.macOS)) {
+      // Directly open file dialog for desktop web platforms
+      final pickedFile = await FilePicker.platform.pickFiles();
+      if (pickedFile != null && pickedFile.files.single.path != null) {
+        _uploadDocument(pickedFile.files.single.path!, context);
+      }
+    } else {
+      _showMobileAddDocumentOptions(context);
+    }
+  }
+
+  void _showMobileAddDocumentOptions(BuildContext context) {
     final picker = ImagePicker();
     showModalBottomSheet(
       context: context,
@@ -91,23 +108,62 @@ class DocumentSection extends StatelessWidget {
                     }
                   }),
               ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Camera'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    _uploadDocument(pickedFile.path, context);
-                  }
-                },
-              ),
+                  leading: const Icon(Icons.photo_camera),
+                  title: const Text('Camera'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+                    if (pickedFile != null) {
+                      _uploadDocument(pickedFile.path, context);
+                    }
+                  }),
+              ListTile(
+                  leading: const Icon(Icons.attach_file),
+                  title: const Text('File'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    try {
+                      final pickedFile = await FilePicker.platform.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'avif'],
+                      );
+                      if (pickedFile != null && pickedFile.files.single.path != null) {
+                        _uploadDocument(pickedFile.files.single.path!, context);
+                      }
+                    } on PlatformException catch (e) {
+                      if (e.code == 'read_external_storage_denied') {
+                        _log.warning('Permission denied: ${e.toString()}');
+
+                        const snackBar = SnackBar(
+                          content: Text('No permission to access files'),
+                          backgroundColor: Colors.red,
+                        );
+                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      } else {
+                        _log.warning('Error picking file: ${e.toString()}');
+
+                        const snackBar = SnackBar(
+                          content: Text('Error picking file'),
+                          backgroundColor: Colors.red,
+                        );
+                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      }
+                    } catch (e) {
+                      _log.warning('Error picking file: ${e.toString()}');
+
+                      const snackBar = SnackBar(
+                        content: Text('Error picking file'),
+                        backgroundColor: Colors.red,
+                      );
+                      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    }
+                  }),
             ],
           ),
         );
       },
     );
   }
-
 
   Widget _buildThumbnailTile(List<Document> documents, int index, context) {
     Document document = documents[index];
