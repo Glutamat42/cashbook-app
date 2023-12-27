@@ -5,53 +5,59 @@ import '../stores/category_store.dart';
 import '../services/locator.dart';
 import 'flexible_detail_item_view.dart';
 
-class DualModeCategoryWidget extends StatefulWidget {
+class DualModeCategoryWidget extends StatelessWidget {
   final bool isEditMode;
   final int? categoryId;
-  final Function(int) onChanged;
+  final Function(int?)? onChanged;
+  final Function(int?)? onSaved;
+  final FormFieldValidator<int>? validator;
+  final CategoryStore categoryStore = locator<CategoryStore>();
+  final Logger _log = Logger('DualModeCategoryWidget');
 
-  const DualModeCategoryWidget({
+  DualModeCategoryWidget({
     Key? key,
     required this.isEditMode,
     required this.categoryId,
-    required this.onChanged,
+    this.validator,
+    this.onChanged,
+    this.onSaved,
   }) : super(key: key);
 
   @override
-  _DualModeCategoryWidgetState createState() => _DualModeCategoryWidgetState();
-}
-
-class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
-  late CategoryStore _categoryStore;
-  final Logger _log = Logger('DualModeCategoryWidget');
-
-  @override
-  void initState() {
-    super.initState();
-    _categoryStore = locator<CategoryStore>();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return widget.isEditMode
-        ? _buildCategoryEdit()
-        : FlexibleDetailItemView(
-            title: 'Category:',
-            rightWidget: Text(_findCategoryName(widget.categoryId)),
-          );
+    return isEditMode ? _buildCategoryEdit(context) : _buildCategoryDisplay();
   }
 
-  Widget _buildCategoryEdit() {
+  Widget _buildCategoryEdit(context) {
     return Row(
       children: <Widget>[
         Expanded(
-          child: _buildCategoryDropdown(),
+          child: DropdownButtonFormField<int>(
+            value: categoryId,
+            items: categoryStore.categories.map<DropdownMenuItem<int>>((Category category) {
+              return DropdownMenuItem<int>(
+                value: category.id,
+                child: Text(category.name),
+              );
+            }).toList(),
+            decoration: const InputDecoration(labelText: 'Category'),
+            onChanged: onChanged,
+            onSaved: onSaved,
+            validator: validator,
+          ),
         ),
         IconButton(
-          icon: Icon(Icons.add),
+          icon: const Icon(Icons.add),
           onPressed: () => _showCategoryDialog(context),
         ),
       ],
+    );
+  }
+
+  Widget _buildCategoryDisplay() {
+    return FlexibleDetailItemView(
+      title: 'Category:',
+      rightWidget: Text(_findCategoryName(categoryId)),
     );
   }
 
@@ -112,7 +118,7 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
   }
 
   void _submitNewCategory(
-      BuildContext scaffoldContext, String newCategoryName) async {
+      BuildContext context, String newCategoryName) async {
     final categoryStore = locator<CategoryStore>();
     {
       if (newCategoryName.isNotEmpty) {
@@ -123,7 +129,7 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
           snackBar = const SnackBar(
               content:
                   Text('Category created and selected for current entry.'));
-          widget.onChanged(newCategory.id!); // Update the parent widget state
+          if (onChanged != null) onChanged!(newCategory.id!); // Update the parent widget state
         } catch (e) {
           _log.severe('Failed to create category: $e');
           snackBar = const SnackBar(content: Text('Failed to create category'));
@@ -131,33 +137,14 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
 
         if (context.mounted) {
           // Check if the widget is still in the widget tree
-          Navigator.of(scaffoldContext).pop(); // Close the dialog
-          ScaffoldMessenger.of(scaffoldContext)
+          Navigator.of(context).pop(); // Close the dialog
+          ScaffoldMessenger.of(context)
               .showSnackBar(snackBar); // Show the snackbar
         }
       }
     }
   }
 
-  Widget _buildCategoryDropdown() {
-    final categories = _categoryStore.categories;
-
-    return DropdownButtonFormField<int>(
-      value: widget.categoryId,
-      onChanged: (int? newValue) {
-        if (newValue != null) {
-          widget.onChanged(newValue);
-        }
-      },
-      items: categories.map<DropdownMenuItem<int>>((Category category) {
-        return DropdownMenuItem<int>(
-          value: category.id,
-          child: Text(category.name),
-        );
-      }).toList(),
-      decoration: const InputDecoration(labelText: 'Category'),
-    );
-  }
 
   String _findCategoryName(int? categoryId) {
     String categoryName = 'Unknown';
@@ -166,7 +153,7 @@ class _DualModeCategoryWidgetState extends State<DualModeCategoryWidget> {
     } else {
       try {
         final category =
-        _categoryStore.categories.firstWhere((c) => c.id == categoryId);
+        categoryStore.categories.firstWhere((c) => c.id == categoryId);
         categoryName = category.name;
       } catch (e) {
         _log.warning('Category with id $categoryId not found');

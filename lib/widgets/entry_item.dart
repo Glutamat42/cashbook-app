@@ -35,11 +35,11 @@ class EntryItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(_formatAmount(entry.amount),
+            Text(_formatAmount(entry.amount, entry.isIncome),
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: _amountColor(entry.amount))),
+                    color: entry.isIncome ? Colors.green : Colors.red)),
             const SizedBox(height: 4),
             Text(_formatDate(entry.date)),
           ],
@@ -48,16 +48,12 @@ class EntryItem extends StatelessWidget {
     );
   }
 
-  String _formatAmount(int? amount) {
+  String _formatAmount(int? amount, bool isIncome) {
     if (amount == null) {
       return "";
     }
     final double amountInEuros = amount / 100;
-    return '${amount >= 0 ? '+' : ''}${amountInEuros.toStringAsFixed(2)}€';
-  }
-
-  Color _amountColor(int? amount) {
-    return amount != null && amount > 0 ? Colors.green : Colors.red;
+    return '${isIncome ? '+' : '-'}${amountInEuros.toStringAsFixed(2)}€';
   }
 
   String _formatDate(DateTime? date) {

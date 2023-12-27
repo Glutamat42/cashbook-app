@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'flexible_detail_item_view.dart';
+
+enum AmountType { income, expense }
 
 class DualModeAmountWidget extends StatelessWidget {
   final bool isEditMode;
   final bool isIncome;
   final int? amount;
   final Function(int?, bool) onChanged;
+  final FormFieldValidator<String>? validator;
 
   const DualModeAmountWidget({
     Key? key,
@@ -13,6 +17,7 @@ class DualModeAmountWidget extends StatelessWidget {
     required this.isIncome,
     required this.amount,
     required this.onChanged,
+    this.validator,
   }) : super(key: key);
 
   double? _centToEuro(int? amountInCents) {
@@ -39,7 +44,10 @@ class DualModeAmountWidget extends StatelessWidget {
         ? _buildAmountEdit()
         : FlexibleDetailItemView(
             title: 'Amount:',
-            rightWidget: Text(_formatAmount(_centToEuro(amount))),
+            rightWidget: Text(
+              (isIncome ? "+" : "-") + _formatAmount(_centToEuro(amount)),
+              style: TextStyle(color: isIncome ? Colors.green : Colors.red),
+            ),
           );
   }
 
@@ -48,39 +56,58 @@ class DualModeAmountWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FlexibleDetailItemView(
-          title: 'Transaction Type:',
-          rightWidget: ToggleButtons(  // TODO: replace with something more clear
-            isSelected: [isIncome, !isIncome],
-            onPressed: (index) {
-              _updateIsIncome(index == 0);
-            },
-            children: const [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Income'),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Expense'),
-              ),
-            ],
-          ),
-        ),
+            title: 'Transaction Type:',
+            rightWidget: Column(
+              children: <Widget>[
+                RadioListTile<bool>(
+                  title: const Text('Income'),
+                  value: true,
+                  groupValue: isIncome,
+                  onChanged: (_) {
+                    _updateIsIncome(true);
+                  },
+                ),
+                RadioListTile<bool>(
+                  title: const Text('Expense'),
+                  value: true,
+                  groupValue: !isIncome,
+                  onChanged: (_) {
+                    _updateIsIncome(false);
+                  },
+                ),
+              ],
+            )
+
+            // ToggleButtons(  // TODO: replace with something more clear
+            //   isSelected: [isIncome, !isIncome],
+            //   onPressed: (index) {
+            //     _updateIsIncome(index == 0);
+            //   },
+            //   children: const [
+            //     Padding(
+            //       padding: EdgeInsets.symmetric(horizontal: 16),
+            //       child: Text('Income'),
+            //     ),
+            //     Padding(
+            //       padding: EdgeInsets.symmetric(horizontal: 16),
+            //       child: Text('Expense'),
+            //     ),
+            //   ],
+            // ),
+            ),
         TextFormField(
-          initialValue:
-              _centToEuro(amount) == null ? "" : _centToEuro(amount)!.toStringAsFixed(2),
+          initialValue: _centToEuro(amount) == null
+              ? ""
+              : _centToEuro(amount)!.toStringAsFixed(2),
           decoration: const InputDecoration(labelText: 'Amount (€)'),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: _updateAmount,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Amount is required';
-            }
-            if (double.tryParse(value) == null) {
-              return 'Enter a valid number';
-            }
-            return null;
-          },
+          inputFormatters: <TextInputFormatter>[
+            // for below version 2 use this
+            FilteringTextInputFormatter.allow(
+                RegExp(r'^[0-9]*([,.][0-9]{0,2})?')),
+          ],
+          validator: validator,
         ),
       ],
     );

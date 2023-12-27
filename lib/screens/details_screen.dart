@@ -5,7 +5,6 @@ import 'package:logging/logging.dart';
 import '../models/entry.dart';
 import '../models/user.dart';
 import '../stores/user_store.dart';
-import '../stores/category_store.dart';
 import '../services/locator.dart';
 import '../widgets/document_section.dart';
 import '../widgets/dual_mode_amount_widget.dart';
@@ -32,40 +31,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
   final Logger _log = Logger('DetailsScreen');
   bool _isEditMode = false;
   bool _isNew = false;
+  DateTime? _currentlySelectedDate;
+  AutovalidateMode _autoValidate = AutovalidateMode.disabled;
   final UserStore _userStore = locator<UserStore>();
+  final _formKey = GlobalKey<FormState>();
 
-  Future<bool> _showSaveChangesDialog(BuildContext context) async {
-    return (await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Save Changes?'),
-            content: const Text('Do you want to save the changes?'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancel'),
-                onPressed: () =>
-                    // Close dialog and stay in edit mode
-                    Navigator.of(context).pop(false),
-              ),
-              TextButton(
-                child: const Text('Discard'),
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                  _discardChanges(context); // Discard changes
-                },
-              ),
-              TextButton(
-                child: const Text('Save'),
-                onPressed: () {
-                  _saveEntry();
-                  Navigator.of(context).pop(true); // Proceed with saving logic
-                },
-              ),
-            ],
-          ),
-        )) ??
-        false;
-  }
+  final TextEditingController _recipientSenderController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   final EntryStore _entryStore = locator<EntryStore>();
 
@@ -77,65 +49,73 @@ class _DetailsScreenState extends State<DetailsScreen> {
       _isEditMode = true;
     }
     _editableEntry = Entry.fromJson(widget.entry.toJson());
+
+    _recipientSenderController.text = _editableEntry.recipientSender ?? '';
+    _descriptionController.text = _editableEntry.description ?? '';
+
+    _currentlySelectedDate = _editableEntry.date;
   }
 
   @override
   @override
   Widget build(BuildContext context) {
     return PopScope(
-        canPop: !_isEditMode,
-        onPopInvoked: (bool canPop) async {
-          if (_isEditMode) {
-            bool shouldClose = await _showSaveChangesDialog(context);
-            if (shouldClose) {
-              setState(() {
-                _isEditMode = false;
-              });
-              if (_isNew) {
-                if (context.mounted) Navigator.of(context).pop();
-              }
+      canPop: !_isEditMode,
+      onPopInvoked: (bool canPop) async {
+        if (_isEditMode) {
+          bool shouldClose = await _showSaveChangesDialog(context);
+          if (shouldClose) {
+            setState(() {
+              _isEditMode = false;
+            });
+            if (_isNew) {
+              if (context.mounted) Navigator.of(context).pop();
             }
           }
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('Entry Details'),
-            actions: <Widget>[
-              // IconButton(
-              //   icon: Icon(Icons.delete),
-              //     onPressed: onPressed
-              // ),
-              IconButton(
-                icon: Icon(_isEditMode ? Icons.check : Icons.edit),
-                onPressed: () async {
-                  if (_isEditMode) {
-                    _saveEntry();
-                    _isEditMode = false;  // setstate not required here as this change by itself should not trigger rebuild
-                    Navigator.of(context).pop();
-                  } else {
-                    setState(() => _isEditMode = !_isEditMode);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Entry Details'),
+          actions: <Widget>[
+            // IconButton(
+            //   icon: Icon(Icons.delete),
+            //     onPressed: onPressed
+            // ),
+            IconButton(
+              icon: Icon(_isEditMode ? Icons.check : Icons.edit),
+              onPressed: () async {
+                if (_isEditMode) {
+                  if (await _saveEntry()) {
+                    setState(() {
+                      _isEditMode = false;
+                    });
                   }
-                },
-              ),
-            ],
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
+                } else {
+                  setState(() => _isEditMode = !_isEditMode);
+                }
+              },
+            ),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            autovalidateMode: _autoValidate,
             child: ListView(
               children: <Widget>[
                 DualModeTextWidget(
                   isEditMode: _isEditMode,
-                  value: _editableEntry.recipientSender,
-                  onChanged: (val) =>
-                      setState(() => _editableEntry.recipientSender = val),
+                  controller: _recipientSenderController,
                   label: 'Recipient/Sender',
+                  validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
                 ),
                 DualModeTextWidget(
                   isEditMode: _isEditMode,
-                  value: _editableEntry.description,
-                  onChanged: (val) =>
-                      setState(() => _editableEntry.description = val),
+                  controller: _descriptionController,
                   label: 'Description',
+                  validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
                 ),
                 DualModeAmountWidget(
                   isEditMode: _isEditMode,
@@ -148,8 +128,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 ),
                 DualModeDateWidget(
                   isEditMode: _isEditMode,
-                  date: _editableEntry.date,
-                  onChanged: (val) => setState(() => _editableEntry.date = val),
+                  date: _currentlySelectedDate,
+                  onChanged: (date) => setState(() => _currentlySelectedDate = date),
+                  validator: (_) {
+                    if (_currentlySelectedDate == null) {
+                      return 'Please select a date';
+                    }
+                    if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
+                      return 'Date cannot be before year 2000';
+                    }
+                  },
                 ),
                 DocumentSection(
                   isEditable: _isEditMode,
@@ -158,61 +146,82 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 DualModeInvoiceCheckbox(
                   isEditMode: _isEditMode,
                   noInvoice: _editableEntry.noInvoice,
-                  onChanged: (val) =>
-                      setState(() => _editableEntry.noInvoice = val),
+                  onChanged: (val) => setState(() => _editableEntry.noInvoice = val),
                 ),
                 DualModeCategoryWidget(
                   isEditMode: _isEditMode,
                   categoryId: _editableEntry.categoryId,
-                  onChanged: (val) =>
-                      setState(() => _editableEntry.categoryId = val),
+                  onChanged: (newCategoryId) => _editableEntry.categoryId = newCategoryId,
+                  validator: (value) => value == null ? 'Please select a category' : null,
                 ),
                 DualModePaymentMethodWidget(
                   isEditMode: _isEditMode,
                   paymentMethod: _editableEntry.paymentMethod,
-                  onChanged: (val) =>
-                      setState(() => _editableEntry.paymentMethod = val),
+                  onChanged: (val) => setState(() => _editableEntry.paymentMethod = val),
                 ),
                 ..._buildCreatedModifiedInfo(),
               ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _recipientSenderController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   void _discardChanges(context) {
     if (!_isNew) {
       setState(() {
-        _editableEntry =
-            Entry.fromJson(widget.entry.toJson()); // Revert to original state
+        _editableEntry = Entry.fromJson(widget.entry.toJson()); // Revert to original state
       });
     }
   }
 
-  void _saveEntry() async {
-    try {
-      if (_isNew) {
-        await _entryStore.createEntry(_editableEntry);
-        _showSnackbar(context, 'Changes saved successfully', Colors.green);
-      } else {
-        Entry updatedEntry = await _entryStore.updateEntry(_editableEntry);
-        _showSnackbar(context, 'Changes saved successfully', Colors.green);
+  Future<bool> _saveEntry() async {
+    setState(() {
+      _autoValidate = AutovalidateMode.always;
+    });
+    if (_formKey.currentState!.validate()) {
+      try {
+        Entry updatedEntry;
+
+        // assemble updatedEntry from controllers and values
+        _editableEntry.recipientSender = _recipientSenderController.text;
+        _editableEntry.description = _descriptionController.text;
+        _editableEntry.date = _currentlySelectedDate!;
+
+
+        if (_isNew) {
+          updatedEntry = await _entryStore.createEntry(_editableEntry);
+          _showSnackbar(context, 'Entry created successfully', Colors.green);
+        } else {
+          updatedEntry = await _entryStore.updateEntry(_editableEntry);
+          _showSnackbar(context, 'Changes saved successfully', Colors.green);
+        }
         // As _editableEntry might get updated from widget.entry it has to be updated
         widget.entry.updateFrom(updatedEntry);
         setState(() {
           // Update _editableEntry to reflect serverside changes (e.g. id, updatedAt, etc.)
           _editableEntry.updateFrom(updatedEntry);
         });
+      } catch (error) {
+        _showSnackbar(context, 'Failed to save changes: ${error.toString()}', Colors.red);
+        _log.warning('Error saving entry: $error');
+        return false;
       }
-    } catch (error) {
-      _showSnackbar(
-          context, 'Failed to save changes: ${error.toString()}', Colors.red);
-      _log.warning('Error saving entry: $error');
+      return true;
     }
+    _log.info('Form validation failed');
+    return false;
   }
 
-  void _showSnackbar(
-      BuildContext context, String message, Color backgroundColor) {
+  void _showSnackbar(BuildContext context, String message, Color backgroundColor) {
     final snackBar = SnackBar(
       content: Text(message),
       backgroundColor: backgroundColor,
@@ -232,8 +241,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return [
       FlexibleDetailItemView(
         title: 'Created:',
-        rightWidget: Text(
-            '${_formatDateTime(_editableEntry.createdAt)} by $createdByUser'),
+        rightWidget: Text('${_formatDateTime(_editableEntry.createdAt)} by $createdByUser'),
       ),
       FlexibleDetailItemView(
         title: 'Last Modified:',
@@ -265,5 +273,39 @@ class _DetailsScreenState extends State<DetailsScreen> {
       _log.warning('User with id $userId not found');
     }
     return username;
+  }
+
+  Future<bool> _showSaveChangesDialog(BuildContext context) async {
+    return (await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save Changes?'),
+        content: const Text('Do you want to save the changes?'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () =>
+            // Close dialog and stay in edit mode
+            Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: const Text('Discard'),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+              _discardChanges(context); // Discard changes
+            },
+          ),
+          TextButton(
+            child: const Text('Save'),
+            onPressed: () async {
+              if (await _saveEntry()) {
+                if (context.mounted) Navigator.of(context).pop(true);
+              }
+            },
+          ),
+        ],
+      ),
+    )) ??
+        false;
   }
 }

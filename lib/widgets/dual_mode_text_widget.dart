@@ -2,56 +2,38 @@ import 'package:flutter/material.dart';
 
 import 'flexible_detail_item_view.dart';
 
-class DualModeTextWidget extends StatefulWidget {
+class DualModeTextWidget extends StatelessWidget {
   final bool isEditMode;
-  final String value;
-  final Function(String) onChanged;
+  final Function(String)? onChanged;
   final String label;
+  final FormFieldValidator<String>? validator;
+  final TextEditingController controller;
 
   const DualModeTextWidget({
     Key? key,
     required this.isEditMode,
-    required this.value,
-    required this.onChanged,
+    this.onChanged,
     required this.label,
+    required this.controller,
+    this.validator,
   }) : super(key: key);
 
   @override
-  _DualModeTextWidgetState createState() => _DualModeTextWidgetState();
-}
-
-class _DualModeTextWidgetState extends State<DualModeTextWidget> {
-  late TextEditingController _textEditingController;
-
-  @override
-  void initState() {
-    super.initState();
-    _textEditingController = TextEditingController(text: widget.value);
-  }
-
-  @override
-  void dispose() {
-    _textEditingController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return widget.isEditMode
+    return isEditMode
         ? _buildTextEdit()
         : FlexibleDetailItemView(
-            title: widget.label,
-            rightWidget: Text(widget.value),
+            title: label,
+            rightWidget: Text(controller.text),
           );
   }
 
   Widget _buildTextEdit() {
     return TextFormField(
-      controller: _textEditingController,
-      decoration: InputDecoration(labelText: widget.label),
-      onChanged: widget.onChanged,
-      validator: (value) =>
-          value == null || value.isEmpty ? 'This field cannot be empty' : null,
+      controller: controller,
+      decoration: InputDecoration(labelText: label),
+      onChanged: onChanged,
+      validator: validator,
     );
   }
 }
