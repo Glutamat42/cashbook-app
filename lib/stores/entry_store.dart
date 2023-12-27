@@ -1,6 +1,6 @@
 import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
-import '../models/document.dart';
+import '../models/remote_document.dart';
 import '../models/entry.dart';
 import '../repositories/documents_repository.dart';
 import '../repositories/entries_repository.dart';
@@ -27,7 +27,7 @@ abstract class _EntryStore with Store {
   List<Entry> allEntries = <Entry>[];
 
   @observable
-  ObservableMap<int, ObservableList<Document>> entryDocuments = ObservableMap<int, ObservableList<Document>>();
+  ObservableMap<int, ObservableList<RemoteDocument>> entryDocuments = ObservableMap<int, ObservableList<RemoteDocument>>();
 
   @observable
   SortField currentSortField = SortField.date;
@@ -39,13 +39,15 @@ abstract class _EntryStore with Store {
   Map<FilterField, dynamic> currentFilters = {};
 
   @action
-  Future<void> loadDocumentsForEntry(int entryId) async {
+  Future<ObservableList<RemoteDocument>> loadDocumentsForEntry(int entryId) async {
     try {
       var docs = await _documentsRepository.getDocumentsByEntryId(entryId);
-      entryDocuments[entryId] = ObservableList<Document>.of(docs);
+      entryDocuments[entryId] = ObservableList<RemoteDocument>.of(docs);
     } catch (e) {
       _logger.severe('Failed to load documents for entry $entryId: $e');
+      entryDocuments[entryId] = ObservableList<RemoteDocument>.of([]);
     }
+    return entryDocuments[entryId]!;
   }
 
   @action
@@ -60,8 +62,8 @@ abstract class _EntryStore with Store {
     }
   }
 
-  ObservableList<Document> getDocumentsForEntry(int entryId) =>
-      entryDocuments[entryId] != null ? entryDocuments[entryId]! : ObservableList<Document>.of([]);
+  ObservableList<RemoteDocument> getDocumentsForEntry(int entryId) =>
+      entryDocuments[entryId] != null ? entryDocuments[entryId]! : ObservableList<RemoteDocument>.of([]);
 
   @action
   Future<void> loadEntries() async {

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../models/document.dart';
 import 'full_screen_image_viewer.dart';
@@ -5,15 +6,11 @@ import 'full_screen_image_viewer.dart';
 class DocumentGalleryViewer extends StatefulWidget {
   final int initialIndex;
   final List<Document> documents;
-  final String token;
-  final String baseUrl;
 
   const DocumentGalleryViewer({
     Key? key,
     required this.initialIndex,
     required this.documents,
-    required this.token,
-    required this.baseUrl,
   }) : super(key: key);
 
   @override
@@ -35,7 +32,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Document Gallery'),
+        title: Text(widget.documents[_currentIndex].originalFilename ?? "Document"),
         actions: [
           IconButton(
             icon: Icon(Icons.share),
@@ -60,8 +57,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
           });
         },
         itemBuilder: (context, index) {
-          String imageUrl = '${widget.baseUrl}/${widget.documents[index].documentLink}';
-          return FullScreenImageViewer(imageUrl: imageUrl, token: widget.token, filename: widget.documents[index].originalFilename ?? "");
+          return FullScreenImageViewer(document: widget.documents[index]);
         },
       ),
     );
