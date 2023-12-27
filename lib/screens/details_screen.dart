@@ -15,8 +15,6 @@ import '../widgets/dual_mode_payment_method_widget.dart';
 import '../widgets/dual_mode_text_widget.dart';
 import '../widgets/flexible_detail_item_view.dart';
 
-// todo: form validation
-
 class DetailsScreen extends StatefulWidget {
   final Entry entry;
 
@@ -255,7 +253,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       return 'Not modified since creation';
     } else {
       String modifiedByUser = _findUserName(_editableEntry.userIdLastModified);
-      return 'Last Modified: ${_formatDateTime(_editableEntry.updatedAt)} by $modifiedByUser';
+      return '${_formatDateTime(_editableEntry.updatedAt)} by $modifiedByUser';
     }
   }
 

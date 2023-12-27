@@ -67,7 +67,6 @@ abstract class _AuthStore with Store {
     } catch (e) {
       isLoggedIn = false;
       user = null;
-      baseUrl = null;
       rethrow; // Re-throw the error
     }
   }
@@ -80,6 +79,5 @@ abstract class _AuthStore with Store {
     await prefs.remove('authToken');
     await prefs.remove('userId');
     await prefs.remove('username');
-    await prefs.remove('baseUrl');
   }
 }

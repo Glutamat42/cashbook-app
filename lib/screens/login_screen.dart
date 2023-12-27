@@ -14,7 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _serverController = TextEditingController();
+  late String _serverInputValue;
 
   bool get _isFormValid => _formKey.currentState?.validate() ?? false;
   bool _usernameTouched = false;
@@ -29,10 +29,15 @@ class _LoginScreenState extends State<LoginScreen> {
   ];
 
   @override
+  void initState() {
+    _serverInputValue = _authStore.baseUrl ?? '';
+    super.initState();
+  }
+
+  @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
-    _serverController.dispose();
     super.dispose();
   }
 
@@ -85,7 +90,11 @@ class _LoginScreenState extends State<LoginScreen> {
               validator: (value) => _passwordTouched && (value?.trim().isEmpty == true) ? 'Password is required' : null,
               onFieldSubmitted: (_) => _performLogin()),
           Autocomplete<String>(
+            initialValue: TextEditingValue(text: _serverInputValue),
             optionsBuilder: (TextEditingValue textEditingValue) {
+              setState(() {
+                _serverInputValue = textEditingValue.text;
+              });
               if (textEditingValue.text.isEmpty) {
                 return _predefinedServers;
               }
@@ -95,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
             },
             onSelected: (String selection) {
               setState(() {
-                _serverController.text = selection;
+                _serverInputValue = selection;
               });
             },
             fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
@@ -130,9 +139,9 @@ class _LoginScreenState extends State<LoginScreen> {
           title: Text(_predefinedServers[index]),
           onTap: () {
             // Set the server input field to the selected server
-            setState(() {
-              _serverController.text = _predefinedServers[index];
-            });
+            // setState(() {
+            //   _serverController.text = _predefinedServers[index];
+            // });
           },
         );
       },
@@ -142,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _performLogin() async {
     ScaffoldMessengerState scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
-      await _authStore.login(_usernameController.text, _passwordController.text, _serverController.text);
+      await _authStore.login(_usernameController.text, _passwordController.text, _serverInputValue);
     } catch (e) {
       scaffoldMessenger.showSnackBar(
         SnackBar(content: Text('Login Failed: ${e.toString()}')),
