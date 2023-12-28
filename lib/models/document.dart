@@ -1,14 +1,8 @@
 abstract class Document {
   int? id;
-  int entryId;
+  int? entryId;  // does not exist for new entries
   String? originalFilename;
   bool deleted = false;
-
-  String get thumbnailLink;
-
-  String get documentLink;
-
-  String get originalLink;
 
   Document({this.id, required this.entryId, this.originalFilename});
 

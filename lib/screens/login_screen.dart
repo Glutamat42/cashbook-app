@@ -68,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         children: <Widget>[
           TextFormField(
+              autofillHints: const [AutofillHints.username],
               controller: _usernameController,
               decoration: const InputDecoration(labelText: 'Username'),
               keyboardType: TextInputType.emailAddress,
@@ -75,10 +76,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 setState(() {
                   _usernameTouched = true;
                 });
-              },              // Update UI on text change
+              },
+              // Update UI on text change
               validator: (value) => _usernameTouched && (value?.trim().isEmpty == true) ? 'Username is required' : null,
               onFieldSubmitted: (_) => _performLogin()),
           TextFormField(
+              autofillHints: const [AutofillHints.password],
               controller: _passwordController,
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
@@ -86,7 +89,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 setState(() {
                   _passwordTouched = true;
                 });
-              },              // Update UI on text change
+              },
+              // Update UI on text change
               validator: (value) => _passwordTouched && (value?.trim().isEmpty == true) ? 'Password is required' : null,
               onFieldSubmitted: (_) => _performLogin()),
           Autocomplete<String>(
@@ -107,8 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 _serverInputValue = selection;
               });
             },
-            fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+            fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController,
+                FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
               return TextFormField(
+                autofillHints: const [AutofillHints.url],
                 controller: fieldTextEditingController,
                 focusNode: fieldFocusNode,
                 decoration: const InputDecoration(labelText: 'Server'),

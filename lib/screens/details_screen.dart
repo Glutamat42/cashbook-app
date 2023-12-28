@@ -149,7 +149,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 DualModeCategoryWidget(
                   isEditMode: _isEditMode,
                   categoryId: _editableEntry.categoryId,
-                  onChanged: (newCategoryId) => _editableEntry.categoryId = newCategoryId,
+                  onChanged: (newCategoryId) => setState(() => _editableEntry.categoryId = newCategoryId),
                   validator: (value) => value == null ? 'Please select a category' : null,
                 ),
                 DualModePaymentMethodWidget(

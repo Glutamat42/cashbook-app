@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cashbook/stores/entry_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,7 +8,8 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logging/logging.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:mime/mime.dart';
+import 'package:mime/mime.dart' as mime;
+import '../utils/helpers.dart';
 import '../models/document.dart';
 import '../models/local_document.dart';
 import '../models/remote_document.dart';
@@ -15,14 +17,12 @@ import '../services/locator.dart';
 import '../stores/auth_store.dart';
 import 'document_gallery_viewer.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 
 class DocumentSection extends StatefulWidget {
   final int? entryId;
   final bool isEditable;
 
-  const DocumentSection({Key? key, required this.entryId, this.isEditable = false})
-      : super(key: key);
+  const DocumentSection({Key? key, required this.entryId, this.isEditable = false}) : super(key: key);
 
   @override
   State<DocumentSection> createState() => _DocumentSectionState();
@@ -46,16 +46,21 @@ class _DocumentSectionState extends State<DocumentSection> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: loadDocumentsFuture,
-      builder: (context, data) {
-        if (data.connectionState == ConnectionState.done) {
-          return _buildDocumentSection(context);
-        } else {
-          return const Center(child: CircularProgressIndicator());
-        }
-      },
-    );
+    if (isNew) {
+      return _buildDocumentSection(context);
+    } else {
+      return FutureBuilder(
+        future: loadDocumentsFuture,
+        builder: (context, data) {
+          if (data.connectionState == ConnectionState.done) {
+            return _buildDocumentSection(context);
+          } else {
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      );
+      ;
+    }
   }
 
   Widget _buildDocumentSection(BuildContext context) {
@@ -64,8 +69,7 @@ class _DocumentSectionState extends State<DocumentSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Text('Documents (Images, PDFs)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Documents (Images, PDFs)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Observer(
             builder: (_) {
@@ -81,8 +85,7 @@ class _DocumentSectionState extends State<DocumentSection> {
                     if (widget.isEditable && index == 0) {
                       return _buildAddButton(context);
                     }
-                    int docIndex =
-                        widget.isEditable ? index - 1 : index; // Adjust index if in editable mode
+                    int docIndex = widget.isEditable ? index - 1 : index; // Adjust index if in editable mode
                     return _buildThumbnailTile(documents, docIndex, context);
                   },
                 ),
@@ -108,14 +111,11 @@ class _DocumentSectionState extends State<DocumentSection> {
   }
 
   Future<void> _addDocument(BuildContext context) async {
-    if (kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.linux ||
-            defaultTargetPlatform == TargetPlatform.windows ||
-            defaultTargetPlatform == TargetPlatform.macOS)) {
+    if (Helpers.isDesktopWebBrowser) {
       // Directly open file dialog for desktop web platforms
-      final pickedFile = await FilePicker.platform.pickFiles();
-      if (pickedFile != null && pickedFile.files.single.path != null) {
-        _uploadDocument(pickedFile.files.single.path!, context, widget.entryId!);
+      final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();
+      if (pickedFile != null) {
+        _newDocumentOpened(pickedFile.files.single.bytes!, pickedFile.files.single.name, context, widget.entryId);
       }
     } else {
       _showMobileAddDocumentOptions(context);
@@ -135,9 +135,9 @@ class _DocumentSectionState extends State<DocumentSection> {
                   title: const Text('Gallery'),
                   onTap: () async {
                     Navigator.pop(context);
-                    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
                     if (pickedFile != null) {
-                      _uploadDocument(pickedFile.path, context, widget.entryId!);
+                      _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, widget.entryId);
                     }
                   }),
               ListTile(
@@ -145,9 +145,9 @@ class _DocumentSectionState extends State<DocumentSection> {
                   title: const Text('Camera'),
                   onTap: () async {
                     Navigator.pop(context);
-                    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+                    final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
                     if (pickedFile != null) {
-                      _uploadDocument(pickedFile.path, context, widget.entryId!);
+                      _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, widget.entryId);
                     }
                   }),
               ListTile(
@@ -156,23 +156,15 @@ class _DocumentSectionState extends State<DocumentSection> {
                   onTap: () async {
                     Navigator.pop(context);
                     try {
-                      final pickedFile = await FilePicker.platform.pickFiles(
+                      final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(
                         type: FileType.custom,
-                        allowedExtensions: [
-                          'pdf',
-                          'jpg',
-                          'jpeg',
-                          'png',
-                          'gif',
-                          'bmp',
-                          'tiff',
-                          'tif',
-                          'webp',
-                          'avif'
-                        ],
+                        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'avif'],
                       );
-                      if (pickedFile != null && pickedFile.files.single.path != null) {
-                        _uploadDocument(pickedFile.files.single.path!, context, widget.entryId!);
+                      if (pickedFile != null && // TODO
+                          (pickedFile.files.single.bytes != null || pickedFile.files.single.path != null)) {
+                        Uint8List bytes =
+                            pickedFile.files.single.bytes ?? File(pickedFile.files.single.path!).readAsBytesSync();
+                        _newDocumentOpened(bytes, pickedFile.files.single.name, context, widget.entryId);
                       }
                     } on PlatformException catch (e) {
                       if (e.code == 'read_external_storage_denied') {
@@ -238,29 +230,37 @@ class _DocumentSectionState extends State<DocumentSection> {
 
   Widget _buildImage(Document document, String baseUrl, String token) {
     if (document is RemoteDocument) {
-      return Image.network(
-        '$baseUrl/${document.thumbnailLink}',
-        headers: {'Authorization': 'Bearer $token'},
+      return CachedNetworkImage(
+        imageUrl: '$baseUrl/${document.thumbnailLink}',
+        httpHeaders: {'Authorization': 'Bearer $token'},
         fit: BoxFit.cover,
       );
     } else {
-      if (lookupMimeType(document.thumbnailLink) == 'application/pdf') {
+      if (_getMimeType((document as LocalDocument).originalBinaryData) == 'application/pdf') {
         return const Icon(Symbols.picture_as_pdf);
       }
-      return Image.file(
-        File(document.thumbnailLink),
+      return Image.memory(
+        document.thumbnailBinaryData,
         fit: BoxFit.cover,
       );
     }
   }
 
-  void _uploadDocument(String filePath, BuildContext context, int entryId) {
+  String? _getMimeType(List<int> binaryFileData) {
+    final List<int> header = binaryFileData.sublist(0, mime.defaultMagicNumbersMaxLength);
+
+    // Empty string for the file name because it's not relevant.
+    return mime.lookupMimeType('', headerBytes: header);
+  }
+
+  void _newDocumentOpened(Uint8List fileData, String filename, BuildContext context, int? entryId) {
     setState(() {
-      documents.add(LocalDocument(filePath: filePath, id: -(documents.length - 1), entryId: entryId));
+      documents.add(LocalDocument(
+          originalFilename: filename, fileBytes: fileData, id: _generateLikelyUniqueDocumentId(), entryId: entryId));
     });
-    _log.info('Uploading document: $filePath');
-    // Implement the logic to upload the document
-    // After uploading, update the EntryStore with the new document
-    // e.g., entryStore.addDocumentToEntry(entryId, uploadedDocument);
+  }
+
+  int _generateLikelyUniqueDocumentId() {
+    return -(int.parse("${DateTime.now().millisecondsSinceEpoch}${documents.length + 1}"));
   }
 }

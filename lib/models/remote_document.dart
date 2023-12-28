@@ -4,13 +4,10 @@ class RemoteDocument extends Document {
   String? createdAt;
   String? updatedAt;
 
-  @override
   String get thumbnailLink => 'api/documents/$id/thumbnail';
 
-  @override
   String get documentLink => 'api/documents/$id';
 
-  @override
   String get originalLink => 'api/documents/$id/original';
 
   RemoteDocument({id, entryId, originalFilename, this.createdAt, this.updatedAt}) : super(id: id, entryId: entryId, originalFilename: originalFilename);

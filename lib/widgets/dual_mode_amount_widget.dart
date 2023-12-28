@@ -25,9 +25,16 @@ class DualModeAmountWidget extends StatelessWidget {
   }
 
   int? _euroToCent(String? amountInEuros) {
-    return amountInEuros == null
-        ? null
-        : (double.parse(amountInEuros) * 100).round();
+    if (amountInEuros == null || amountInEuros.isEmpty) {
+      return null;
+    }
+    if (amountInEuros.endsWith(',') || amountInEuros.endsWith('.')) {
+      amountInEuros = amountInEuros + '0';
+    }
+    if (amountInEuros.contains(',')) {
+      amountInEuros = amountInEuros.replaceAll(',', '.');
+    }
+    return (double.parse(amountInEuros) * 100).round();
   }
 
   void _updateAmount(String? value) {
