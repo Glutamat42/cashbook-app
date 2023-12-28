@@ -14,6 +14,4 @@ class DocumentsRepository {
       throw Exception('Failed to load documents: ${e.toString()}');
     }
   }
-
-// ... other methods for handling document-related API calls
 }

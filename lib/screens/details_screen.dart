@@ -1,7 +1,9 @@
+import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+import '../models/document.dart';
 import '../models/entry.dart';
 import '../models/user.dart';
 import '../stores/user_store.dart';
@@ -32,31 +34,38 @@ class _DetailsScreenState extends State<DetailsScreen> {
   DateTime? _currentlySelectedDate;
   AutovalidateMode _autoValidate = AutovalidateMode.disabled;
   final UserStore _userStore = locator<UserStore>();
+  final EntryStore _entryStore = locator<EntryStore>();
+  final CategoryStore _categoryStore = locator<CategoryStore>();
   final _formKey = GlobalKey<FormState>();
+  late List<Document> documents = [];
+  late Future loadDocumentsFuture;
+  late Entry entry;
 
   final TextEditingController _recipientSenderController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-
-  final EntryStore _entryStore = locator<EntryStore>();
-
   @override
   void initState() {
-    super.initState();
-    _isNew = widget.entry.id == null;
+    entry = _entryStore.allEntries.firstWhere((e) => e.id == widget.entry.id);
+    _isNew = entry.id == null;
     if (_isNew) {
       _isEditMode = true;
+      loadDocumentsFuture = Future.value([]);
+    } else {
+      loadDocumentsFuture = _entryStore.loadDocumentsForEntry(entry.id!);
     }
-    _editableEntry = Entry.fromJson(widget.entry.toJson());
+    _editableEntry = Entry.fromJson(entry.toJson());
 
     _recipientSenderController.text = _editableEntry.recipientSender ?? '';
     _descriptionController.text = _editableEntry.description ?? '';
 
     _currentlySelectedDate = _editableEntry.date;
+    super.initState();
   }
 
-  @override
+
   @override
   Widget build(BuildContext context) {
+    _log.fine('InitState, entry: ${entry.toJson()}');
     return PopScope(
       canPop: !_isEditMode,
       onPopInvoked: (bool canPop) async {
@@ -98,72 +107,120 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            autovalidateMode: _autoValidate,
-            child: ListView(
-              children: <Widget>[
-                DualModeTextWidget(
-                  isEditMode: _isEditMode,
-                  controller: _recipientSenderController,
-                  label: 'Recipient/Sender',
-                  validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
-                ),
-                DualModeTextWidget(
-                  isEditMode: _isEditMode,
-                  controller: _descriptionController,
-                  label: 'Description',
-                  validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
-                ),
-                DualModeAmountWidget(
-                  isEditMode: _isEditMode,
-                  amount: _editableEntry.amount,
-                  isIncome: _editableEntry.isIncome,
-                  onChanged: (amount, isIncome) => setState(() {
-                    _editableEntry.amount = amount;
-                    _editableEntry.isIncome = isIncome;
-                  }),
-                ),
-                DualModeDateWidget(
-                  isEditMode: _isEditMode,
-                  date: _currentlySelectedDate,
-                  onChanged: (date) => setState(() => _currentlySelectedDate = date),
-                  validator: (_) {
-                    if (_currentlySelectedDate == null) {
-                      return 'Please select a date';
-                    }
-                    if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
-                      return 'Date cannot be before year 2000';
-                    }
-                  },
-                ),
-                DocumentSection(
-                  isEditable: _isEditMode,
-                  entryId: _editableEntry.id,
-                ),
-                DualModeInvoiceCheckbox(
-                  isEditMode: _isEditMode,
-                  noInvoice: _editableEntry.noInvoice,
-                  onChanged: (val) => setState(() => _editableEntry.noInvoice = val),
-                ),
-                DualModeCategoryWidget(
-                  isEditMode: _isEditMode,
-                  categoryId: _editableEntry.categoryId,
-                  onChanged: (newCategoryId) => setState(() => _editableEntry.categoryId = newCategoryId),
-                  validator: (value) => value == null ? 'Please select a category' : null,
-                ),
-                DualModePaymentMethodWidget(
-                  isEditMode: _isEditMode,
-                  paymentMethod: _editableEntry.paymentMethod,
-                  onChanged: (val) => setState(() => _editableEntry.paymentMethod = val),
-                ),
-                ..._buildCreatedModifiedInfo(),
-              ],
-            ),
+          child: _isEditMode ? _buildForm() : RefreshIndicator(
+            onRefresh: _refreshData,
+            child: _buildForm(),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildForm() {
+    return Form(
+      key: _formKey,
+      autovalidateMode: _autoValidate,
+      child: ListView(
+        children: <Widget>[
+          DualModeTextWidget(
+            isEditMode: _isEditMode,
+            controller: _recipientSenderController,
+            label: 'Recipient/Sender',
+            validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
+          ),
+          DualModeTextWidget(
+            isEditMode: _isEditMode,
+            controller: _descriptionController,
+            label: 'Description',
+            validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
+          ),
+          DualModeAmountWidget(
+            isEditMode: _isEditMode,
+            amount: _editableEntry.amount,
+            isIncome: _editableEntry.isIncome,
+            onChanged: (amount, isIncome) =>
+                setState(() {
+                  _editableEntry.amount = amount;
+                  _editableEntry.isIncome = isIncome;
+                }),
+          ),
+          DualModeDateWidget(
+            isEditMode: _isEditMode,
+            date: _currentlySelectedDate,
+            onChanged: (date) => setState(() => _currentlySelectedDate = date),
+            validator: (_) {
+              if (_currentlySelectedDate == null) {
+                return 'Please select a date';
+              }
+              if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
+                return 'Date cannot be before year 2000';
+              }
+            },
+          ),
+          FutureBuilder(
+            future: loadDocumentsFuture,
+            builder: (context, data) {
+              bool isLoading = false;
+              if (data.connectionState == ConnectionState.done) {
+                if (documents.isEmpty && !_isNew) {
+                  documents = _entryStore.entryDocuments[entry.id!] ?? [];
+                }
+              } else {
+                isLoading = true;
+              }
+              return DocumentSection(
+                isEditable: _isEditMode,
+                entryId: _editableEntry.id,
+                isLoading: isLoading,
+                documents: documents,
+                onDocumentsChanged: (List<Document> updatedDocuments) {
+                  setState(() => documents = updatedDocuments);
+                },
+              );
+            },
+          ),
+          DualModeInvoiceCheckbox(
+            isEditMode: _isEditMode,
+            noInvoice: _editableEntry.noInvoice,
+            onChanged: (val) => setState(() => _editableEntry.noInvoice = val),
+          ),
+          DualModeCategoryWidget(
+            isEditMode: _isEditMode,
+            categoryId: _editableEntry.categoryId,
+            onChanged: (newCategoryId) => setState(() => _editableEntry.categoryId = newCategoryId),
+            validator: (value) => value == null ? 'Please select a category' : null,
+          ),
+          DualModePaymentMethodWidget(
+            isEditMode: _isEditMode,
+            paymentMethod: _editableEntry.paymentMethod,
+            onChanged: (val) => setState(() => _editableEntry.paymentMethod = val),
+          ),
+          ..._buildCreatedModifiedInfo(),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _refreshData() async {
+    if (_isEditMode) {
+      _log.warning('Refresh data called in edit mode');
+      return; // just ensure this is only called in view mode
+    }
+    try {
+      setState(() {
+        loadDocumentsFuture = _entryStore.loadDocumentsForEntry(entry.id!);
+      });
+      _entryStore.loadEntries().then((value) => setState(() {
+        entry = _entryStore.allEntries.firstWhere((e) => e.id == entry.id);
+        _editableEntry = Entry.fromJson(entry.toJson());
+        _recipientSenderController.text = _editableEntry.recipientSender ?? '';
+        _descriptionController.text = _editableEntry.description ?? '';
+        _currentlySelectedDate = _editableEntry.date;
+      }));
+      _categoryStore.loadCategories();
+    } catch (e) {
+      _log.warning('Error refreshing data: $e');
+    }
   }
 
   @override
@@ -176,7 +233,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   void _discardChanges(context) {
     if (!_isNew) {
       setState(() {
-        _editableEntry = Entry.fromJson(widget.entry.toJson()); // Revert to original state
+        _editableEntry = Entry.fromJson(entry.toJson()); // Revert to original state
       });
     }
   }
@@ -187,23 +244,21 @@ class _DetailsScreenState extends State<DetailsScreen> {
     });
     if (_formKey.currentState!.validate()) {
       try {
-        Entry updatedEntry;
-
-        // assemble updatedEntry from controllers and values
         _editableEntry.recipientSender = _recipientSenderController.text;
         _editableEntry.description = _descriptionController.text;
         _editableEntry.date = _currentlySelectedDate!;
 
 
+        Entry updatedEntry;
         if (_isNew) {
-          updatedEntry = await _entryStore.createEntry(_editableEntry);
+          updatedEntry = await _entryStore.createEntry(_editableEntry, documents);
           _showSnackbar(context, 'Entry created successfully', Colors.green);
         } else {
-          updatedEntry = await _entryStore.updateEntry(_editableEntry);
+          updatedEntry = await _entryStore.updateEntry(_editableEntry, documents);
           _showSnackbar(context, 'Changes saved successfully', Colors.green);
         }
-        // As _editableEntry might get updated from widget.entry it has to be updated
-        widget.entry.updateFrom(updatedEntry);
+        // As _editableEntry might get updated from entry it has to be updated
+        entry.updateFrom(updatedEntry);
         setState(() {
           // Update _editableEntry to reflect serverside changes (e.g. id, updatedAt, etc.)
           _editableEntry.updateFrom(updatedEntry);
@@ -276,33 +331,34 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Future<bool> _showSaveChangesDialog(BuildContext context) async {
     return (await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Save Changes?'),
-        content: const Text('Do you want to save the changes?'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () =>
-            // Close dialog and stay in edit mode
-            Navigator.of(context).pop(false),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text('Save Changes?'),
+            content: const Text('Do you want to save the changes?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () =>
+                // Close dialog and stay in edit mode
+                Navigator.of(context).pop(false),
+              ),
+              TextButton(
+                child: const Text('Discard'),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  _discardChanges(context); // Discard changes
+                },
+              ),
+              TextButton(
+                child: const Text('Save'),
+                onPressed: () async {
+                  if (await _saveEntry()) {
+                    if (context.mounted) Navigator.of(context).pop(true);
+                  }
+                },
+              ),
+            ],
           ),
-          TextButton(
-            child: const Text('Discard'),
-            onPressed: () {
-              Navigator.of(context).pop(true);
-              _discardChanges(context); // Discard changes
-            },
-          ),
-          TextButton(
-            child: const Text('Save'),
-            onPressed: () async {
-              if (await _saveEntry()) {
-                if (context.mounted) Navigator.of(context).pop(true);
-              }
-            },
-          ),
-        ],
-      ),
     )) ??
         false;
   }

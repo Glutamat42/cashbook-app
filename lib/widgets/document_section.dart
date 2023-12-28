@@ -21,26 +21,31 @@ import 'package:file_picker/file_picker.dart';
 class DocumentSection extends StatefulWidget {
   final int? entryId;
   final bool isEditable;
+  final bool isLoading;
+  final List<Document> documents;
+  final Function(List<Document>) onDocumentsChanged;
 
-  const DocumentSection({Key? key, required this.entryId, this.isEditable = false}) : super(key: key);
+  const DocumentSection({
+    Key? key,
+    required this.entryId,
+    this.isEditable = false,
+    required this.isLoading,
+    required this.documents,
+    required this.onDocumentsChanged,
+  }) : super(key: key);
 
   @override
   State<DocumentSection> createState() => _DocumentSectionState();
 }
-
+// TODO: convert to stateless
 class _DocumentSectionState extends State<DocumentSection> {
   final Logger _log = Logger('DocumentSection');
-  final EntryStore _entryStore = locator<EntryStore>();
-  List<Document> documents = [];
   late final isNew;
-  late Future loadDocumentsFuture;
 
   @override
   void initState() {
     isNew = widget.entryId == null;
-    if (!isNew) {
-      loadDocumentsFuture = _entryStore.loadDocumentsForEntry(widget.entryId!);
-    }
+    if (!isNew) {}
     super.initState();
   }
 
@@ -49,20 +54,11 @@ class _DocumentSectionState extends State<DocumentSection> {
     if (isNew) {
       return _buildDocumentSection(context);
     } else {
-      return FutureBuilder(
-        future: loadDocumentsFuture,
-        builder: (context, data) {
-          if (data.connectionState == ConnectionState.done) {
-            if (documents.isEmpty) {
-              documents = _entryStore.entryDocuments[widget.entryId!] ?? [];
-            }
-            return _buildDocumentSection(context);
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
-      );
-      ;
+      if (!widget.isLoading) {
+        return _buildDocumentSection(context);
+      } else {
+        return const Center(child: CircularProgressIndicator());
+      }
     }
   }
 
@@ -77,8 +73,8 @@ class _DocumentSectionState extends State<DocumentSection> {
           Observer(
             builder: (_) {
               int itemCount = widget.isEditable
-                  ? documents.length + 1 // +1 for add button if editable
-                  : documents.length;
+                  ? widget.documents.length + 1 // +1 for add button if editable
+                  : widget.documents.length;
               return Container(
                 height: 100,
                 child: ListView.builder(
@@ -89,7 +85,7 @@ class _DocumentSectionState extends State<DocumentSection> {
                       return _buildAddButton(context);
                     }
                     int docIndex = widget.isEditable ? index - 1 : index; // Adjust index if in editable mode
-                    return _buildThumbnailTile(documents, docIndex, context);
+                    return _buildThumbnailTile(widget.documents, docIndex, context);
                   },
                 ),
               );
@@ -233,9 +229,9 @@ class _DocumentSectionState extends State<DocumentSection> {
 
   Widget _buildImage(Document document, String baseUrl, String token) {
     if (document is RemoteDocument) {
-      return CachedNetworkImage(
-        imageUrl: '$baseUrl/${document.thumbnailLink}',
-        httpHeaders: {'Authorization': 'Bearer $token'},
+      return Image.network(
+        '$baseUrl/${document.thumbnailLink}',
+        headers: {'Authorization': 'Bearer $token'},
         fit: BoxFit.cover,
       );
     } else {
@@ -257,13 +253,23 @@ class _DocumentSectionState extends State<DocumentSection> {
   }
 
   void _newDocumentOpened(Uint8List fileData, String filename, BuildContext context, int? entryId) {
-    setState(() {
-      documents.add(LocalDocument(
-          originalFilename: filename, fileBytes: fileData, id: _generateLikelyUniqueDocumentId(), entryId: entryId));
-    });
+    widget.onDocumentsChanged([
+      ...widget.documents,
+      LocalDocument(
+          originalFilename: filename, fileBytes: fileData, id: _generateLikelyUniqueDocumentId(), entryId: entryId)
+    ]);
+  }
+
+  void _documentDeleted(Document document) {
+    widget.onDocumentsChanged(widget.documents.map((doc) {
+      if (doc.id == document.id) {
+        doc.deleted = true;
+      }
+      return doc;
+    }).toList());
   }
 
   int _generateLikelyUniqueDocumentId() {
-    return -(int.parse("${DateTime.now().millisecondsSinceEpoch}${documents.length + 1}"));
+    return -(int.parse("${DateTime.now().millisecondsSinceEpoch}${widget.documents.length + 1}"));
   }
 }

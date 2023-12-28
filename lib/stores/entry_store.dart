@@ -1,6 +1,6 @@
 import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
-import '../models/remote_document.dart';
+import '../models/document.dart';
 import '../models/entry.dart';
 import '../repositories/documents_repository.dart';
 import '../repositories/entries_repository.dart';
@@ -9,9 +9,7 @@ import '../services/locator.dart';
 part 'entry_store.g.dart';
 
 enum SortField { date, amount, recipient }
-
 enum SortOrder { ascending, descending }
-
 enum FilterField { category, invoiceMissing, searchText }
 
 class EntryStore = _EntryStore with _$EntryStore;
@@ -27,7 +25,7 @@ abstract class _EntryStore with Store {
   List<Entry> allEntries = <Entry>[];
 
   @observable
-  ObservableMap<int, ObservableList<RemoteDocument>> entryDocuments = ObservableMap<int, ObservableList<RemoteDocument>>();
+  ObservableMap<int, ObservableList<Document>> entryDocuments = ObservableMap<int, ObservableList<Document>>();
 
   @observable
   SortField currentSortField = SortField.date;
@@ -38,22 +36,23 @@ abstract class _EntryStore with Store {
   @observable
   Map<FilterField, dynamic> currentFilters = {};
 
+  // TODO: check if return value is required or could be Future<void>
   @action
-  Future<ObservableList<RemoteDocument>> loadDocumentsForEntry(int entryId) async {
+  Future<ObservableList<Document>> loadDocumentsForEntry(int entryId) async {
     try {
       var docs = await _documentsRepository.getDocumentsByEntryId(entryId);
-      entryDocuments[entryId] = ObservableList<RemoteDocument>.of(docs);
+      entryDocuments[entryId] = ObservableList<Document>.of(docs);
     } catch (e) {
       _logger.severe('Failed to load documents for entry $entryId: $e');
-      entryDocuments[entryId] = ObservableList<RemoteDocument>.of([]);
+      entryDocuments[entryId] = ObservableList<Document>.of([]);
     }
     return entryDocuments[entryId]!;
   }
 
   @action
-  Future<Entry> createEntry(Entry newEntry) async {
+  Future<Entry> createEntry(Entry newEntry, List<Document> documents) async {
     try {
-      final createdEntry = await _entriesRepository.createEntry(newEntry.toJson());
+      final createdEntry = await _entriesRepository.createEntry(newEntry, documents);
       visibleEntries.add(createdEntry);
       return createdEntry;
     } catch (e) {
@@ -62,8 +61,24 @@ abstract class _EntryStore with Store {
     }
   }
 
-  ObservableList<RemoteDocument> getDocumentsForEntry(int entryId) =>
-      entryDocuments[entryId] != null ? entryDocuments[entryId]! : ObservableList<RemoteDocument>.of([]);
+  @action
+  Future<Entry> updateEntry(Entry updatedEntry, List<Document> documents) async {
+    try {
+      final entry = await _entriesRepository.updateEntry(updatedEntry.id!, updatedEntry, documents);
+      final index = visibleEntries.indexWhere((e) => e.id == updatedEntry.id);
+      if (index != -1) {
+        visibleEntries.replaceRange(index, index + 1, [entry]);
+      }
+      _applyFilterAndSort();
+      return entry;
+    } catch (e) {
+      _logger.severe('Failed to update entry: $e');
+      throw Exception('Failed to update entry');
+    }
+  }
+
+  ObservableList<Document> getDocumentsForEntry(int entryId) =>
+      entryDocuments[entryId] != null ? entryDocuments[entryId]! : ObservableList<Document>.of([]);
 
   @action
   Future<void> loadEntries() async {
@@ -74,23 +89,6 @@ abstract class _EntryStore with Store {
     }
 
     _applyFilterAndSort();
-  }
-
-  @action
-  Future<Entry> updateEntry(Entry updatedEntry) async {
-    int oldEntryId = updatedEntry.id!;
-    try {
-      final entry = await _entriesRepository.updateEntry(updatedEntry.id!, updatedEntry.toJson());
-      final index = visibleEntries.indexWhere((e) => e.id == oldEntryId);
-      if (index != -1) {
-        visibleEntries.replaceRange(index, index + 1, [entry]);
-        _applyFilterAndSort();
-      }
-      return entry;
-    } catch (e) {
-      _logger.severe('Failed to update entry: $e');
-      throw Exception('Failed to update entry');
-    }
   }
 
   @action
