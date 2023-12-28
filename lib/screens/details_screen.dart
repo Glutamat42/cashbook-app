@@ -45,12 +45,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   @override
   void initState() {
-    entry = _entryStore.allEntries.firstWhere((e) => e.id == widget.entry.id);
-    _isNew = entry.id == null;
+    _isNew = widget.entry.id == null;
     if (_isNew) {
       _isEditMode = true;
       loadDocumentsFuture = Future.value([]);
+      entry = widget.entry; // is new entry, refresh is not relevant here
     } else {
+      entry = _entryStore.allEntries.firstWhere((e) => e.id == widget.entry.id);
       loadDocumentsFuture = _entryStore.loadDocumentsForEntry(entry.id!);
     }
     _editableEntry = Entry.fromJson(entry.toJson());
