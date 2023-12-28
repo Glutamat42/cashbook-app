@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final List<String> _predefinedServers = [
     'http://localhost:8001',
     'http://192.168.2.110:8001',
-    'https://cashbook.markus-heck.dev',
+    'https://cashbook-api.markus-heck.dev',
   ];
 
   @override
