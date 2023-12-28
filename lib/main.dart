@@ -2,6 +2,7 @@ import 'package:cashbook/config/app_config.dart';
 import 'package:cashbook/screens/home_screen.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/auth_store.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'constants/route_names.dart';
@@ -70,6 +71,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Cashbook',
       initialRoute: initialRoute,
+      scrollBehavior: AppScrollBehavior(),
       routes: {
         RouteNames.loginScreen: (context) => LoginScreen(),
         RouteNames.homeScreen: (context) => HomeScreen(),
@@ -96,4 +98,14 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+  };
 }

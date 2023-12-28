@@ -230,12 +230,14 @@ class _DocumentSectionState extends State<DocumentSection> {
 
   Widget _buildImageWithDeletionState(Document document, String baseUrl, String token) {
     if (document.deleted) {
-      return ColorFiltered(
-        colorFilter: const ColorFilter.mode(
-          Colors.grey,
-          BlendMode.saturation,
+      return ClipRect(
+        child: ColorFiltered(
+          colorFilter: const ColorFilter.mode(
+            Colors.grey,
+            BlendMode.saturation,
+          ),
+          child: _buildImage(document, baseUrl, token),
         ),
-        child: _buildImage(document, baseUrl, token),
       );
     } else {
       return _buildImage(document, baseUrl, token);
