@@ -269,6 +269,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
           loadDocumentsFuture = _entryStore.loadDocumentsForEntry(updatedEntry.id!);
         });
       } catch (error) {
+        // TODO: show correct error message if request is too large
+        // glaube da war ein error code der da kommen kann (wenn nginx wert zu klein)
+        // oder das: {"errors":{"document.0":["The document.0 failed to upload."]}}
         _showSnackbar(context, 'Failed to save changes: ${error.toString()}', Colors.red);
         _log.warning('Error saving entry: $error');
         return false;

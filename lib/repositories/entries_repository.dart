@@ -1,3 +1,4 @@
+import 'package:cashbook/models/remote_document.dart';
 import 'package:dio/dio.dart';
 import '../models/document.dart';
 import '../models/entry.dart'; // Assuming you have an Entry model defined
@@ -102,7 +103,7 @@ class EntriesRepository {
   List<int> _getDeletedDocumentIds(List<Document> documents) {
     List<int> deletedDocumentIds = [];
     for (Document doc in documents) {
-      if (doc is LocalDocument && doc.deleted) {
+      if (doc is RemoteDocument && doc.deleted) {
         deletedDocumentIds.add(doc.id!);
       }
     }
