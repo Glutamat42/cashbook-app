@@ -53,6 +53,9 @@ class _DocumentSectionState extends State<DocumentSection> {
         future: loadDocumentsFuture,
         builder: (context, data) {
           if (data.connectionState == ConnectionState.done) {
+            if (documents.isEmpty) {
+              documents = _entryStore.entryDocuments[widget.entryId!] ?? [];
+            }
             return _buildDocumentSection(context);
           } else {
             return const Center(child: CircularProgressIndicator());
