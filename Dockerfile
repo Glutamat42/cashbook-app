@@ -9,7 +9,7 @@ COPY . /app
 
 # Get dependencies and build the web application
 RUN flutter pub get
-RUN flutter packages pub run build_runner build
+RUN flutter packages pub run build_runner build --delete-conflicting-outputs
 RUN flutter build web
 
 # Runner stage

@@ -8,7 +8,8 @@ class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
-
+// TODO: login with invalid credentials shows confusing error (long text with 401) -> improve
+// 405: wrong api url
 class _LoginScreenState extends State<LoginScreen> {
   final AuthStore _authStore = locator<AuthStore>();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();

@@ -235,6 +235,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     if (!_isNew) {
       setState(() {
         _editableEntry = Entry.fromJson(entry.toJson()); // Revert to original state
+        documents = _entryStore.entryDocuments[entry.id!] ?? [];
       });
     }
   }
@@ -258,11 +259,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
           updatedEntry = await _entryStore.updateEntry(_editableEntry, documents);
           _showSnackbar(context, 'Changes saved successfully', Colors.green);
         }
+
         // As _editableEntry might get updated from entry it has to be updated
         entry.updateFrom(updatedEntry);
         setState(() {
           // Update _editableEntry to reflect serverside changes (e.g. id, updatedAt, etc.)
           _editableEntry.updateFrom(updatedEntry);
+          // refresh documents
+          loadDocumentsFuture = _entryStore.loadDocumentsForEntry(updatedEntry.id!);
         });
       } catch (error) {
         _showSnackbar(context, 'Failed to save changes: ${error.toString()}', Colors.red);

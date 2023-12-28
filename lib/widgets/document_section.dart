@@ -1,13 +1,10 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cashbook/stores/entry_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logging/logging.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:mime/mime.dart' as mime;
 import '../utils/helpers.dart';
 import '../models/document.dart';
@@ -37,6 +34,7 @@ class DocumentSection extends StatefulWidget {
   @override
   State<DocumentSection> createState() => _DocumentSectionState();
 }
+
 // TODO: convert to stateless
 class _DocumentSectionState extends State<DocumentSection> {
   final Logger _log = Logger('DocumentSection');
@@ -216,6 +214,8 @@ class _DocumentSectionState extends State<DocumentSection> {
             initialIndex: index,
             documents: documents,
             showDeleteButton: widget.isEditable,
+            onDocumentDeleted: widget.isEditable ? (int id) => _documentDeletedChanged(id, true) : null,
+            onDocumentUndeleted: widget.isEditable ? (int id) => _documentDeletedChanged(id, false) : null,
           ),
         ));
       },
@@ -223,9 +223,23 @@ class _DocumentSectionState extends State<DocumentSection> {
         width: 100,
         margin: const EdgeInsets.only(right: 8),
         color: Colors.grey[300],
-        child: _buildImage(document, authStore.baseUrl!, token),
+        child: _buildImageWithDeletionState(document, authStore.baseUrl!, token),
       ),
     );
+  }
+
+  Widget _buildImageWithDeletionState(Document document, String baseUrl, String token) {
+    if (document.deleted) {
+      return ColorFiltered(
+        colorFilter: const ColorFilter.mode(
+          Colors.grey,
+          BlendMode.saturation,
+        ),
+        child: _buildImage(document, baseUrl, token),
+      );
+    } else {
+      return _buildImage(document, baseUrl, token);
+    }
   }
 
   Widget _buildImage(Document document, String baseUrl, String token) {
@@ -237,7 +251,7 @@ class _DocumentSectionState extends State<DocumentSection> {
       );
     } else {
       if (_getMimeType((document as LocalDocument).originalBinaryData) == 'application/pdf') {
-        return const Icon(Symbols.picture_as_pdf);
+        return Image.asset('/assets/images/icon-picture_as_pdf.png');
       }
       return Image.memory(
         document.thumbnailBinaryData,
@@ -261,10 +275,10 @@ class _DocumentSectionState extends State<DocumentSection> {
     ]);
   }
 
-  void _documentDeleted(Document document) {
+  void _documentDeletedChanged(int documentId, bool isDeleted) {
     widget.onDocumentsChanged(widget.documents.map((doc) {
-      if (doc.id == document.id) {
-        doc.deleted = true;
+      if (doc.id == documentId) {
+        doc.deleted = isDeleted;
       }
       return doc;
     }).toList());

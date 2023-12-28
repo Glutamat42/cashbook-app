@@ -1,6 +1,6 @@
 # cashbook
 
-generate mobx files: flutter packages pub run build_runner build
+generate mobx files: flutter packages pub run build_runner build --delete-conflicting-outputs
 
 dev.markus-heck
 

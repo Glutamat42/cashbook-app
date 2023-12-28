@@ -49,7 +49,16 @@ abstract class _EntryStore with Store {
     return entryDocuments[entryId]!;
   }
 
+
   @action
+  /// Same as loadDocumentsForEntry but deletes all documents (including local) before loading
+  Future<ObservableList<Document>> refreshDocumentsForEntry(int entryId) async {
+    entryDocuments[entryId] = ObservableList<Document>.of([]);
+    return loadDocumentsForEntry(entryId);
+  }
+
+
+    @action
   Future<Entry> createEntry(Entry newEntry, List<Document> documents) async {
     try {
       final createdEntry = await _entriesRepository.createEntry(newEntry, documents);

@@ -1,6 +1,7 @@
 import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/stores/auth_store.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import '../services/locator.dart';
 import '../models/document.dart';
 import '../models/remote_document.dart';
@@ -17,12 +18,16 @@ class DocumentGalleryViewer extends StatefulWidget {
   final int initialIndex;
   final List<Document> documents;
   final bool showDeleteButton;
+  final Function(int)? onDocumentDeleted;
+  final Function(int)? onDocumentUndeleted;
 
   const DocumentGalleryViewer({
     Key? key,
     required this.initialIndex,
     required this.documents,
     required this.showDeleteButton,
+    this.onDocumentDeleted,
+    this.onDocumentUndeleted,
   }) : super(key: key);
 
   @override
@@ -30,6 +35,7 @@ class DocumentGalleryViewer extends StatefulWidget {
 }
 
 class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
+  final Logger _log = Logger('_DocumentGalleryViewerState');
   late PageController _pageController;
   late int _currentIndex;
   final AuthStore authStore = locator<AuthStore>();
@@ -47,22 +53,15 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
       appBar: AppBar(
         title: Text(widget.documents[_currentIndex].originalFilename ?? "Document"),
         actions: [
-          widget.documents[_currentIndex] is RemoteDocument
-              ? IconButton(
-                  icon: Icon(Icons.share),
-                  onPressed: () {
-                    // Implement share functionality for _currentIndex document
-                  },
-                )
-              : Container(),
-          widget.showDeleteButton
-              ? IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () {
-                    // Implement delete functionality for _currentIndex document
-                  },
-                )
-              : Container(),
+          // widget.documents[_currentIndex] is RemoteDocument
+          //     ? IconButton(
+          //         icon: Icon(Icons.share),
+          //         onPressed: () {
+          //           // Implement share functionality for _currentIndex document
+          //         },
+          //       )
+          //     : Container(),
+          _buildDeleteButton(),
           PopupMenuButton<String>(
             onSelected: _handleMenuSelection,
             itemBuilder: (BuildContext context) {
@@ -85,10 +84,48 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
           });
         },
         itemBuilder: (context, index) {
-          return FullScreenImageViewer(document: widget.documents[index]);
+          return _buildFullScreenImageViewerWithDeletionState(widget.documents[index]);
         },
       ),
     );
+  }
+
+  Widget _buildFullScreenImageViewerWithDeletionState(Document document) {
+    if (widget.documents[_currentIndex].deleted) {
+      return ColorFiltered(
+        colorFilter: const ColorFilter.mode(
+          Colors.grey,
+          BlendMode.saturation,
+        ),
+        child: FullScreenImageViewer(document: widget.documents[_currentIndex]),
+      );
+    } else {
+      return FullScreenImageViewer(document: widget.documents[_currentIndex]);
+    }
+  }
+
+  Widget _buildDeleteButton() {
+    if (widget.showDeleteButton && widget.onDocumentDeleted != null && widget.onDocumentUndeleted != null) {
+      if (widget.documents[_currentIndex].deleted) {
+        return IconButton(
+          icon: const Icon(Icons.undo),
+          onPressed: () {
+            widget.onDocumentUndeleted!(widget.documents[_currentIndex].id!);
+            setState(() {}); // TODO: not really happy with this, it should update without it
+          },
+        );
+      } else {
+        return IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: () {
+            widget.onDocumentDeleted!(widget.documents[_currentIndex].id!);
+            setState(() {}); // TODO: not really happy with this, it should update without it
+          },
+        );
+      }
+    } else {
+      return Container();
+    }
   }
 
   void _handleMenuSelection(String choice) {
@@ -98,10 +135,13 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
   }
 
   String? _getMimeType(List<int> binaryFileData) {
+    _log.finest('Binary file data length: ${binaryFileData.length}');
     final List<int> header = binaryFileData.sublist(0, mime.defaultMagicNumbersMaxLength);
 
     // Empty string for the file name because it's not relevant.
-    return mime.lookupMimeType('', headerBytes: header);
+    String? mimeType = mime.lookupMimeType('', headerBytes: header);
+    _log.fine('Mime type: $mimeType');
+    return mimeType;
   }
 
   Future<void> _downloadAndShareOriginal() async {
@@ -114,8 +154,8 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
 
     if (currentDocument is RemoteDocument) {
       // Download the file for mobile platforms
-      final response = await http
-          .get(Uri.parse(currentDocument.documentLink), headers: {"Authorization": "Bearer ${authStore.user!.token}"});
+      final response = await http.get(Uri.parse("${authStore.baseUrl!}/${currentDocument.originalLink}"),
+          headers: {"Authorization": "Bearer ${authStore.user!.token}"});
       fileBytes = response.bodyBytes;
     } else {
       // Local file
