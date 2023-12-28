@@ -16,11 +16,13 @@ import 'package:cashbook/utils/downloads/share_mobile.dart'
 class DocumentGalleryViewer extends StatefulWidget {
   final int initialIndex;
   final List<Document> documents;
+  final bool showDeleteButton;
 
   const DocumentGalleryViewer({
     Key? key,
     required this.initialIndex,
     required this.documents,
+    required this.showDeleteButton,
   }) : super(key: key);
 
   @override
@@ -53,12 +55,14 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
                   },
                 )
               : Container(),
-          IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () {
-              // Implement delete functionality for _currentIndex document
-            },
-          ),
+          widget.showDeleteButton
+              ? IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    // Implement delete functionality for _currentIndex document
+                  },
+                )
+              : Container(),
           PopupMenuButton<String>(
             onSelected: _handleMenuSelection,
             itemBuilder: (BuildContext context) {

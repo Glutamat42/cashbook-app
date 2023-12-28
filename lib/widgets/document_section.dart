@@ -215,6 +215,7 @@ class _DocumentSectionState extends State<DocumentSection> {
           builder: (context) => DocumentGalleryViewer(
             initialIndex: index,
             documents: documents,
+            showDeleteButton: widget.isEditable,
           ),
         ));
       },
