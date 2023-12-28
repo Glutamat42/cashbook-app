@@ -18,6 +18,9 @@ FROM nginx:alpine
 # Copy the built app from the builder stage to the nginx server
 COPY --from=builder /app/build/web /usr/share/nginx/html
 
+# Copy the nginx configuration file
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Set environment variables (replace these with the actual values or pass them at runtime)
 ENV API_BASE_URL="http://192.168.2.110:8001"
 ENV LOG_LEVEL="INFO"
