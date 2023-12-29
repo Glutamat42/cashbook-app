@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/entry.dart';
 import '../screens/details_screen.dart';
+import '../services/locator.dart';
+import '../stores/entry_store.dart';
 
 class EntryItem extends StatelessWidget {
   final Entry entry;
@@ -64,8 +66,8 @@ class EntryItem extends StatelessWidget {
   }
 
   Color _getBackgroundColor() {
-    if (entry.noInvoice == false) {
-      // TODO: check document exists
+    EntryStore entryStore = locator<EntryStore>();
+    if (entry.noInvoice == false && (entryStore.entryDocuments[entry.id] ?? []).isEmpty) {
       return Colors.orange
           .withOpacity(0.3); // Color for entries with no invoice
     }
