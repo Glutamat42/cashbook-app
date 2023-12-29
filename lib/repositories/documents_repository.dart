@@ -14,4 +14,13 @@ class DocumentsRepository {
       throw Exception('Failed to load documents: ${e.toString()}');
     }
   }
+
+  Future<List<RemoteDocument>> getAll() async {
+    try {
+      final response = await dio.get('/api/documents');
+      return (response.data as List).map((d) => RemoteDocument.fromJson(d)).toList();
+    } catch (e) {
+      throw Exception('Failed to load documents: ${e.toString()}');
+    }
+  }
 }

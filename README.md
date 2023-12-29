@@ -21,9 +21,7 @@ samples, guidance on mobile development, and a full API reference.
 
 
 todolist
-test upload large image
 
-delete document not reflected in backend
 
 document section not correctly updating (after save with image deleted)
 
@@ -33,3 +31,5 @@ testcase: add document, save, directly delete
 loading spinner document upload
 
 BUG: edit with new document, save, edit again, save, document uploaded two times
+
+BUG: einträge mit dokumenten werden als "Ohne Beleg" angezeigt

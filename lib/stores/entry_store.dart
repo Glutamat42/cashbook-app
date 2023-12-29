@@ -9,7 +9,9 @@ import '../services/locator.dart';
 part 'entry_store.g.dart';
 
 enum SortField { date, amount, recipient }
+
 enum SortOrder { ascending, descending }
+
 enum FilterField { category, invoiceMissing, searchText }
 
 class EntryStore = _EntryStore with _$EntryStore;
@@ -49,16 +51,15 @@ abstract class _EntryStore with Store {
     return entryDocuments[entryId]!;
   }
 
-
   @action
+
   /// Same as loadDocumentsForEntry but deletes all documents (including local) before loading
   Future<ObservableList<Document>> refreshDocumentsForEntry(int entryId) async {
     entryDocuments[entryId] = ObservableList<Document>.of([]);
     return loadDocumentsForEntry(entryId);
   }
 
-
-    @action
+  @action
   Future<Entry> createEntry(Entry newEntry, List<Document> documents) async {
     try {
       final createdEntry = await _entriesRepository.createEntry(newEntry, documents);
@@ -90,7 +91,20 @@ abstract class _EntryStore with Store {
       entryDocuments[entryId] != null ? entryDocuments[entryId]! : ObservableList<Document>.of([]);
 
   @action
+  Future<void> loadDocuments() async {
+    try {
+      final docs = await _documentsRepository.getAll();
+      entryDocuments = ObservableMap<int, ObservableList<Document>>.of({
+        for (var d in docs) d.entryId!: ObservableList<Document>.of([d])
+      });
+    } catch (e) {
+      _logger.severe('Failed to load documents: $e');
+    }
+  }
+
+  @action
   Future<void> loadEntries() async {
+    Future loadDocumentFuture = loadDocuments();
     try {
       allEntries = await _entriesRepository.getEntries();
     } catch (e) {
@@ -98,6 +112,7 @@ abstract class _EntryStore with Store {
     }
 
     _applyFilterAndSort();
+    await loadDocumentFuture;
   }
 
   @action
@@ -175,9 +190,11 @@ abstract class _EntryStore with Store {
 
     // Filter for missing invoice
     if (currentFilters.containsKey(FilterField.invoiceMissing) && currentFilters[FilterField.invoiceMissing]) {
-      // TODO
-      // filteredEntries = filteredEntries.where((entry) => entry.noInvoice && entry.documentId == null).toList();
-      filteredEntries = filteredEntries.where((entry) => entry.noInvoice == false).toList();
+      // Filter for: where noInvoice == false and no documents exist (in entryDocuments)
+      List<Entry> entriesRequiringDocuments = filteredEntries.where((entry) => !entry.noInvoice).toList();
+      filteredEntries = entriesRequiringDocuments
+          .where((entry) => entryDocuments[entry.id] == null || entryDocuments[entry.id]!.isEmpty)
+          .toList();
     }
 
     // Filter by search text

@@ -16,7 +16,7 @@ import '../widgets/dual_mode_invoice_checkbox.dart';
 import '../widgets/dual_mode_payment_method_widget.dart';
 import '../widgets/dual_mode_text_widget.dart';
 import '../widgets/flexible_detail_item_view.dart';
-
+// todo proper navigation url to this page
 class DetailsScreen extends StatefulWidget {
   final Entry entry;
 
@@ -86,7 +86,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         appBar: AppBar(
           title: Text('Entry Details'),
           actions: <Widget>[
-            // IconButton(
+            // IconButton( // TODO: implement deleteentry
             //   icon: Icon(Icons.delete),
             //     onPressed: onPressed
             // ),
