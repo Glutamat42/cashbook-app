@@ -23,14 +23,12 @@ samples, guidance on mobile development, and a full API reference.
 todolist
 
 
-document section not correctly updating (after save with image deleted)
 
 testcase: add document, save, directly delete
 
 
 loading spinner document upload / save, update entry
 
-BUG: edit with new document, save, edit again, save, document uploaded two times
 
 
 Caching remote bilder

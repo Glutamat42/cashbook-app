@@ -211,6 +211,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     try {
       setState(() {
         loadDocumentsFuture = _entryStore.loadDocumentsForEntry(entry.id!);
+        documents = [];
       });
       _entryStore.loadEntries().then((value) => setState(() {
         entry = _entryStore.allEntries.firstWhere((e) => e.id == entry.id);
@@ -268,6 +269,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           _editableEntry.updateFrom(updatedEntry);
           // refresh documents
           loadDocumentsFuture = _entryStore.loadDocumentsForEntry(updatedEntry.id!);
+          documents = [];
         });
       } catch (error) {
         // TODO: show correct error message if request is too large

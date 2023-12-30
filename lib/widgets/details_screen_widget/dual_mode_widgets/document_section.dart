@@ -15,14 +15,15 @@ import 'package:mime/mime.dart' as mime;
 import '../document_gallery_viewer.dart';
 import 'package:file_picker/file_picker.dart';
 
-class DocumentSection extends StatefulWidget {
+class DocumentSection extends StatelessWidget {
+  final Logger _log = Logger('DocumentSection');
   final int? entryId;
   final bool isEditable;
   final bool isLoading;
   final List<Document> documents;
   final Function(List<Document>) onDocumentsChanged;
 
-  const DocumentSection({
+  DocumentSection({
     Key? key,
     required this.entryId,
     this.isEditable = false,
@@ -32,35 +33,12 @@ class DocumentSection extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<DocumentSection> createState() => _DocumentSectionState();
-}
-
-// TODO: convert to stateless
-class _DocumentSectionState extends State<DocumentSection> {
-  final Logger _log = Logger('DocumentSection');
-  late final isNew;
-
-  @override
-  void initState() {
-    isNew = widget.entryId == null;
-    if (!isNew) {}
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (isNew) {
-      return _buildDocumentSection(context);
-    } else {
-      if (!widget.isLoading) {
-        return _buildDocumentSection(context);
-      } else {
-        return const Center(child: CircularProgressIndicator());
-      }
-    }
+    final isNew = entryId == null;
+    return _buildDocumentSection(context, isNew);
   }
 
-  Widget _buildDocumentSection(BuildContext context) {
+  Widget _buildDocumentSection(BuildContext context, bool isNew) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Column(
@@ -69,29 +47,27 @@ class _DocumentSectionState extends State<DocumentSection> {
           const Text('Documents (Images, PDFs)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Observer(
-            builder: (_) {
-              int itemCount = widget.isEditable
-                  ? widget.documents.length + 1 // +1 for add button if editable
-                  : widget.documents.length;
-              return Container(
+            builder: (_) =>
+
+               Container(
                 height: 100,
-                child: ListView.builder(
+                child: isLoading && !isNew ? const Center(child: CircularProgressIndicator()) :ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: itemCount,
+                  itemCount: isEditable ? documents.length + 1 : documents.length, // +1 for add button if editable
                   itemBuilder: (context, index) {
-                    if (widget.isEditable && index == 0) {
+                    if (isEditable && index == 0) {
                       return _buildAddButton(context);
                     }
-                    int docIndex = widget.isEditable ? index - 1 : index; // Adjust index if in editable mode
-                    return _buildThumbnailTile(widget.documents, docIndex, context);
+                    int docIndex = isEditable ? index - 1 : index; // Adjust index if in editable mode
+                    return _buildThumbnailTile(documents, docIndex, context);
                   },
                 ),
-              );
-            },
+              )
+          )
+    ]
+            ,
           ),
-        ],
-      ),
-    );
+      );
   }
 
   Widget _buildAddButton(BuildContext context) {
@@ -111,8 +87,8 @@ class _DocumentSectionState extends State<DocumentSection> {
     if (Helpers.isDesktopWebBrowser) {
       // Directly open file dialog for desktop web platforms
       final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();
-      if (pickedFile != null) {
-        _newDocumentOpened(pickedFile.files.single.bytes!, pickedFile.files.single.name, context, widget.entryId);
+      if (pickedFile != null && context.mounted) {
+        _newDocumentOpened(pickedFile.files.single.bytes!, pickedFile.files.single.name, context, entryId);
       }
     } else {
       _showMobileAddDocumentOptions(context);
@@ -133,8 +109,8 @@ class _DocumentSectionState extends State<DocumentSection> {
                   onTap: () async {
                     Navigator.pop(context);
                     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
-                    if (pickedFile != null) {
-                      _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, widget.entryId);
+                    if (pickedFile != null && context.mounted) {
+                      _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, entryId);
                     }
                   }),
               ListTile(
@@ -143,8 +119,8 @@ class _DocumentSectionState extends State<DocumentSection> {
                   onTap: () async {
                     Navigator.pop(context);
                     final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
-                    if (pickedFile != null) {
-                      _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, widget.entryId);
+                    if (pickedFile != null && context.mounted) {
+                      _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, entryId);
                     }
                   }),
               ListTile(
@@ -157,11 +133,12 @@ class _DocumentSectionState extends State<DocumentSection> {
                         type: FileType.custom,
                         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'avif'],
                       );
-                      if (pickedFile != null && // TODO
-                          (pickedFile.files.single.bytes != null || pickedFile.files.single.path != null)) {
+                      if (pickedFile != null &&
+                          (pickedFile.files.single.bytes != null || pickedFile.files.single.path != null) &&
+                          context.mounted) {
                         Uint8List bytes =
                             pickedFile.files.single.bytes ?? File(pickedFile.files.single.path!).readAsBytesSync();
-                        _newDocumentOpened(bytes, pickedFile.files.single.name, context, widget.entryId);
+                        _newDocumentOpened(bytes, pickedFile.files.single.name, context, entryId);
                       }
                     } on PlatformException catch (e) {
                       if (e.code == 'read_external_storage_denied') {
@@ -213,9 +190,9 @@ class _DocumentSectionState extends State<DocumentSection> {
           builder: (context) => DocumentGalleryViewer(
             initialIndex: index,
             documents: documents,
-            showDeleteButton: widget.isEditable,
-            onDocumentDeleted: widget.isEditable ? (int id) => _documentDeletedChanged(id, true) : null,
-            onDocumentUndeleted: widget.isEditable ? (int id) => _documentDeletedChanged(id, false) : null,
+            showDeleteButton: isEditable,
+            onDocumentDeleted: isEditable ? (int id) => _documentDeletedChanged(id, true) : null,
+            onDocumentUndeleted: isEditable ? (int id) => _documentDeletedChanged(id, false) : null,
           ),
         ));
       },
@@ -270,15 +247,15 @@ class _DocumentSectionState extends State<DocumentSection> {
   }
 
   void _newDocumentOpened(Uint8List fileData, String filename, BuildContext context, int? entryId) {
-    widget.onDocumentsChanged([
-      ...widget.documents,
+    onDocumentsChanged([
+      ...documents,
       LocalDocument(
           originalFilename: filename, fileBytes: fileData, id: _generateLikelyUniqueDocumentId(), entryId: entryId)
     ]);
   }
 
   void _documentDeletedChanged(int documentId, bool isDeleted) {
-    widget.onDocumentsChanged(widget.documents.map((doc) {
+    onDocumentsChanged(documents.map((doc) {
       if (doc.id == documentId) {
         doc.deleted = isDeleted;
       }
@@ -287,6 +264,6 @@ class _DocumentSectionState extends State<DocumentSection> {
   }
 
   int _generateLikelyUniqueDocumentId() {
-    return -(int.parse("${DateTime.now().millisecondsSinceEpoch}${widget.documents.length + 1}"));
+    return -(int.parse("${DateTime.now().millisecondsSinceEpoch}${documents.length + 1}"));
   }
 }
