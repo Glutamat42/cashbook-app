@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:mime/mime.dart' as mime;
 
-import '../models/document.dart';
-import '../models/local_document.dart';
-import '../models/remote_document.dart';
-import '../services/locator.dart';
+import '../../models/document.dart';
+import '../../models/local_document.dart';
+import '../../models/remote_document.dart';
+import '../../services/locator.dart';
 
 class FullScreenImageViewer extends StatelessWidget {
   final Document document;
@@ -21,8 +21,8 @@ class FullScreenImageViewer extends StatelessWidget {
 
     return PhotoView(
       imageProvider: _buildImageProvider(authStore),
-      minScale: PhotoViewComputedScale.contained * 0.8,
-      maxScale: PhotoViewComputedScale.covered * 2,
+      minScale: PhotoViewComputedScale.contained * 1.0,
+      maxScale: PhotoViewComputedScale.covered * 2.5,
       initialScale: PhotoViewComputedScale.contained,
       backgroundDecoration: BoxDecoration(
         color: Theme.of(context).canvasColor,

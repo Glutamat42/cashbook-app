@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:intl/intl.dart';
 import '../models/entry.dart';
 import '../screens/details_screen.dart';
@@ -12,7 +13,7 @@ class EntryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Observer(builder: (_) => Container(
       color: _getBackgroundColor(), // Highlight for no invoice
       child: ListTile(
         // In your ListView.builder:
@@ -46,7 +47,7 @@ class EntryItem extends StatelessWidget {
             Text(_formatDate(entry.date)),
           ],
         ),
-      ),
+      ),),
     );
   }
 

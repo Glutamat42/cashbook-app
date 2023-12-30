@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'flexible_detail_item_view.dart';
+import '../flexible_detail_item_view.dart';
 
 class DualModeInvoiceCheckbox extends StatelessWidget {
   final bool isEditMode;

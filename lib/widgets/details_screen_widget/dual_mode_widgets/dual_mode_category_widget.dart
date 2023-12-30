@@ -1,9 +1,9 @@
+import 'package:cashbook/models/category.dart';
+import 'package:cashbook/services/locator.dart';
+import 'package:cashbook/stores/category_store.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import '../models/category.dart';
-import '../stores/category_store.dart';
-import '../services/locator.dart';
-import 'flexible_detail_item_view.dart';
+import '../flexible_detail_item_view.dart';
 
 class DualModeCategoryWidget extends StatelessWidget {
   final bool isEditMode;

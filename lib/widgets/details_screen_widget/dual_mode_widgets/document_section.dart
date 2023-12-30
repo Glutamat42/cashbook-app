@@ -1,18 +1,18 @@
 import 'dart:io';
 
+import 'package:cashbook/models/document.dart';
+import 'package:cashbook/models/local_document.dart';
+import 'package:cashbook/models/remote_document.dart';
+import 'package:cashbook/services/locator.dart';
+import 'package:cashbook/stores/auth_store.dart';
+import 'package:cashbook/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logging/logging.dart';
 import 'package:mime/mime.dart' as mime;
-import '../utils/helpers.dart';
-import '../models/document.dart';
-import '../models/local_document.dart';
-import '../models/remote_document.dart';
-import '../services/locator.dart';
-import '../stores/auth_store.dart';
-import 'document_gallery_viewer.dart';
+import '../document_gallery_viewer.dart';
 import 'package:file_picker/file_picker.dart';
 
 class DocumentSection extends StatefulWidget {

@@ -1,11 +1,13 @@
+import 'package:cashbook/widgets/auto_complete_text_edit.dart';
 import 'package:flutter/material.dart';
 
-import 'flexible_detail_item_view.dart';
+import '../flexible_detail_item_view.dart';
 
 class DualModeTextWidget extends StatelessWidget {
   final bool isEditMode;
   final Function(String)? onChanged;
   final String label;
+  final List<String>? suggestions;
   final FormFieldValidator<String>? validator;
   final TextEditingController controller;
 
@@ -16,6 +18,7 @@ class DualModeTextWidget extends StatelessWidget {
     required this.label,
     required this.controller,
     this.validator,
+    this.suggestions,
   }) : super(key: key);
 
   @override
@@ -29,11 +32,19 @@ class DualModeTextWidget extends StatelessWidget {
   }
 
   Widget _buildTextEdit() {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(labelText: label),
-      onChanged: onChanged,
-      validator: validator,
-    );
+    return suggestions != null
+        ? AutoCompleteTextEdit(
+            controller: controller,
+            onChanged: onChanged,
+            labelText: label,
+            suggestions: suggestions!,
+            validator: validator,
+          )
+        : TextFormField(
+            controller: controller,
+            decoration: InputDecoration(labelText: label),
+            onChanged: onChanged,
+            validator: validator,
+          );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
-import 'flexible_detail_item_view.dart';
+import '../flexible_detail_item_view.dart';
 
 class DualModeDateWidget extends StatelessWidget {
   final Logger _log = Logger('DualModeDateWidget');

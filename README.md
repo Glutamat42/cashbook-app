@@ -28,8 +28,11 @@ document section not correctly updating (after save with image deleted)
 testcase: add document, save, directly delete
 
 
-loading spinner document upload
+loading spinner document upload / save, update entry
 
 BUG: edit with new document, save, edit again, save, document uploaded two times
 
-BUG: einträge mit dokumenten werden als "Ohne Beleg" angezeigt
+
+Caching remote bilder
+
+upload: vorkomprimieren

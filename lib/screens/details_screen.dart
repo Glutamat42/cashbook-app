@@ -1,5 +1,12 @@
 import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
+import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/document_section.dart';
+import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/dual_mode_amount_widget.dart';
+import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/dual_mode_category_widget.dart';
+import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/dual_mode_date_widget.dart';
+import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/dual_mode_invoice_checkbox.dart';
+import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/dual_mode_payment_method_widget.dart';
+import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/dual_mode_text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
@@ -8,14 +15,7 @@ import '../models/entry.dart';
 import '../models/user.dart';
 import '../stores/user_store.dart';
 import '../services/locator.dart';
-import '../widgets/document_section.dart';
-import '../widgets/dual_mode_amount_widget.dart';
-import '../widgets/dual_mode_category_widget.dart';
-import '../widgets/dual_mode_date_widget.dart';
-import '../widgets/dual_mode_invoice_checkbox.dart';
-import '../widgets/dual_mode_payment_method_widget.dart';
-import '../widgets/dual_mode_text_widget.dart';
-import '../widgets/flexible_detail_item_view.dart';
+import '../widgets/details_screen_widget/flexible_detail_item_view.dart';
 // todo proper navigation url to this page
 class DetailsScreen extends StatefulWidget {
   final Entry entry;
@@ -128,6 +128,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             controller: _recipientSenderController,
             label: 'Recipient/Sender',
             validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
+            suggestions: _entryStore.allEntries.map((e) => e.recipientSender).toSet().toList(),
           ),
           DualModeTextWidget(
             isEditMode: _isEditMode,

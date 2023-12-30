@@ -1,3 +1,4 @@
+import 'package:cashbook/widgets/auto_complete_text_edit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import '../stores/auth_store.dart';
@@ -8,6 +9,7 @@ class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
+
 // TODO: login with invalid credentials shows confusing error (long text with 401) -> improve
 // 405: wrong api url
 class _LoginScreenState extends State<LoginScreen> {
@@ -15,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  late String _serverInputValue;
+  late final TextEditingController _serverController;
 
   bool get _isFormValid => _formKey.currentState?.validate() ?? false;
   bool _usernameTouched = false;
@@ -31,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void initState() {
-    _serverInputValue = _authStore.baseUrl ?? '';
+    _serverController = TextEditingController(text: _authStore.baseUrl ?? '');
     super.initState();
   }
 
@@ -39,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _serverController.dispose();
     super.dispose();
   }
 
@@ -94,40 +97,20 @@ class _LoginScreenState extends State<LoginScreen> {
               // Update UI on text change
               validator: (value) => _passwordTouched && (value?.trim().isEmpty == true) ? 'Password is required' : null,
               onFieldSubmitted: (_) => _performLogin()),
-          Autocomplete<String>(
-            initialValue: TextEditingValue(text: _serverInputValue),
-            optionsBuilder: (TextEditingValue textEditingValue) {
+          AutoCompleteTextEdit(
+            controller: _serverController,
+            labelText: 'Server',
+            suggestions: _predefinedServers,
+            onChanged: (_) {
               setState(() {
-                _serverInputValue = textEditingValue.text;
-              });
-              if (textEditingValue.text.isEmpty) {
-                return _predefinedServers;
-              }
-              return _predefinedServers.where((String option) {
-                return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                _serverTouched = true;
               });
             },
-            onSelected: (String selection) {
-              setState(() {
-                _serverInputValue = selection;
-              });
-            },
-            fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController,
-                FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
-              return TextFormField(
-                autofillHints: const [AutofillHints.url],
-                controller: fieldTextEditingController,
-                focusNode: fieldFocusNode,
-                decoration: const InputDecoration(labelText: 'Server'),
-                validator: (value) => _serverTouched && (value?.trim().isEmpty == true) ? 'Server is required' : null,
-                onChanged: (value) {
-                  setState(() {
-                    _serverTouched = true;
-                  });
-                },
-              );
-            },
+            validator: (value) => _serverTouched && (value?.trim().isEmpty == true) ? 'Server is required' : null,
+            autofillHints: const [AutofillHints.url],
+            onFieldSubmitted: (_) => _performLogin(),
           ),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _isFormValid ? () => _performLogin() : null,
             child: const Text('Login'),
@@ -137,37 +120,14 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildPredefinedServersList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: _predefinedServers.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(_predefinedServers[index]),
-          onTap: () {
-            // Set the server input field to the selected server
-            // setState(() {
-            //   _serverController.text = _predefinedServers[index];
-            // });
-          },
-        );
-      },
-    );
-  }
-
   void _performLogin() async {
     ScaffoldMessengerState scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
-      await _authStore.login(_usernameController.text, _passwordController.text, _serverInputValue);
+      await _authStore.login(_usernameController.text, _passwordController.text, _serverController.text);
     } catch (e) {
       scaffoldMessenger.showSnackBar(
         SnackBar(content: Text('Login Failed: ${e.toString()}')),
       );
     }
-  }
-
-  void _showLoginError(dynamic error, BuildContext context) {
-    final snackBar = SnackBar(content: Text('Login Failed: ${error.toString()}'));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

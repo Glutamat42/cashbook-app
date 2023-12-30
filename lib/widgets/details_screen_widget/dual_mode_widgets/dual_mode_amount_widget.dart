@@ -1,6 +1,6 @@
+import 'package:cashbook/widgets/details_screen_widget/flexible_detail_item_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'flexible_detail_item_view.dart';
 
 enum AmountType { income, expense }
 
