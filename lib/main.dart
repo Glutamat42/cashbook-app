@@ -97,8 +97,8 @@ class _MyAppState extends State<MyApp> {
     // For sharing images coming from outside the app while the app is in the memory
     _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream().listen((List<SharedFile> value) {
       _log.info("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
-      _entryStore.intentDocuments = <LocalDocument>[];
       for (var sharedFile in value) {
+        _entryStore.intentDocuments ??= <LocalDocument>[];
         File file = File(sharedFile.value!);
         _entryStore.intentDocuments!.add(LocalDocument(
           originalFilename: sharedFile.value!.split("/").last,
@@ -112,8 +112,8 @@ class _MyAppState extends State<MyApp> {
     // For sharing images coming from outside the app while the app is closed
     FlutterSharingIntent.instance.getInitialSharing().then((List<SharedFile> value) {
       _log.info("Shared: getInitialMedia ${value.map((f) => f.value).join(",")}");
-      _entryStore.intentDocuments = <LocalDocument>[];
       for (var sharedFile in value) {
+        _entryStore.intentDocuments ??= <LocalDocument>[];
         File file = File(sharedFile.value!);
         _entryStore.intentDocuments!.add(LocalDocument(
           originalFilename: sharedFile.value!.split("/").last,

@@ -26,7 +26,7 @@ class EntriesRepository {
   }
 
   Future<Entry> createEntry(Entry entryData, List<Document> documents) async {
-    FormData formData = _prepareFormData(entryData, documents);
+    FormData formData = await _prepareFormData(entryData, documents);
 
     try {
       final response = await dio.post('/api/entries', data: formData);
@@ -39,7 +39,7 @@ class EntriesRepository {
   }
 
   Future<Entry> updateEntry(int id, Entry entryData, List<Document> documents) async {
-    FormData formData = _prepareFormData(entryData, documents);
+    FormData formData = await _prepareFormData(entryData, documents);
     // Add deleted document IDs to the FormData
     formData.fields
         .addAll(_getDeletedDocumentIds(documents).map((docId) => MapEntry('deleted_documents[]', docId.toString())));
@@ -64,7 +64,7 @@ class EntriesRepository {
     }
   }
 
-  FormData _prepareFormData(Entry entryData, List<Document> documents) {
+  Future<FormData> _prepareFormData(Entry entryData, List<Document> documents) async {
     // Create a multipart request
     FormData formData = FormData();
 
@@ -91,7 +91,8 @@ class EntriesRepository {
     for (Document doc in documents) {
       if (doc is LocalDocument && !doc.deleted) {
         String filename = doc.originalFilename!;
-        MultipartFile multipartFile = MultipartFile.fromBytes(doc.fileBytes, filename: filename);
+        await doc.compressionFuture; // if compression not yet done -> wait
+        MultipartFile multipartFile = MultipartFile.fromBytes(doc.originalBinaryData, filename: filename);
         formData.files.add(MapEntry('document[]', multipartFile));
       }
     }

@@ -18,7 +18,7 @@ void setupLocator() {
   Dio dio = Dio(BaseOptions(
       baseUrl: "http://localhost:8080",
       connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10)));
+      receiveTimeout: const Duration(seconds: 300))); // document upload 5 minutes timeout
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) {
       // Skip adding token for login requests

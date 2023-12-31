@@ -23,6 +23,6 @@ samples, guidance on mobile development, and a full API reference.
 - loading spinner document upload / save, update entry
 - BUG: create entry with and directly edit, go to home, entry missing
 - Caching remote bilder
-- upload: vorkomprimieren
+- allow users to select compression level (maybe: source, 4k (8MP), WQHD (3.6MP), FHD (2MP))
 - share button für fullscreen bilder
-- file intent
+- multi language (i18n)
