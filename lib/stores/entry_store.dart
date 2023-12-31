@@ -38,7 +38,6 @@ abstract class _EntryStore with Store {
   @observable
   Map<FilterField, dynamic> currentFilters = {};
 
-  // TODO: check if return value is required or could be Future<void>
   @action
   Future<ObservableList<Document>> loadDocumentsForEntry(int entryId) async {
     try {
@@ -51,9 +50,8 @@ abstract class _EntryStore with Store {
     return entryDocuments[entryId]!;
   }
 
-  @action
-
   /// Same as loadDocumentsForEntry but deletes all documents (including local) before loading
+  @action
   Future<ObservableList<Document>> refreshDocumentsForEntry(int entryId) async {
     entryDocuments[entryId] = ObservableList<Document>.of([]);
     return loadDocumentsForEntry(entryId);

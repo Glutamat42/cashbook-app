@@ -1,6 +1,7 @@
 import 'package:cashbook/widgets/sorting_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:logging/logging.dart';
 import '../models/entry.dart';
 import '../stores/category_store.dart';
 import '../stores/user_store.dart';
@@ -22,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final EntryStore _entryStore = locator<EntryStore>();
   final CategoryStore _categoryStore = locator<CategoryStore>();
   final UserStore _userStore = locator<UserStore>();
+  final Logger _log = Logger('_HomeScreenState');
   bool _isSearchVisible = false;
 
   @override
@@ -34,6 +36,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_authStore.isLoggedIn) {
+      // TODO: login page is pushed two times, no idea why, but this is sufficient for now as this should not happen often
+      _log.info('User is not logged in. Redirecting to login screen.');
+      Future.microtask(() => Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),

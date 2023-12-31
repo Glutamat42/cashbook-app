@@ -1,3 +1,5 @@
+import 'package:cashbook/constants/route_names.dart';
+import 'package:cashbook/stores/auth_store.dart';
 import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
 import 'package:cashbook/widgets/details_screen_widget/dual_mode_widgets/document_section.dart';
@@ -36,6 +38,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   final UserStore _userStore = locator<UserStore>();
   final EntryStore _entryStore = locator<EntryStore>();
   final CategoryStore _categoryStore = locator<CategoryStore>();
+  final AuthStore _authStore = locator<AuthStore>();
   final _formKey = GlobalKey<FormState>();
   late List<Document> documents = [];
   late Future loadDocumentsFuture;
@@ -66,6 +69,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+      if (!_authStore.isLoggedIn) {
+        // TODO: login page is pushed two times, no idea why, but this is sufficient for now as this should not happen often
+        _log.info('User is not logged in. Redirecting to login screen.');
+        Future.microtask(() => Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen));
+      }
+
     _log.fine('InitState, entry: ${entry.toJson()}');
     return PopScope(
       canPop: !_isEditMode,

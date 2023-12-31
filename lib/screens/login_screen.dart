@@ -19,7 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   late final TextEditingController _serverController;
 
-  bool get _isFormValid => _formKey.currentState?.validate() ?? false;
+  bool get _isFormValid =>
+    _usernameTouched && _passwordTouched && _serverTouched && _formKey.currentState?.validate() == true;
   bool _usernameTouched = false;
   bool _passwordTouched = false;
   bool _serverTouched = false;
@@ -34,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     _serverController = TextEditingController(text: _authStore.baseUrl ?? '');
+    _serverTouched = _authStore.baseUrl != null && _authStore.baseUrl!.isNotEmpty;
     super.initState();
   }
 
@@ -125,9 +127,19 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authStore.login(_usernameController.text, _passwordController.text, _serverController.text);
     } catch (e) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text('Login Failed: ${e.toString()}')),
-      );
+      if (e.toString().contains("401")) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: const Text('Login Failed: Invalid credentials'), backgroundColor: Colors.red),
+        );
+      } else if (e.toString().contains("network layer")) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: const Text('Login Failed: Invalid server'), backgroundColor: Colors.red),
+        );
+      } else {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('Login Failed: ${e.toString()}'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 }

@@ -37,23 +37,33 @@ abstract class _AuthStore with Store {
     String? username = prefs.getString('username');
     baseUrl = prefs.getString('baseUrl');
 
-    if (authToken != null && userId != null && username != null) {
+    if (authToken != null && userId != null && username != null && baseUrl != null && baseUrl!.isNotEmpty) {
       user = User(id: userId, username: username, token: authToken);
 
-      if (baseUrl == null || baseUrl!.isEmpty) {
-        _log.severe('No base URL found in shared preferences, logging out');
+      // check if token is still valid
+      try {
+        // Dio baseUrl is not yet set as the reaction is not yet triggered
+        await _authRepository.validateToken(baseUrl!);
+      } catch (e) {
+        _log.severe('Failed to validate token: $e');
         await logout();
       }
+    } else {
+      _log.severe('No valid login information found in shared preferences, logging out');
+      await logout();
     }
 
-    isLoggedIn = authToken != null && authToken.isNotEmpty;
-
-  //   TODO: validate token still valid
+    if (user != null) {
+      _log.info(
+          'Loaded user data from shared preferences for user ${user!.username} and token ${user!.token!.substring(0, 5)}... is valid');
+      isLoggedIn = true;
+    } else {
+      isLoggedIn = false;
+    }
   }
 
   @action
   Future<void> login(String username, String password, String server) async {
-
     try {
       User user = await _authRepository.login(username, password, server);
 

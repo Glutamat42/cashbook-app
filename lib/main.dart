@@ -65,6 +65,7 @@ void _setupLogging(String level) {
 class MyApp extends StatelessWidget {
   MyApp({super.key});
 
+  final Logger _log = Logger('MyApp');
   final AuthStore _authStore = locator<AuthStore>();
 
   // This widget is the root of your application.
@@ -72,6 +73,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     String initialRoute =
         _authStore.isLoggedIn ? RouteNames.homeScreen : RouteNames.loginScreen;
+    _log.info('Initial route: $initialRoute');
+
 
     return MaterialApp(
       title: 'Cashbook',
