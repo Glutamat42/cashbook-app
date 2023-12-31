@@ -25,8 +25,10 @@ abstract class _AuthStore with Store {
   @observable
   User? user;
 
+  late Future<void> loadAuthTokenFuture;
+
   _AuthStore() {
-    _loadAuthToken();
+    loadAuthTokenFuture = _loadAuthToken();
   }
 
   @action

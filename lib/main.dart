@@ -1,19 +1,27 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:cashbook/config/app_config.dart';
+import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/screens/home_screen.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/auth_store.dart';
+import 'package:cashbook/stores/entry_store.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
+import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:logging/logging.dart';
 import 'constants/route_names.dart';
 import 'screens/login_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Ensure plugin services are initialized
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure plugin services are initialized
   await AppConfig.loadConfig(); // Load the configuration
   _setupLogging(AppConfig().logLevel);
   setupLocator();
+  final AuthStore authStore = locator<AuthStore>();
+  await authStore.loadAuthTokenFuture;
   runApp(MyApp());
 }
 
@@ -62,19 +70,64 @@ void _setupLogging(String level) {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   MyApp({super.key});
 
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   final Logger _log = Logger('MyApp');
+
   final AuthStore _authStore = locator<AuthStore>();
+  final EntryStore _entryStore = locator<EntryStore>();
+
+  late StreamSubscription _intentDataStreamSubscription;
+  List<SharedFile>? list;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Implementation of intention is not perfect here as it relies on that the files are loaded before the user opens
+    // the details page of an entry. Usually that should work fine as the user will at least need a few seconds to
+    // open the details page. This should be sufficient to load the files from the intent.
+
+    // For sharing images coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream().listen((List<SharedFile> value) {
+      _log.info("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
+      _entryStore.intentDocuments = <LocalDocument>[];
+      for (var sharedFile in value) {
+        File file = File(sharedFile.value!);
+        _entryStore.intentDocuments!.add(LocalDocument(
+          originalFilename: sharedFile.value!.split("/").last,
+          fileBytes: file.readAsBytesSync(),
+        ));
+      }
+    }, onError: (err) {
+      _log.warning("getIntentDataStream error: $err");
+    });
+
+    // For sharing images coming from outside the app while the app is closed
+    FlutterSharingIntent.instance.getInitialSharing().then((List<SharedFile> value) {
+      _log.info("Shared: getInitialMedia ${value.map((f) => f.value).join(",")}");
+      _entryStore.intentDocuments = <LocalDocument>[];
+      for (var sharedFile in value) {
+        File file = File(sharedFile.value!);
+        _entryStore.intentDocuments!.add(LocalDocument(
+          originalFilename: sharedFile.value!.split("/").last,
+          fileBytes: file.readAsBytesSync(),
+        ));
+      }
+    });
+  }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    String initialRoute =
-        _authStore.isLoggedIn ? RouteNames.homeScreen : RouteNames.loginScreen;
+    String initialRoute = _authStore.isLoggedIn ? RouteNames.homeScreen : RouteNames.loginScreen;
     _log.info('Initial route: $initialRoute');
-
 
     return MaterialApp(
       title: 'Cashbook',
@@ -108,12 +161,11 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-    PointerDeviceKind.touch,
-    PointerDeviceKind.mouse,
-    PointerDeviceKind.trackpad,
-  };
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
 }

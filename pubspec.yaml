@@ -47,6 +47,10 @@ dependencies:
   permission_handler: ^10.0.0
   mime: ^1.0.4
   share_plus: ^7.2.1
+  flutter_sharing_intent:
+    git:
+      url: https://github.com/bhagat-techind/flutter_sharing_intent
+      ref: 5f4f2e66c02580105ba89b3fec5a7be907d5466f
 
 dev_dependencies:
   flutter_test:

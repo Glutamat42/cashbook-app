@@ -1,4 +1,5 @@
 import 'package:cashbook/constants/route_names.dart';
+import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/stores/auth_store.dart';
 import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
@@ -18,6 +19,7 @@ import '../models/user.dart';
 import '../stores/user_store.dart';
 import '../services/locator.dart';
 import '../widgets/details_screen_widget/flexible_detail_item_view.dart';
+
 // todo proper navigation url to this page
 class DetailsScreen extends StatefulWidget {
   final Entry entry;
@@ -46,6 +48,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   final TextEditingController _recipientSenderController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+
   @override
   void initState() {
     _isNew = widget.entry.id == null;
@@ -63,17 +66,38 @@ class _DetailsScreenState extends State<DetailsScreen> {
     _descriptionController.text = _editableEntry.description;
 
     _currentlySelectedDate = _editableEntry.date;
+
+    if (_entryStore.intentDocuments != null) {
+      _log.info('Received ${_entryStore.intentDocuments!.length} shared files');
+      _isEditMode = true;
+
+      _loadDocumentsFromSharedFiles();
+
+      _entryStore.intentDocuments = null;
+    }
+
     super.initState();
   }
 
+  _loadDocumentsFromSharedFiles() {
+    for (LocalDocument document in _entryStore.intentDocuments!) {
+      document.entryId = _editableEntry.id;
+      document.id = _generateLikelyUniqueDocumentId();
+      documents.add(document);
+    }
+  }
+
+  int _generateLikelyUniqueDocumentId() {
+    return -(int.parse("${DateTime.now().millisecondsSinceEpoch}${documents.length + 1}"));
+  }
 
   @override
   Widget build(BuildContext context) {
-      if (!_authStore.isLoggedIn) {
-        // TODO: login page is pushed two times, no idea why, but this is sufficient for now as this should not happen often
-        _log.info('User is not logged in. Redirecting to login screen.');
-        Future.microtask(() => Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen));
-      }
+    if (!_authStore.isLoggedIn) {
+      // TODO: login page is pushed two times, no idea why, but this is sufficient for now as this should not happen often
+      _log.info('User is not logged in. Redirecting to login screen.');
+      Future.microtask(() => Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen));
+    }
 
     _log.fine('InitState, entry: ${entry.toJson()}');
     return PopScope(
@@ -97,11 +121,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
           actions: <Widget>[
             _isNew
                 ? Container()
-                :
-            IconButton(
-              icon: const Icon(Icons.delete),
-                onPressed: _onEntryDelete,
-            ),
+                : IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: _onEntryDelete,
+                  ),
             IconButton(
               icon: Icon(_isEditMode ? Icons.check : Icons.edit),
               onPressed: () async {
@@ -120,10 +143,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: _isEditMode ? _buildForm() : RefreshIndicator(
-            onRefresh: _refreshData,
-            child: _buildForm(),
-          ),
+          child: _isEditMode
+              ? _buildForm()
+              : RefreshIndicator(
+                  onRefresh: _refreshData,
+                  child: _buildForm(),
+                ),
         ),
       ),
     );
@@ -152,11 +177,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
             isEditMode: _isEditMode,
             amount: _editableEntry.amount,
             isIncome: _editableEntry.isIncome,
-            onChanged: (amount, isIncome) =>
-                setState(() {
-                  _editableEntry.amount = amount;
-                  _editableEntry.isIncome = isIncome;
-                }),
+            onChanged: (amount, isIncome) => setState(() {
+              _editableEntry.amount = amount;
+              _editableEntry.isIncome = isIncome;
+            }),
           ),
           DualModeDateWidget(
             isEditMode: _isEditMode,
@@ -227,12 +251,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
         documents = [];
       });
       _entryStore.loadEntries().then((value) => setState(() {
-        entry = _entryStore.allEntries.firstWhere((e) => e.id == entry.id);
-        _editableEntry = Entry.fromJson(entry.toJson());
-        _recipientSenderController.text = _editableEntry.recipientSender;
-        _descriptionController.text = _editableEntry.description;
-        _currentlySelectedDate = _editableEntry.date;
-      }));
+            entry = _entryStore.allEntries.firstWhere((e) => e.id == entry.id);
+            _editableEntry = Entry.fromJson(entry.toJson());
+            _recipientSenderController.text = _editableEntry.recipientSender;
+            _descriptionController.text = _editableEntry.description;
+            _currentlySelectedDate = _editableEntry.date;
+          }));
       _categoryStore.loadCategories();
     } catch (e) {
       _log.warning('Error refreshing data: $e');
@@ -264,7 +288,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
         _editableEntry.recipientSender = _recipientSenderController.text;
         _editableEntry.description = _descriptionController.text;
         _editableEntry.date = _currentlySelectedDate!;
-
 
         Entry updatedEntry;
         if (_isNew) {
@@ -356,17 +379,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   Future<bool> _showSaveChangesDialog(BuildContext context) async {
     return (await showDialog<bool>(
-      context: context,
-      builder: (context) =>
-          AlertDialog(
+          context: context,
+          builder: (context) => AlertDialog(
             title: const Text('Save Changes?'),
             content: const Text('Do you want to save the changes?'),
             actions: <Widget>[
               TextButton(
                 child: const Text('Cancel'),
                 onPressed: () =>
-                // Close dialog and stay in edit mode
-                Navigator.of(context).pop(false),
+                    // Close dialog and stay in edit mode
+                    Navigator.of(context).pop(false),
               ),
               TextButton(
                 child: const Text('Discard'),
@@ -385,37 +407,36 @@ class _DetailsScreenState extends State<DetailsScreen> {
               ),
             ],
           ),
-    )) ??
+        )) ??
         false;
   }
 
   Future<void> _onEntryDelete() async {
     bool result = await showDialog(
       context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: const Text('Delete Entry?'),
-            content: const Text('Do you really want to delete this entry?'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancel'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              TextButton(
-                child: const Text('Delete'),
-                onPressed: () async {
-                  try {
-                    await _entryStore.deleteEntry(_editableEntry.id!);
-                    if (context.mounted) Navigator.of(context).pop(true);
-                  } catch (e) {
-                    _log.warning('Error deleting entry: $e');
-                    if (context.mounted) Navigator.of(context).pop(false);
-                    if (context.mounted) _showSnackbar(context, 'Failed to delete entry: ${e.toString()}', Colors.red);
-                  }
-                },
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Entry?'),
+        content: const Text('Do you really want to delete this entry?'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
           ),
+          TextButton(
+            child: const Text('Delete'),
+            onPressed: () async {
+              try {
+                await _entryStore.deleteEntry(_editableEntry.id!);
+                if (context.mounted) Navigator.of(context).pop(true);
+              } catch (e) {
+                _log.warning('Error deleting entry: $e');
+                if (context.mounted) Navigator.of(context).pop(false);
+                if (context.mounted) _showSnackbar(context, 'Failed to delete entry: ${e.toString()}', Colors.red);
+              }
+            },
+          ),
+        ],
+      ),
     );
 
     if (result && context.mounted) {

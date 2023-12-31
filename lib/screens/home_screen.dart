@@ -14,6 +14,8 @@ import '../widgets/filter_dialog.dart';
 import 'details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -103,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToNewEntry() {
     // Navigate to DetailsScreen with a new Entry object
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsScreen(entry: Entry(date: DateTime.now())), // Implement createNew method in Entry model
+      builder: (context) => DetailsScreen(entry: Entry(date: DateTime.now())),
     ));
   }
 
@@ -136,22 +138,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildFilterInfoBar() {
     return Observer(
       builder: (_) {
         List<String> activeFilters = [];
 
         if (_entryStore.currentFilters[FilterField.category] != null) {
-          activeFilters.add(
-              'Category: ${_entryStore.currentFilters[FilterField.category]}');
+          activeFilters.add('Category: ${_entryStore.currentFilters[FilterField.category]}');
         }
         if (_entryStore.currentFilters[FilterField.invoiceMissing] == true) {
           activeFilters.add('Invoice Missing');
         }
         if (_entryStore.currentFilters[FilterField.searchText] != null) {
-          activeFilters.add(
-              'Search: ${_entryStore.currentFilters[FilterField.searchText]}');
+          activeFilters.add('Search: ${_entryStore.currentFilters[FilterField.searchText]}');
         }
 
         if (activeFilters.isEmpty) {
@@ -162,8 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
           width: MediaQuery.of(context).size.width,
           padding: const EdgeInsets.all(8),
           color: Colors.blue[100], // Example color for the info bar
-          child: Text('Active Filters: ${activeFilters.join(', ')}',
-              style: const TextStyle(fontSize: 16)),
+          child: Text('Active Filters: ${activeFilters.join(', ')}', style: const TextStyle(fontSize: 16)),
         );
       },
     );
@@ -199,11 +197,9 @@ class _HomeScreenState extends State<HomeScreen> {
           labelText: 'Search',
           suffixIcon: Icon(Icons.search),
         ),
-        controller: TextEditingController()
-          ..text = _entryStore.currentFilters[FilterField.searchText] ?? '',
+        controller: TextEditingController()..text = _entryStore.currentFilters[FilterField.searchText] ?? '',
         onChanged: (value) {
-          final newFilters =
-              Map<FilterField, dynamic>.from(_entryStore.currentFilters);
+          final newFilters = Map<FilterField, dynamic>.from(_entryStore.currentFilters);
           newFilters[FilterField.searchText] = value.isNotEmpty ? value : null;
           _entryStore.applyFilters(newFilters);
         },
@@ -230,8 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showFilterDialog() async {
     final result = await showDialog<Map<FilterField, dynamic>>(
       context: context,
-      builder: (BuildContext context) =>
-          FilterDialog(currentFilters: _entryStore.currentFilters),
+      builder: (BuildContext context) => FilterDialog(currentFilters: _entryStore.currentFilters),
     );
 
     if (result != null) {

@@ -18,13 +18,11 @@ samples, guidance on mobile development, and a full API reference.
 ---
 
 
-todolist
+# todolist
 
-
-loading spinner document upload / save, update entry
-
-BUG: create entry with and directly edit, go to home, entry missing
-
-Caching remote bilder
-
-upload: vorkomprimieren
+- loading spinner document upload / save, update entry
+- BUG: create entry with and directly edit, go to home, entry missing
+- Caching remote bilder
+- upload: vorkomprimieren
+- share button für fullscreen bilder
+- file intent

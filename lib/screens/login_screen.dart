@@ -10,8 +10,6 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-
-// 405: wrong api url
 class _LoginScreenState extends State<LoginScreen> {
   final AuthStore _authStore = locator<AuthStore>();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -131,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
         scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Login Failed: Invalid credentials'), backgroundColor: Colors.red),
         );
-      } else if (e.toString().contains("405") || e.toString().contains("network layer")) {
+      } else if (e.toString().contains("405") || e.toString().contains("405") || e.toString().contains("network layer")) {
         scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Login Failed: Invalid server'), backgroundColor: Colors.red),
         );

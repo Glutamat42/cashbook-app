@@ -2,6 +2,7 @@ import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
 import '../models/document.dart';
 import '../models/entry.dart';
+import '../models/local_document.dart';
 import '../repositories/documents_repository.dart';
 import '../repositories/entries_repository.dart';
 import '../services/locator.dart';
@@ -25,6 +26,8 @@ abstract class _EntryStore with Store {
   ObservableList<Entry> visibleEntries = ObservableList<Entry>();
 
   List<Entry> allEntries = <Entry>[];
+
+  List<LocalDocument>? intentDocuments;
 
   @observable
   ObservableMap<int, ObservableList<Document>> entryDocuments = ObservableMap<int, ObservableList<Document>>();
