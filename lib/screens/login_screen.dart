@@ -10,7 +10,7 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-// TODO: login with invalid credentials shows confusing error (long text with 401) -> improve
+
 // 405: wrong api url
 class _LoginScreenState extends State<LoginScreen> {
   final AuthStore _authStore = locator<AuthStore>();
@@ -129,11 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (e.toString().contains("401")) {
         scaffoldMessenger.showSnackBar(
-          SnackBar(content: const Text('Login Failed: Invalid credentials'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Login Failed: Invalid credentials'), backgroundColor: Colors.red),
         );
-      } else if (e.toString().contains("network layer")) {
+      } else if (e.toString().contains("405") || e.toString().contains("network layer")) {
         scaffoldMessenger.showSnackBar(
-          SnackBar(content: const Text('Login Failed: Invalid server'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Login Failed: Invalid server'), backgroundColor: Colors.red),
         );
       } else {
         scaffoldMessenger.showSnackBar(

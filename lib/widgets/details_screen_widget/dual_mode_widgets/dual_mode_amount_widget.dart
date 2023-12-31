@@ -83,36 +83,15 @@ class DualModeAmountWidget extends StatelessWidget {
                   },
                 ),
               ],
-            )
-
-            // ToggleButtons(  // TODO: replace with something more clear
-            //   isSelected: [isIncome, !isIncome],
-            //   onPressed: (index) {
-            //     _updateIsIncome(index == 0);
-            //   },
-            //   children: const [
-            //     Padding(
-            //       padding: EdgeInsets.symmetric(horizontal: 16),
-            //       child: Text('Income'),
-            //     ),
-            //     Padding(
-            //       padding: EdgeInsets.symmetric(horizontal: 16),
-            //       child: Text('Expense'),
-            //     ),
-            //   ],
-            // ),
-            ),
+            )),
         TextFormField(
-          initialValue: _centToEuro(amount) == null
-              ? ""
-              : _centToEuro(amount)!.toStringAsFixed(2),
+          initialValue: _centToEuro(amount) == null ? "" : _centToEuro(amount)!.toStringAsFixed(2),
           decoration: const InputDecoration(labelText: 'Amount (€)'),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: _updateAmount,
           inputFormatters: <TextInputFormatter>[
             // for below version 2 use this
-            FilteringTextInputFormatter.allow(
-                RegExp(r'^[0-9]*([,.][0-9]{0,2})?')),
+            FilteringTextInputFormatter.allow(RegExp(r'^[0-9]*([,.][0-9]{0,2})?')),
           ],
           validator: validator,
         ),
