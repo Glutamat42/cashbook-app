@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToNewEntry,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
       drawer: _buildDrawer(),
       body: Column(
@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToNewEntry() {
     // Navigate to DetailsScreen with a new Entry object
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsScreen(entry: Entry(date: new DateTime.now())), // Implement createNew method in Entry model
+      builder: (context) => DetailsScreen(entry: Entry(date: DateTime.now())), // Implement createNew method in Entry model
     ));
   }
 
@@ -220,9 +220,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showFilterDialog() async {
-    // Assuming you have a way to get current filters from EntryStore
-    final currentFilters = _entryStore.currentFilters;
-
     final result = await showDialog<Map<FilterField, dynamic>>(
       context: context,
       builder: (BuildContext context) =>

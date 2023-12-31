@@ -24,4 +24,9 @@ abstract class _UserStore with Store {
       _logger.severe('Failed to load users: $e');
     }
   }
+
+  @action
+  Future<void> onLogout() async {
+    users.clear();
+  }
 }

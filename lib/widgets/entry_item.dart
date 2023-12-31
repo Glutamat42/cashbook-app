@@ -9,7 +9,7 @@ import '../stores/entry_store.dart';
 class EntryItem extends StatelessWidget {
   final Entry entry;
 
-  EntryItem({Key? key, required this.entry}) : super(key: key);
+  const EntryItem({Key? key, required this.entry}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +26,12 @@ class EntryItem extends StatelessWidget {
           );
         },
         title: Text(
-          entry.recipientSender ?? "",
+          entry.recipientSender,
           style: const TextStyle(fontWeight: FontWeight.bold),
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          entry.description ?? "",
+          entry.description,
           overflow: TextOverflow.ellipsis,
         ),
         trailing: Column(

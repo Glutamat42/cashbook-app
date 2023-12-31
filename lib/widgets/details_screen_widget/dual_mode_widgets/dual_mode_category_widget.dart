@@ -71,7 +71,7 @@ class DualModeCategoryWidget extends StatelessWidget {
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
-                title: Text('Manage Categories'),
+                title: const Text('Manage Categories'),
                 content: SizedBox(
                   width: double.maxFinite, // Ensures the dialog is wide enough
                   child: Column(

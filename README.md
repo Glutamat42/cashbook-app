@@ -2,8 +2,6 @@
 
 generate mobx files: flutter packages pub run build_runner build --delete-conflicting-outputs
 
-dev.markus-heck
-
 ## Getting Started
 
 This project is a starting point for a Flutter application.
@@ -23,13 +21,9 @@ samples, guidance on mobile development, and a full API reference.
 todolist
 
 
-
-testcase: add document, save, directly delete
-
-
 loading spinner document upload / save, update entry
 
-
+BUG: create entry with and directly edit, go to home, entry missing
 
 Caching remote bilder
 

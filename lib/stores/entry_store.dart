@@ -117,12 +117,8 @@ abstract class _EntryStore with Store {
 
   @action
   Future<void> deleteEntry(int entryId) async {
-    try {
-      await _entriesRepository.deleteEntry(entryId);
-      visibleEntries.removeWhere((entry) => entry.id == entryId);
-    } catch (e) {
-      // Handle errors
-    }
+    await _entriesRepository.deleteEntry(entryId);
+    visibleEntries.removeWhere((entry) => entry.id == entryId);
   }
 
   @action
@@ -208,5 +204,12 @@ abstract class _EntryStore with Store {
     }
 
     return filteredEntries;
+  }
+
+  @action
+  Future<void> onLogout() async {
+    allEntries.clear();
+    visibleEntries.clear();
+    entryDocuments.clear;
   }
 }

@@ -56,8 +56,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
     }
     _editableEntry = Entry.fromJson(entry.toJson());
 
-    _recipientSenderController.text = _editableEntry.recipientSender ?? '';
-    _descriptionController.text = _editableEntry.description ?? '';
+    _recipientSenderController.text = _editableEntry.recipientSender;
+    _descriptionController.text = _editableEntry.description;
 
     _currentlySelectedDate = _editableEntry.date;
     super.initState();
@@ -84,12 +84,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Entry Details'),
+          title: const Text('Entry Details'),
           actions: <Widget>[
-            // IconButton( // TODO: implement deleteentry
-            //   icon: Icon(Icons.delete),
-            //     onPressed: onPressed
-            // ),
+            _isNew
+                ? Container()
+                :
+            IconButton(
+              icon: const Icon(Icons.delete),
+                onPressed: _onEntryDelete,
+            ),
             IconButton(
               icon: Icon(_isEditMode ? Icons.check : Icons.edit),
               onPressed: () async {
@@ -157,6 +160,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
                 return 'Date cannot be before year 2000';
               }
+              return null;
             },
           ),
           FutureBuilder(
@@ -216,8 +220,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
       _entryStore.loadEntries().then((value) => setState(() {
         entry = _entryStore.allEntries.firstWhere((e) => e.id == entry.id);
         _editableEntry = Entry.fromJson(entry.toJson());
-        _recipientSenderController.text = _editableEntry.recipientSender ?? '';
-        _descriptionController.text = _editableEntry.description ?? '';
+        _recipientSenderController.text = _editableEntry.recipientSender;
+        _descriptionController.text = _editableEntry.description;
         _currentlySelectedDate = _editableEntry.date;
       }));
       _categoryStore.loadCategories();
@@ -270,6 +274,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
           // refresh documents
           loadDocumentsFuture = _entryStore.loadDocumentsForEntry(updatedEntry.id!);
           documents = [];
+          // if it was a new entry it isn't anymore now
+          _isNew = false;
         });
       } catch (error) {
         // TODO: show correct error message if request is too large
@@ -294,7 +300,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   List<Widget> _buildCreatedModifiedInfo() {
-    _log.fine('Building created/modified info, isNew: ${_isNew}');
+    _log.fine('Building created/modified info, isNew: $_isNew');
     if (_isNew) {
       return [];
     }
@@ -372,5 +378,40 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
     )) ??
         false;
+  }
+
+  Future<void> _onEntryDelete() async {
+    bool result = await showDialog(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: const Text('Delete Entry?'),
+            content: const Text('Do you really want to delete this entry?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: const Text('Delete'),
+                onPressed: () async {
+                  try {
+                    await _entryStore.deleteEntry(_editableEntry.id!);
+                    if (context.mounted) Navigator.of(context).pop(true);
+                  } catch (e) {
+                    _log.warning('Error deleting entry: $e');
+                    if (context.mounted) Navigator.of(context).pop(false);
+                    if (context.mounted) _showSnackbar(context, 'Failed to delete entry: ${e.toString()}', Colors.red);
+                  }
+                },
+              ),
+            ],
+          ),
+    );
+
+    if (result && context.mounted) {
+      _isEditMode = false;
+      Navigator.of(context).pop();
+    }
   }
 }

@@ -164,26 +164,6 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
     fileName = currentDocument.originalFilename ?? 'file';
     mimeType = _getMimeType(fileBytes.toList())!;
 
-    // Share the file based on platform
-    // if (Helpers.isDesktopWebBrowser && currentDocument is RemoteDocument) {
-    //   // Desktop Web Browser logic to download the file
-    //   Sharing.share(fileBytes, fileName);
-    // }
-
     Sharing.share(fileBytes, fileName, mimeType);
-    // else {
-    //   if (kIsWeb) {
-    //     // For web, use HTML anchor element for downloading
-    //     final blob = html.Blob([fileBytes]);
-    //     final url = html.Url.createObjectUrlFromBlob(blob);
-    //     html.AnchorElement(href: url)
-    //       ..setAttribute("download", fileName)
-    //       ..click();
-    //     html.Url.revokeObjectUrl(url);
-    //   } else {
-    //     // For non-web, use Share package
-    //     await Share.shareXFiles([XFile.fromData(fileBytes, name: fileName)]);
-    //   }
-    // }
   }
 }

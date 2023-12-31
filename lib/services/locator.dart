@@ -1,4 +1,3 @@
-import 'package:cashbook/config/app_config.dart';
 import 'package:cashbook/repositories/categories_repository.dart';
 import 'package:cashbook/repositories/documents_repository.dart';
 import 'package:cashbook/repositories/entries_repository.dart';

@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../models/document.dart';
 import '../models/entry.dart'; // Assuming you have an Entry model defined
 import '../models/local_document.dart';
-import '../services/locator.dart';
 
 class EntriesRepository {
   final Dio dio;

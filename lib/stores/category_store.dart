@@ -40,5 +40,8 @@ abstract class _CategoryStore with Store {
     }
   }
 
-// Additional methods for CRUD operations on categories can be added here
+  @action
+  Future<void> onLogout() async {
+    categories.clear();
+  }
 }

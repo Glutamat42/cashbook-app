@@ -48,8 +48,7 @@ class DocumentSection extends StatelessWidget {
           const SizedBox(height: 10),
           Observer(
             builder: (_) =>
-
-               Container(
+               SizedBox(
                 height: 100,
                 child: isLoading && !isNew ? const Center(child: CircularProgressIndicator()) :ListView.builder(
                   scrollDirection: Axis.horizontal,

@@ -1,3 +1,6 @@
+import 'package:cashbook/stores/category_store.dart';
+import 'package:cashbook/stores/entry_store.dart';
+import 'package:cashbook/stores/user_store.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobx/mobx.dart';
@@ -43,7 +46,7 @@ abstract class _AuthStore with Store {
       }
     }
 
-    isLoggedIn = authToken != null && authToken!.isNotEmpty;
+    isLoggedIn = authToken != null && authToken.isNotEmpty;
 
   //   TODO: validate token still valid
   }
@@ -57,7 +60,7 @@ abstract class _AuthStore with Store {
       isLoggedIn = user.token != null;
       if (isLoggedIn) {
         this.user = user;
-        this.baseUrl = server;
+        baseUrl = server;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', user.token!);
         await prefs.setInt('userId', user.id);
@@ -79,5 +82,9 @@ abstract class _AuthStore with Store {
     await prefs.remove('authToken');
     await prefs.remove('userId');
     await prefs.remove('username');
+
+    locator<CategoryStore>().onLogout();
+    locator<EntryStore>().onLogout();
+    locator<UserStore>().onLogout();
   }
 }

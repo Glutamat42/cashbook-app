@@ -48,8 +48,13 @@ void _setupLogging(String level) {
 
   Logger.root.level = logLevel; // Set this level as per your need
   Logger.root.onRecord.listen((record) {
-    // Use `print` or other mechanisms to output logs
-    print('${record.level.name}: ${record.time}: ${record.message}');
+    final timestamp = record.time.toIso8601String();
+    final logLevel = record.level.name.padRight(7); // "WARNING" has 7 characters
+    final loggerName = record.loggerName;
+    final message = record.message;
+
+    // ignore: avoid_print
+    print('$timestamp | $logLevel | $loggerName | $message');
   });
 
   if (invalidLevel) {

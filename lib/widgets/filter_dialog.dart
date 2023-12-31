@@ -86,15 +86,4 @@ class _FilterDialogState extends State<FilterDialog> {
       ],
     );
   }
-
-  String _getFilterFieldText(FilterField field) {
-    switch (field) {
-      case FilterField.category:
-        return 'Category';
-      case FilterField.invoiceMissing:
-        return 'Invoice Missing';
-      default:
-        return '';
-    }
-  }
 }

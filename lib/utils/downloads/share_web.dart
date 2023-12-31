@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:typed_data';
-import 'package:js/js.dart';
 import 'package:logging/logging.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:html' as html;
@@ -8,7 +6,7 @@ import 'dart:html' as html;
 import '../helpers.dart';
 
 class Sharing {
-  static Logger _log = Logger('Sharing');
+  static final Logger _log = Logger('Sharing');
 
   static void shareWeb(Uint8List fileBytes, String fileName, String mimeType) {
     // This should work but doesnt. It says "TypeError: this.share is not a function"
