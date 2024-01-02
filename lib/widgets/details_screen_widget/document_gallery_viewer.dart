@@ -1,15 +1,13 @@
 import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/stores/auth_store.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import '../../services/locator.dart';
 import '../../models/document.dart';
 import '../../models/remote_document.dart';
-import 'package:http/http.dart' as http;
 import 'full_screen_image_viewer.dart';
 import 'package:mime/mime.dart' as mime;
-import 'dart:typed_data';
-import 'package:flutter/services.dart';
 
 import 'package:cashbook/utils/downloads/share_mobile.dart'
     if (dart.library.html) 'package:cashbook/utils/downloads/share_web.dart';
@@ -53,14 +51,12 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
       appBar: AppBar(
         title: Text(widget.documents[_currentIndex].originalFilename ?? "Document"),
         actions: [
-          // widget.documents[_currentIndex] is RemoteDocument
-          //     ? IconButton(
-          //         icon: Icon(Icons.share),
-          //         onPressed: () {
-          //           // Implement share functionality for _currentIndex document
-          //         },
-          //       )
-          //     : Container(),
+          IconButton(
+            icon: const Icon(kIsWeb ? Icons.download : Icons.share),
+            onPressed: () {
+              _downloadAndShare(QualityType.document);
+            },
+          ),
           _buildDeleteButton(),
           PopupMenuButton<String>(
             onSelected: _handleMenuSelection,
@@ -130,7 +126,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
 
   void _handleMenuSelection(String choice) {
     if (choice == 'Download Original') {
-      _downloadAndShareOriginal();
+      _downloadAndShare(QualityType.original);
     }
   }
 
@@ -144,26 +140,45 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
     return mimeType;
   }
 
-  Future<void> _downloadAndShareOriginal() async {
-    final currentDocument = widget.documents[_currentIndex];
-
+  Future<void> _downloadAndShare(QualityType qualityType) async {
+    Document document = widget.documents[_currentIndex];
     // Mobile and mobile web browser logic to share the file
     Uint8List fileBytes;
     String fileName;
     String mimeType;
 
-    if (currentDocument is RemoteDocument) {
+    if (document is RemoteDocument) {
       // Download the file for mobile platforms
-      final response = await http.get(Uri.parse("${authStore.baseUrl!}/${currentDocument.originalLink}"),
-          headers: {"Authorization": "Bearer ${authStore.user!.token}"});
-      fileBytes = response.bodyBytes;
+      switch (qualityType) {
+        case QualityType.original:
+          fileBytes = await (document).originalBinaryData;
+        case QualityType.document:
+          fileBytes = await (document).documentBinaryData;
+        case QualityType.thumbnail:
+          fileBytes = await (document).thumbnailBinaryData;
+      }
     } else {
       // Local file
-      fileBytes = (currentDocument as LocalDocument).originalBinaryData;
+      switch (qualityType) {
+        case QualityType.original:
+          fileBytes = (document as LocalDocument).originalBinaryData;
+        case QualityType.document:
+          fileBytes = (document as LocalDocument).documentBinaryData;
+        case QualityType.thumbnail:
+          fileBytes = (document as LocalDocument).thumbnailBinaryData;
+      }
     }
-    fileName = currentDocument.originalFilename ?? 'file';
+    fileName = document.originalFilename ?? 'file';
     mimeType = _getMimeType(fileBytes.toList())!;
+
+    // TODO convert to jpeg
 
     Sharing.share(fileBytes, fileName, mimeType);
   }
+}
+
+enum QualityType {
+  original,
+  document,
+  thumbnail,
 }

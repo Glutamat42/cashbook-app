@@ -222,11 +222,16 @@ class DocumentSection extends StatelessWidget {
 
   Widget _buildImage(Document document, String baseUrl, String token) {
     if (document is RemoteDocument) {
-      return Image.network(
-        '$baseUrl/${document.thumbnailLink}',
-        headers: {'Authorization': 'Bearer $token'},
-        fit: BoxFit.cover,
-      );
+      return FutureBuilder(future: document.thumbnailBinaryData, builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Image.memory(
+            snapshot.data as Uint8List,
+            fit: BoxFit.cover,
+          );
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      });
     } else {
       if (_getMimeType((document as LocalDocument).originalBinaryData) == 'application/pdf') {
         return Image.asset('/assets/images/icon-picture_as_pdf.png');

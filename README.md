@@ -24,7 +24,6 @@ samples, guidance on mobile development, and a full API reference.
 - BUG: create entry with and directly edit, go to home, entry missing
 - Caching remote bilder
 - allow users to select compression level (maybe: source, 4k (8MP), WQHD (3.6MP), FHD (2MP))
-- share button für fullscreen bilder
 - multi language (i18n)
 - BUG: intent on web throws exceptions in console. disable code on web, web is not supported anyway
 
