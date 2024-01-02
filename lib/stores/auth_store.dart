@@ -1,6 +1,7 @@
 import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
 import 'package:cashbook/stores/user_store.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -101,7 +102,9 @@ abstract class _AuthStore with Store {
     locator<UserStore>().onLogout();
 
     // clear cache
-    final cacheDir = await getTemporaryDirectory();
-    cacheDir.delete(recursive: true);
+    if (!kIsWeb) {
+      final cacheDir = await getTemporaryDirectory();
+      await cacheDir.delete(recursive: true);
+    }
   }
 }

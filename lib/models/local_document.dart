@@ -25,13 +25,18 @@ class LocalDocument extends Document {
 
   Future get compressionFuture => Future.wait(_compressionFutures);
 
-  void compress() {
+  void _compress() {
     String? mimeType = Helpers.getMimeType(originalBinaryData.toList());
-    if (!mimeType!.startsWith('image/')) {
+    if (mimeType == null) {
+      _logger.severe('Could not determine mime type of file (null)');
+      throw Exception('Could not determine mime type of file');
+    } else if (!mimeType.startsWith('image/')) {
       _logger.info('File is not an image, not compressing');
     } else if (mimeType == 'image/avif' || mimeType == 'image/webp' && originalBinaryData.lengthInBytes < 500000) {
       _logger.info('File is already compressed with a modern format and smaller than 500kB, not recompressing');
-  } else{
+    // } else if (mimeType == 'image/heif') {
+    //   _logger.info('File is in HEIF format, not compressing');
+    } else {
       _logger.fine('Compressing image');
       _logger.finest('File size before compression: ${(originalBinaryData.lengthInBytes / 1024).round()} kilobytes');
       Future compressionFuture = FlutterImageCompress.compressWithList(
@@ -63,7 +68,7 @@ class LocalDocument extends Document {
     _fileBytes = fileBytes;
     if (compressionSettings != null) _compressionSettings = compressionSettings;
     if (enableCompression) {
-      compress();
+      _compress();
     }
   }
 
