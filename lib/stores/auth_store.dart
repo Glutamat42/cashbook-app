@@ -2,6 +2,7 @@ import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
 import 'package:cashbook/stores/user_store.dart';
 import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobx/mobx.dart';
 import '../models/user.dart';
@@ -98,5 +99,9 @@ abstract class _AuthStore with Store {
     locator<CategoryStore>().onLogout();
     locator<EntryStore>().onLogout();
     locator<UserStore>().onLogout();
+
+    // clear cache
+    final cacheDir = await getTemporaryDirectory();
+    cacheDir.delete(recursive: true);
   }
 }

@@ -1,7 +1,8 @@
+import 'package:cashbook/utils/helpers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_avif/flutter_avif.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:mime/mime.dart' as mime;
 
 import '../../models/document.dart';
 import '../../models/local_document.dart';
@@ -22,7 +23,7 @@ class FullScreenImageViewer extends StatelessWidget {
           future: (document as RemoteDocument).documentBinaryData,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return _buildPhotoView(MemoryImage(snapshot.data!), context);
+              return _buildPhotoView(_buildMemoryImageProviderWithAvif(snapshot.data!), context);
             } else if (snapshot.hasError) {
               return const Center(child: Text('Error loading image'));
             } else {
@@ -45,21 +46,22 @@ class FullScreenImageViewer extends StatelessWidget {
   }
 
   ImageProvider _buildLocalDocumentImageProvider() {
-    if (_getMimeType((document as LocalDocument).thumbnailBinaryData) == 'application/pdf') {
+    if (Helpers.getMimeType((document as LocalDocument).originalBinaryData) == 'application/pdf') {
       if (kIsWeb) {
         return const NetworkImage('assets/images/icon-picture_as_pdf.png');
       } else {
         return const AssetImage('assets/images/icon-picture_as_pdf.png');
       }
     } else {
-      return MemoryImage((document as LocalDocument).documentBinaryData);
+      return _buildMemoryImageProviderWithAvif((document as LocalDocument).documentBinaryData);
     }
   }
 
-  String? _getMimeType(List<int> binaryFileData) {
-    final List<int> header = binaryFileData.sublist(0, mime.defaultMagicNumbersMaxLength);
-
-    // Empty string for the file name because it's not relevant.
-    return mime.lookupMimeType('', headerBytes: header);
+  ImageProvider _buildMemoryImageProviderWithAvif(Uint8List imageData) {
+    if (Helpers.getMimeType(imageData) == 'image/avif') {
+      return MemoryAvifImage(imageData);
+    } else {
+      return MemoryImage(imageData);
+    }
   }
 }

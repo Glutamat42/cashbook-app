@@ -6,12 +6,12 @@ import 'package:cashbook/models/remote_document.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/auth_store.dart';
 import 'package:cashbook/utils/helpers.dart';
+import 'package:cashbook/widgets/memory_image_with_avif.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logging/logging.dart';
-import 'package:mime/mime.dart' as mime;
 import '../document_gallery_viewer.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -47,26 +47,26 @@ class DocumentSection extends StatelessWidget {
           const Text('Documents (Images, PDFs)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Observer(
-            builder: (_) =>
-               SizedBox(
-                height: 100,
-                child: isLoading && !isNew ? const Center(child: CircularProgressIndicator()) :ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: isEditable ? documents.length + 1 : documents.length, // +1 for add button if editable
-                  itemBuilder: (context, index) {
-                    if (isEditable && index == 0) {
-                      return _buildAddButton(context);
-                    }
-                    int docIndex = isEditable ? index - 1 : index; // Adjust index if in editable mode
-                    return _buildThumbnailTile(documents, docIndex, context);
-                  },
-                ),
-              )
-          )
-    ]
-            ,
-          ),
-      );
+              builder: (_) => SizedBox(
+                    height: 100,
+                    child: isLoading && !isNew
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount:
+                                isEditable ? documents.length + 1 : documents.length, // +1 for add button if editable
+                            itemBuilder: (context, index) {
+                              if (isEditable && index == 0) {
+                                return _buildAddButton(context);
+                              }
+                              int docIndex = isEditable ? index - 1 : index; // Adjust index if in editable mode
+                              return _buildThumbnailTile(documents, docIndex, context);
+                            },
+                          ),
+                  ))
+        ],
+      ),
+    );
   }
 
   Widget _buildAddButton(BuildContext context) {
@@ -222,32 +222,21 @@ class DocumentSection extends StatelessWidget {
 
   Widget _buildImage(Document document, String baseUrl, String token) {
     if (document is RemoteDocument) {
-      return FutureBuilder(future: document.thumbnailBinaryData, builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return Image.memory(
-            snapshot.data as Uint8List,
-            fit: BoxFit.cover,
-          );
-        } else {
-          return const Center(child: CircularProgressIndicator());
-        }
-      });
+      return FutureBuilder(
+          future: document.thumbnailBinaryData,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return MemoryImageWithAvif(imageData: snapshot.data as Uint8List);
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
+          });
     } else {
-      if (_getMimeType((document as LocalDocument).originalBinaryData) == 'application/pdf') {
+      if (Helpers.getMimeType((document as LocalDocument).originalBinaryData) == 'application/pdf') {
         return Image.asset('/assets/images/icon-picture_as_pdf.png');
       }
-      return Image.memory(
-        document.thumbnailBinaryData,
-        fit: BoxFit.cover,
-      );
+      return MemoryImageWithAvif(imageData: document.thumbnailBinaryData);
     }
-  }
-
-  String? _getMimeType(List<int> binaryFileData) {
-    final List<int> header = binaryFileData.sublist(0, mime.defaultMagicNumbersMaxLength);
-
-    // Empty string for the file name because it's not relevant.
-    return mime.lookupMimeType('', headerBytes: header);
   }
 
   void _newDocumentOpened(Uint8List fileData, String filename, BuildContext context, int? entryId) {

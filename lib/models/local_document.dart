@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:cashbook/models/document.dart';
+import 'package:cashbook/utils/helpers.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:logging/logging.dart';
-import 'package:mime/mime.dart' as mime;
 
 class LocalDocument extends Document {
   final Logger _logger = Logger('LocalDocument');
@@ -14,13 +14,6 @@ class LocalDocument extends Document {
   Uint8List get documentBinaryData => _fileBytes;
 
   Uint8List get originalBinaryData => _fileBytes;
-
-  String? get mimeType {
-    final List<int> header = originalBinaryData.sublist(0, mime.defaultMagicNumbersMaxLength);
-
-    // Empty string for the file name because it's not relevant.
-    return mime.lookupMimeType('', headerBytes: header);
-  }
 
   Map<String, int> _compressionSettings = {
     'minHeight': 2560,
@@ -33,9 +26,12 @@ class LocalDocument extends Document {
   Future get compressionFuture => Future.wait(_compressionFutures);
 
   void compress() {
+    String? mimeType = Helpers.getMimeType(originalBinaryData.toList());
     if (!mimeType!.startsWith('image/')) {
       _logger.info('File is not an image, not compressing');
-    } else {
+    } else if (mimeType == 'image/avif' || mimeType == 'image/webp') {
+      _logger.info('File is already compressed with a modern format, not recompressing');
+  } else{
       _logger.fine('Compressing image');
       _logger.finest('File size before compression: ${(originalBinaryData.lengthInBytes / 1024).round()} kilobytes');
       Future compressionFuture = FlutterImageCompress.compressWithList(
@@ -46,6 +42,7 @@ class LocalDocument extends Document {
         minHeight: _compressionSettings['minHeight']!,
         minWidth: _compressionSettings['minWidth']!,
         quality: _compressionSettings['quality']!,
+        format: CompressFormat.webp,
       );
       compressionFuture.then((value) {
         _logger.finer('File size after compression: ${(value.lengthInBytes / 1024).round()} kilobytes');

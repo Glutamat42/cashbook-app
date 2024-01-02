@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/stores/auth_store.dart';
+import 'package:cashbook/utils/helpers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:logging/logging.dart';
 import '../../services/locator.dart';
 import '../../models/document.dart';
 import '../../models/remote_document.dart';
 import 'full_screen_image_viewer.dart';
-import 'package:mime/mime.dart' as mime;
 
 import 'package:cashbook/utils/downloads/share_mobile.dart'
     if (dart.library.html) 'package:cashbook/utils/downloads/share_web.dart';
@@ -37,6 +40,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
   late PageController _pageController;
   late int _currentIndex;
   final AuthStore authStore = locator<AuthStore>();
+  bool shareSupported = false;
 
   @override
   void initState() {
@@ -51,24 +55,33 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
       appBar: AppBar(
         title: Text(widget.documents[_currentIndex].originalFilename ?? "Document"),
         actions: [
-          IconButton(
-            icon: const Icon(kIsWeb ? Icons.download : Icons.share),
-            onPressed: () {
-              _downloadAndShare(QualityType.document);
-            },
-          ),
+          shareSupported
+              ? IconButton(
+                  icon: const Icon(kIsWeb ? Icons.download : Icons.share),
+                  onPressed: () {
+                    // _downloadAndShare(QualityType.original);
+                    _downloadAndShare(QualityType.document);
+                  },
+                )
+              : IconButton(
+                  icon: const Icon(kIsWeb ? Icons.download : Icons.share),
+                  onPressed: () {
+                    _downloadAndShare(QualityType.original);
+                  },
+                ),
           _buildDeleteButton(),
-          PopupMenuButton<String>(
-            onSelected: _handleMenuSelection,
-            itemBuilder: (BuildContext context) {
-              return {'Download Original'}.map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
-            },
-          ),
+          if (shareSupported)
+            PopupMenuButton<String>(
+              onSelected: _handleMenuSelection,
+              itemBuilder: (BuildContext context) {
+                return {'Download/share Original'}.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            ),
         ],
       ),
       body: PageView.builder(
@@ -86,7 +99,24 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
     );
   }
 
+  void _checkShareSupported(Document document) async {
+    Uint8List imageData;
+    if (document is LocalDocument) {
+      imageData = document.documentBinaryData;
+    } else {
+      imageData = await (document as RemoteDocument).documentBinaryData;
+    }
+    final bool isSupported = Helpers.getMimeType(imageData) != 'image/avif';
+    if (shareSupported != isSupported) {
+      setState(() {
+        shareSupported = isSupported;
+      });
+    }
+  }
+
   Widget _buildFullScreenImageViewerWithDeletionState(Document document) {
+    _checkShareSupported(widget.documents[_currentIndex]);
+
     if (widget.documents[_currentIndex].deleted) {
       return ColorFiltered(
         colorFilter: const ColorFilter.mode(
@@ -130,17 +160,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
     }
   }
 
-  String? _getMimeType(List<int> binaryFileData) {
-    _log.finest('Binary file data length: ${binaryFileData.length}');
-    final List<int> header = binaryFileData.sublist(0, mime.defaultMagicNumbersMaxLength);
-
-    // Empty string for the file name because it's not relevant.
-    String? mimeType = mime.lookupMimeType('', headerBytes: header);
-    _log.fine('Mime type: $mimeType');
-    return mimeType;
-  }
-
-  Future<void> _downloadAndShare(QualityType qualityType) async {
+  Future<void> _downloadAndShare(QualityType qualityType, {bool convertToJpeg = true}) async {
     Document document = widget.documents[_currentIndex];
     // Mobile and mobile web browser logic to share the file
     Uint8List fileBytes;
@@ -169,9 +189,18 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
       }
     }
     fileName = document.originalFilename ?? 'file';
-    mimeType = _getMimeType(fileBytes.toList())!;
+    mimeType = Helpers.getMimeType(fileBytes.toList())!;
 
-    // TODO convert to jpeg
+    // convert
+    if (convertToJpeg) {
+      if (mimeType == 'image/avif') {
+        _log.warning('Cannot convert AVIF to JPEG');
+      } else if (mimeType == 'image/webp') {
+        final image = img.decodeImage(fileBytes);
+        fileBytes = img.encodeJpg(image!, quality: 90);
+        mimeType = 'image/jpeg';
+      }
+    }
 
     Sharing.share(fileBytes, fileName, mimeType);
   }
