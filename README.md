@@ -26,4 +26,7 @@ samples, guidance on mobile development, and a full API reference.
 - allow users to select compression level (maybe: source, 4k (8MP), WQHD (3.6MP), FHD (2MP))
 - share button für fullscreen bilder
 - multi language (i18n)
-- BUG: intent on web throws exceptions in console. disalbe code on web, web is not supported anyway
+- BUG: intent on web throws exceptions in console. disable code on web, web is not supported anyway
+
+- switch lumen to laravel
+  - improve auth
