@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/document.dart';
 import '../models/entry.dart';
 import '../models/local_document.dart';
@@ -81,6 +85,7 @@ abstract class _EntryStore with Store {
         visibleEntries.replaceRange(index, index + 1, [entry]);
       }
       _applyFilterAndSort();
+      _cleanupDocumentCache(entryId: entry.id);
       return entry;
     } catch (e) {
       _logger.severe('Failed to update entry: $e');
@@ -98,8 +103,74 @@ abstract class _EntryStore with Store {
       entryDocuments = ObservableMap<int, ObservableList<Document>>.of({
         for (var d in docs) d.entryId!: ObservableList<Document>.of([d])
       });
+
+      _cleanupDocumentCache();
     } catch (e) {
       _logger.severe('Failed to load documents: $e');
+    }
+  }
+
+  _cleanupDocumentCache({int? entryId}) async {
+    if (!kIsWeb) {
+      // Only clean up the document cache on mobile
+      _logger.info('Cleaning up document cache');
+      try {
+        // Obtain the temporary directory
+        final tempDir = await getTemporaryDirectory();
+        final documentCacheDir = Directory('${tempDir.path}/documents');
+
+        if (!documentCacheDir.existsSync()) {
+          return; // If the cache directory doesn't exist, nothing to clean
+        }
+
+        // For all entries
+        final cacheDirList = Directory('${documentCacheDir.path}/documents/').listSync();
+        final existingEntryIds = allEntries.map((entry) => entry.id).toSet();
+        for (var dir in cacheDirList) {
+          if (dir is Directory) {
+            final dirName = dir.path.split('/').last;
+            final dirEntryId = int.tryParse(dirName);
+
+            if (dirEntryId == null) {
+              _logger.warning('Found invalid directory in document cache: $dirName, deleting it');
+              dir.delete(recursive: true);
+              continue;
+            }
+            if (dirEntryId != entryId) {
+              // Cleanup only for specific entryId, this is not it
+              continue;
+            }
+            if (!existingEntryIds.contains(dirEntryId)) {
+              _logger.info('Found orphaned directory in document cache: $dirName, deleting it');
+              dir.delete(recursive: true);
+              continue;
+            }
+            // now the only case left is that the entry still exists and it's cache content has to be cleaned up
+            _cleanupDocumentsForEntry(dirEntryId, dir);
+          } else {
+            // not a dir, should not be here -> delete
+            await dir.delete();
+          }
+        }
+      } catch (e) {
+        _logger.severe('Failed to cleanup document cache: $e');
+      }
+    } else {
+      _logger.info('Skipping document cache cleanup on web');
+    }
+  }
+
+  Future<void> _cleanupDocumentsForEntry(int entryId, Directory documentCacheDir) async {
+    final existingDocumentIds = entryDocuments[entryId]?.map((doc) => doc.id).toSet() ?? <int>{};
+    final cachedFiles = Directory('${documentCacheDir.path}/documents/$entryId').listSync();
+
+    for (var dir in cachedFiles) {
+      final dirName = dir.path.split('/').last;
+      final cachedDocumentId = int.tryParse(dirName);
+
+      if (!existingDocumentIds.contains(cachedDocumentId)) {
+        await dir.delete(recursive: true);
+      }
     }
   }
 
@@ -120,6 +191,7 @@ abstract class _EntryStore with Store {
   Future<void> deleteEntry(int entryId) async {
     await _entriesRepository.deleteEntry(entryId);
     visibleEntries.removeWhere((entry) => entry.id == entryId);
+    _cleanupDocumentCache(entryId: entryId);
   }
 
   @action

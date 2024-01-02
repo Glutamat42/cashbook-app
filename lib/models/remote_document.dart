@@ -57,7 +57,8 @@ class RemoteDocument extends Document {
   Future<File?> _saveToCache(String url, Uint8List fileBytes) async {
     // validate data
     final cacheDir = await getTemporaryDirectory();
-    final filePath = '${cacheDir.path}/documents/$id/${Uri.parse(url).pathSegments.last}';
+    final filePath = '${cacheDir.path}/documents/$entryId/$id/${Uri.parse(url).pathSegments.last}';
+    _log.fine('Saving file to $filePath');
     final file = File(filePath);
 
     // Create the directory if it doesn't exist
@@ -86,7 +87,8 @@ class RemoteDocument extends Document {
 
   Future<File?> _getCachedFile(String url) async {
     final cacheDir = await getTemporaryDirectory();
-    final filePath = '${cacheDir.path}/documents/$id/${Uri.parse(url).pathSegments.last}';
+    final filePath = '${cacheDir.path}/documents/$entryId/$id/${Uri.parse(url).pathSegments.last}';
+    _log.fine('Checking for cached file at $filePath');
     final file = File(filePath);
 
     try {
