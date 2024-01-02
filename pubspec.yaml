@@ -46,9 +46,6 @@ dependencies:
   file_picker: ^6.1.1
   permission_handler: ^10.0.0
   mime: ^1.0.4
-#  mime:
-#    git:
-#      url: https://github.com/Glutamat42/mime
   share_plus: ^7.2.1
   flutter_sharing_intent:
     git:

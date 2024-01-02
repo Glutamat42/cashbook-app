@@ -26,5 +26,6 @@ samples, guidance on mobile development, and a full API reference.
 - multi language (i18n)
 - BUG: intent on web throws exceptions in console. disable code on web, web is not supported anyway
 
+- avif support: requires image/avif decode support in flutter_avif (feature request submitted)
 - switch lumen to laravel
   - improve auth

@@ -18,7 +18,7 @@ class LocalDocument extends Document {
   Map<String, int> _compressionSettings = {
     'minHeight': 2560,
     'minWidth': 2560,
-    'quality': 80,
+    'quality': 70,
   };
 
   final List<Future> _compressionFutures = [];
@@ -29,8 +29,8 @@ class LocalDocument extends Document {
     String? mimeType = Helpers.getMimeType(originalBinaryData.toList());
     if (!mimeType!.startsWith('image/')) {
       _logger.info('File is not an image, not compressing');
-    } else if (mimeType == 'image/avif' || mimeType == 'image/webp') {
-      _logger.info('File is already compressed with a modern format, not recompressing');
+    } else if (mimeType == 'image/avif' || mimeType == 'image/webp' && originalBinaryData.lengthInBytes < 500000) {
+      _logger.info('File is already compressed with a modern format and smaller than 500kB, not recompressing');
   } else{
       _logger.fine('Compressing image');
       _logger.finest('File size before compression: ${(originalBinaryData.lengthInBytes / 1024).round()} kilobytes');

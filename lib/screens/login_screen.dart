@@ -1,6 +1,7 @@
 import 'package:cashbook/widgets/auto_complete_text_edit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:logging/logging.dart';
 import '../stores/auth_store.dart';
 import '../services/locator.dart';
 import '../constants/route_names.dart';
@@ -11,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final Logger _log = Logger('_LoginScreenState');
   final AuthStore _authStore = locator<AuthStore>();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
@@ -126,10 +128,12 @@ class _LoginScreenState extends State<LoginScreen> {
       await _authStore.login(_usernameController.text, _passwordController.text, _serverController.text);
     } catch (e) {
       if (e.toString().contains("401")) {
+        _log.info('Login Failed: Invalid credentials: ${e.toString()}');
         scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Login Failed: Invalid credentials'), backgroundColor: Colors.red),
         );
-      } else if (e.toString().contains("405") || e.toString().contains("405") || e.toString().contains("network layer")) {
+      } else if (e.toString().contains("405") || e.toString().contains("network layer") || e.toString().contains("Connection reset by peer")) {
+        _log.info('Login Failed: Invalid server: ${e.toString()}');
         scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Login Failed: Invalid server'), backgroundColor: Colors.red),
         );
