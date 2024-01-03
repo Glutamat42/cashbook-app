@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:cashbook/models/document.dart';
 import 'package:cashbook/utils/helpers.dart';
+import 'package:flutter_avif/flutter_avif.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:logging/logging.dart';
 
@@ -39,6 +40,12 @@ class LocalDocument extends Document {
     } else {
       _logger.fine('Compressing image');
       _logger.finest('File size before compression: ${(originalBinaryData.lengthInBytes / 1024).round()} kilobytes');
+
+
+// TODO: compression settings for avif
+      // TODO: loading spinner for compression (somehow in background, probably in thumbnail tile, disable save button until finished)
+      // TODO: add new images to the left of the thumbnail lift
+      // TODO: improve this compression code
       Future compressionFuture = FlutterImageCompress.compressWithList(
         originalBinaryData,
         keepExif: true,
@@ -46,12 +53,19 @@ class LocalDocument extends Document {
         // autoCorrectionAngle: true,
         minHeight: _compressionSettings['minHeight']!,
         minWidth: _compressionSettings['minWidth']!,
-        quality: _compressionSettings['quality']!,
-        format: CompressFormat.webp,
+        quality: 90,
+        format: CompressFormat.jpeg,
       );
       compressionFuture.then((value) {
         _logger.finer('File size after compression: ${(value.lengthInBytes / 1024).round()} kilobytes');
-        return _fileBytes = value;
+
+        Future avifBytesFuture = encodeAvif(value, maxQuantizer: 40, minQuantizer: 25, maxQuantizerAlpha: 40, minQuantizerAlpha: 25);
+        avifBytesFuture.then((value) {
+          _logger.finer('File size after AVIF compression: ${(value.lengthInBytes / 1024).round()} kilobytes');
+          return _fileBytes = value;
+        });
+
+        // _fileBytes = value;
       });
       _compressionFutures.add(compressionFuture);
     }

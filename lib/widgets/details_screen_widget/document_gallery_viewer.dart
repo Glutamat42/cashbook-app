@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:ui';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/stores/auth_store.dart';
 import 'package:cashbook/utils/helpers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img;
+import 'package:flutter_avif/flutter_avif.dart';
 import 'package:logging/logging.dart';
 import '../../services/locator.dart';
 import '../../models/document.dart';
@@ -40,7 +42,6 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
   late PageController _pageController;
   late int _currentIndex;
   final AuthStore authStore = locator<AuthStore>();
-  bool shareSupported = false;
 
   @override
   void initState() {
@@ -55,33 +56,24 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
       appBar: AppBar(
         title: Text(widget.documents[_currentIndex].originalFilename ?? "Document"),
         actions: [
-          shareSupported
-              ? IconButton(
-                  icon: const Icon(kIsWeb ? Icons.download : Icons.share),
-                  onPressed: () {
-                    // _downloadAndShare(QualityType.original);
-                    _downloadAndShare(QualityType.document);
-                  },
-                )
-              : IconButton(
-                  icon: const Icon(kIsWeb ? Icons.download : Icons.share),
-                  onPressed: () {
-                    _downloadAndShare(QualityType.original);
-                  },
-                ),
+          IconButton(
+            icon: const Icon(kIsWeb ? Icons.download : Icons.share),
+            onPressed: () {
+              _downloadAndShare(QualityType.document);
+            },
+          ),
           _buildDeleteButton(),
-          if (shareSupported)
-            PopupMenuButton<String>(
-              onSelected: _handleMenuSelection,
-              itemBuilder: (BuildContext context) {
-                return {'Download/share Original'}.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
-              },
-            ),
+          PopupMenuButton<String>(
+            onSelected: _handleMenuSelection,
+            itemBuilder: (BuildContext context) {
+              return {'Download/share Original'}.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice),
+                );
+              }).toList();
+            },
+          ),
         ],
       ),
       body: PageView.builder(
@@ -99,24 +91,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
     );
   }
 
-  void _checkShareSupported(Document document) async {
-    Uint8List imageData;
-    if (document is LocalDocument) {
-      imageData = document.documentBinaryData;
-    } else {
-      imageData = await (document as RemoteDocument).documentBinaryData;
-    }
-    final bool isSupported = Helpers.getMimeType(imageData) != 'image/avif';
-    if (shareSupported != isSupported) {
-      setState(() {
-        shareSupported = isSupported;
-      });
-    }
-  }
-
   Widget _buildFullScreenImageViewerWithDeletionState(Document document) {
-    _checkShareSupported(widget.documents[_currentIndex]);
-
     if (widget.documents[_currentIndex].deleted) {
       return ColorFiltered(
         colorFilter: const ColorFilter.mode(
@@ -194,10 +169,21 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
     // convert
     if (convertToJpeg) {
       if (mimeType == 'image/avif') {
-        _log.warning('Cannot convert AVIF to JPEG');
+        final codec = SingleFrameAvifCodec(bytes: fileBytes);
+        await codec.ready();
+        final image = await codec.getNextFrame();
+
+        final byteData = await image.image.toByteData(format: ImageByteFormat.png);
+        final pngBytes = byteData!.buffer.asUint8List();
+        fileBytes = await FlutterImageCompress.compressWithList(pngBytes, format: CompressFormat.jpeg, quality: 90);
+        // alternative with Image package
+        // final img.Image? imageLibImage = img.decodeImage(pngBytes);
+        // final jpegFileBytes = img.encodeJpg(imageLibImage!, quality: 90);
+        mimeType = 'image/jpeg';
+
+        codec.dispose();
       } else if (mimeType == 'image/webp') {
-        final image = img.decodeImage(fileBytes);
-        fileBytes = img.encodeJpg(image!, quality: 90);
+        fileBytes = await FlutterImageCompress.compressWithList(fileBytes, format: CompressFormat.jpeg, quality: 90);
         mimeType = 'image/jpeg';
       }
     }
