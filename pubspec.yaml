@@ -44,7 +44,7 @@ dependencies:
   photo_view: ^0.14.0
   image_picker: ^1.0.5
   file_picker: ^6.1.1
-  permission_handler: ^10.0.0
+  permission_handler: ^11.1.0
   mime: ^1.0.4
   share_plus: ^7.2.1
   flutter_sharing_intent:
@@ -83,6 +83,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/config.json
+    - assets/images/icon-hourglass-top.png
     - assets/images/icon-picture_as_pdf.png
     - assets/pica9.0.1.min.js
 

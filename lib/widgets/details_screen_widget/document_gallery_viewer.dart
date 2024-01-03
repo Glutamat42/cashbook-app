@@ -9,10 +9,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_avif/flutter_avif.dart';
 import 'package:logging/logging.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import '../../services/locator.dart';
 import '../../models/document.dart';
 import '../../models/remote_document.dart';
-import 'full_screen_image_viewer.dart';
 
 import 'package:cashbook/utils/downloads/share_mobile.dart'
     if (dart.library.html) 'package:cashbook/utils/downloads/share_web.dart';
@@ -42,27 +43,56 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
   late PageController _pageController;
   late int _currentIndex;
   final AuthStore authStore = locator<AuthStore>();
+  late List<ImageProvider> imageProviders = [];
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+
+    for (int i = 0; i < widget.documents.length; i++) {
+      Document document = widget.documents[i];
+      if (document is LocalDocument) {
+        if (Helpers.getMimeType(document.originalBinaryData) == 'application/pdf') {
+          imageProviders.add(const AssetImage('assets/images/icon-picture_as_pdf.png'));
+        } else {
+          imageProviders.add(_buildMemoryImageProviderWithAvif(document.documentBinaryData));
+        }
+      } else {
+        imageProviders.add(const AssetImage('assets/images/icon-hourglass-top.png'));
+        (document as RemoteDocument).documentBinaryData.then((value) {
+          if (mounted) {
+            setState(() {
+              imageProviders[i] = _buildMemoryImageProviderWithAvif(value);
+            });
+          }
+        });
+      }
+    }
+  }
+
+  ImageProvider _buildMemoryImageProviderWithAvif(Uint8List imageData) {
+    if (Helpers.getMimeType(imageData) == 'image/avif') {
+      return MemoryAvifImage(imageData);
+    } else {
+      return MemoryImage(imageData);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.documents[_currentIndex].originalFilename ?? "Document"),
+        title: Text((widget.documents[_currentIndex].deleted ? "DELETE: " : "") + (widget.documents[_currentIndex].originalFilename ?? "Document")),
         actions: [
+          _buildDeleteButton(),
           IconButton(
             icon: const Icon(kIsWeb ? Icons.download : Icons.share),
             onPressed: () {
               _downloadAndShare(QualityType.document);
             },
           ),
-          _buildDeleteButton(),
           PopupMenuButton<String>(
             onSelected: _handleMenuSelection,
             itemBuilder: (BuildContext context) {
@@ -76,33 +106,34 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
           ),
         ],
       ),
-      body: PageView.builder(
-        controller: _pageController,
-        itemCount: widget.documents.length,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        itemBuilder: (context, index) {
-          return _buildFullScreenImageViewerWithDeletionState(widget.documents[index]);
-        },
+      body: ColorFiltered(
+        colorFilter: widget.documents[_currentIndex].deleted
+            ? const ColorFilter.mode(Colors.grey, BlendMode.saturation)
+            : const ColorFilter.mode(Colors.transparent, BlendMode.saturation),
+        child: PhotoViewGallery.builder(
+          itemCount: widget.documents.length,
+          pageController: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          builder: (context, index) {
+            return PhotoViewGalleryPageOptions(
+              imageProvider: imageProviders[index],
+              minScale: PhotoViewComputedScale.contained * 1.0,
+              maxScale: PhotoViewComputedScale.covered * 2.5,
+              initialScale: PhotoViewComputedScale.contained,
+              heroAttributes: PhotoViewHeroAttributes(tag: index.toString()),
+            );
+          },
+          scrollPhysics: const BouncingScrollPhysics(),
+          backgroundDecoration: BoxDecoration(
+            color: Theme.of(context).canvasColor,
+          ),
+        ),
       ),
     );
-  }
-
-  Widget _buildFullScreenImageViewerWithDeletionState(Document document) {
-    if (widget.documents[_currentIndex].deleted) {
-      return ColorFiltered(
-        colorFilter: const ColorFilter.mode(
-          Colors.grey,
-          BlendMode.saturation,
-        ),
-        child: FullScreenImageViewer(document: widget.documents[_currentIndex]),
-      );
-    } else {
-      return FullScreenImageViewer(document: widget.documents[_currentIndex]);
-    }
   }
 
   Widget _buildDeleteButton() {
