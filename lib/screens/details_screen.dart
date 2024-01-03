@@ -247,7 +247,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               return DocumentSection(
                 isEditable: _isEditMode,
                 entryId: _editableEntry.id,
-                isLoading: isLoading,
+                isLoadingDocumentsList: isLoading,
                 documents: documents,
                 onDocumentsChanged: (List<Document> updatedDocuments) {
                   setState(() => documents = updatedDocuments);

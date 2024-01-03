@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:cashbook/models/document.dart';
 import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/models/remote_document.dart';
-import 'package:cashbook/services/locator.dart';
-import 'package:cashbook/stores/auth_store.dart';
 import 'package:cashbook/utils/helpers.dart';
 import 'package:cashbook/widgets/memory_image_with_avif.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +13,11 @@ import 'package:logging/logging.dart';
 import '../document_gallery_viewer.dart';
 import 'package:file_picker/file_picker.dart';
 
-
 class DocumentSection extends StatelessWidget {
   final Logger _log = Logger('DocumentSection');
   final int? entryId;
   final bool isEditable;
-  final bool isLoading;
+  final bool isLoadingDocumentsList;
   final List<Document> documents;
   final Function(List<Document>) onDocumentsChanged;
 
@@ -28,7 +25,7 @@ class DocumentSection extends StatelessWidget {
     Key? key,
     required this.entryId,
     this.isEditable = false,
-    required this.isLoading,
+    required this.isLoadingDocumentsList,
     required this.documents,
     required this.onDocumentsChanged,
   }) : super(key: key);
@@ -50,7 +47,7 @@ class DocumentSection extends StatelessWidget {
           Observer(
               builder: (_) => SizedBox(
                     height: 100,
-                    child: isLoading && !isNew
+                    child: isLoadingDocumentsList && !isNew
                         ? const Center(child: CircularProgressIndicator())
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
@@ -188,22 +185,14 @@ class DocumentSection extends StatelessWidget {
 
   Widget _buildThumbnailTile(List<Document> documents, int index, context) {
     Document document = documents[index];
-    AuthStore authStore = locator<AuthStore>();
-    String token = authStore.user?.token ?? "";
-
-    if (token.isEmpty) {
-      throw Exception("Token is empty");
-    }
 
     return FutureBuilder(
         future:
             document is LocalDocument ? document.compressionFuture : (document as RemoteDocument).thumbnailBinaryData,
         builder: (context, data) {
-          if (document is LocalDocument && data.connectionState == ConnectionState.waiting ||
-              document is RemoteDocument && !data.hasData) {
+          if (document is RemoteDocument && !data.hasData) {
             return Container(
               width: 100,
-              height: 100,
               margin: const EdgeInsets.only(right: 8),
               child: const Center(child: CircularProgressIndicator()),
             );
@@ -223,16 +212,23 @@ class DocumentSection extends StatelessWidget {
               ));
             },
             child: Container(
-              width: 100,
-              margin: const EdgeInsets.only(right: 8),
-              color: Colors.grey[300],
-              child: _buildImageWithDeletionState(document, thumbnailBytes, authStore.baseUrl!, token),
-            ),
+                width: 100,
+                height: 100,
+                margin: const EdgeInsets.only(right: 8),
+                color: Colors.grey[300],
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _buildImageWithDeletionState(document, thumbnailBytes),
+                    if (document is LocalDocument && data.connectionState == ConnectionState.waiting)
+                      const Center(child: CircularProgressIndicator()),
+                  ],
+                )),
           );
         });
   }
 
-  Widget _buildImageWithDeletionState(Document document, Uint8List thumbnailBytes, String baseUrl, String token) {
+  Widget _buildImageWithDeletionState(Document document, Uint8List thumbnailBytes) {
     if (document.deleted) {
       return ClipRect(
         child: ColorFiltered(
@@ -250,7 +246,7 @@ class DocumentSection extends StatelessWidget {
 
   Widget _buildImage(Document document, Uint8List thumbnailBytes) {
     if (document is LocalDocument && Helpers.getMimeType(document.originalBinaryData) == 'application/pdf') {
-        return Image.asset('/assets/images/icon-picture_as_pdf.png');
+      return Image.asset('/assets/images/icon-picture_as_pdf.png');
     } else {
       return MemoryImageWithAvif(imageData: thumbnailBytes);
     }
