@@ -90,8 +90,8 @@ class EntriesRepository {
     // Add documents as part of the multipart request
     for (Document doc in documents) {
       if (doc is LocalDocument && !doc.deleted) {
-        String filename = doc.originalFilename!;
         await doc.compressionFuture; // if compression not yet done -> wait
+        String filename = doc.originalFilename!;
         MultipartFile multipartFile = MultipartFile.fromBytes(doc.originalBinaryData, filename: filename);
         formData.files.add(MapEntry('document[]', multipartFile));
       }

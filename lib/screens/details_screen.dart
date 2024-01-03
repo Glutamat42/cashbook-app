@@ -129,11 +129,48 @@ class _DetailsScreenState extends State<DetailsScreen> {
               icon: Icon(_isEditMode ? Icons.check : Icons.edit),
               onPressed: () async {
                 if (_isEditMode) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) {
+                      return DefaultTextStyle(
+                        style: const TextStyle(color: Colors.white, fontSize: 24.0),
+                        child: Container(
+                          color: Colors.grey,
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                              SizedBox(height: 16.0),
+                              Text(
+                                'Saving changes...',
+                              ),
+                              SizedBox(height: 4.0),
+                              Text(
+                                'This might take a bit',
+                                style: TextStyle(fontSize: 16.0),
+                              ),
+                              SizedBox(height: 32.0),
+                              Text(
+                                  'Tip: Adding the images before editing the rest of the entry can reduce this waiting time.',
+                                  style: TextStyle(fontSize: 16.0)),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+
                   if (await _saveEntry()) {
                     setState(() {
                       _isEditMode = false;
                     });
                   }
+
+                  if (context.mounted) Navigator.of(context).pop();
                 } else {
                   setState(() => _isEditMode = !_isEditMode);
                 }

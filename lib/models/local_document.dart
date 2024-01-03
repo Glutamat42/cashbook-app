@@ -17,8 +17,8 @@ class LocalDocument extends Document {
   Uint8List get originalBinaryData => _fileBytes;
 
   Map<String, int> _compressionSettings = {
-    'minHeight': 2560,
-    'minWidth': 2560,
+    'minHeight': 1920,
+    'minWidth': 1920,
     'quality': 70,
   };
 
@@ -41,34 +41,29 @@ class LocalDocument extends Document {
       _logger.fine('Compressing image');
       _logger.finest('File size before compression: ${(originalBinaryData.lengthInBytes / 1024).round()} kilobytes');
 
-
-// TODO: compression settings for avif
-      // TODO: loading spinner for compression (somehow in background, probably in thumbnail tile, disable save button until finished)
-      // TODO: add new images to the left of the thumbnail lift
-      // TODO: improve this compression code
-      Future compressionFuture = FlutterImageCompress.compressWithList(
-        originalBinaryData,
-        keepExif: true,
-        // rotate: 0,
-        // autoCorrectionAngle: true,
-        minHeight: _compressionSettings['minHeight']!,
-        minWidth: _compressionSettings['minWidth']!,
-        quality: 90,
-        format: CompressFormat.jpeg,
-      );
-      compressionFuture.then((value) {
-        _logger.finer('File size after compression: ${(value.lengthInBytes / 1024).round()} kilobytes');
-
-        Future avifBytesFuture = encodeAvif(value, maxQuantizer: 40, minQuantizer: 25, maxQuantizerAlpha: 40, minQuantizerAlpha: 25);
-        avifBytesFuture.then((value) {
-          _logger.finer('File size after AVIF compression: ${(value.lengthInBytes / 1024).round()} kilobytes');
-          return _fileBytes = value;
-        });
-
-        // _fileBytes = value;
-      });
-      _compressionFutures.add(compressionFuture);
+      _compressionFutures.add(_executeCompression());
     }
+  }
+
+  Future<void> _executeCompression() async {
+    // TODO: compression settings for avif
+    // Uint8List step1data = await FlutterImageCompress.compressWithList(
+    //   originalBinaryData,
+    //   keepExif: true,
+    //   // rotate: 0,
+    //   // autoCorrectionAngle: true,
+    //   minHeight: _compressionSettings['minHeight']!,
+    //   minWidth: _compressionSettings['minWidth']!,
+    //   quality: 100,
+    //   format: CompressFormat.jpeg,
+    // );
+    // _logger.finer('File size after compression: ${(step1data.lengthInBytes / 1024).round()} kilobytes');
+    Uint8List avifBytes = await encodeAvif(
+        originalBinaryData, maxQuantizer: 30, minQuantizer: 10, maxQuantizerAlpha: 30, minQuantizerAlpha: 10, speed: 6);
+    _logger.finer('File size after AVIF compression: ${(avifBytes.lengthInBytes / 1024).round()} kilobytes');
+
+    _fileBytes = avifBytes;
+    originalFilename = originalFilename!.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '.avif');
   }
 
   LocalDocument(

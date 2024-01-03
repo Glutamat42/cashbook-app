@@ -183,28 +183,44 @@ class DocumentSection extends StatelessWidget {
       throw Exception("Token is empty");
     }
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => DocumentGalleryViewer(
-            initialIndex: index,
-            documents: documents,
-            showDeleteButton: isEditable,
-            onDocumentDeleted: isEditable ? (int id) => _documentDeletedChanged(id, true) : null,
-            onDocumentUndeleted: isEditable ? (int id) => _documentDeletedChanged(id, false) : null,
-          ),
-        ));
-      },
-      child: Container(
-        width: 100,
-        margin: const EdgeInsets.only(right: 8),
-        color: Colors.grey[300],
-        child: _buildImageWithDeletionState(document, authStore.baseUrl!, token),
-      ),
-    );
+    return FutureBuilder(
+        future:
+            document is LocalDocument ? document.compressionFuture : (document as RemoteDocument).thumbnailBinaryData,
+        builder: (context, data) {
+          if (document is LocalDocument && data.connectionState == ConnectionState.waiting ||
+              document is RemoteDocument && !data.hasData) {
+            return Container(
+              width: 100,
+              height: 100,
+              margin: const EdgeInsets.only(right: 8),
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          Uint8List thumbnailBytes = document is LocalDocument ? document.thumbnailBinaryData : data.data as Uint8List;
+          return GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => DocumentGalleryViewer(
+                  initialIndex: index,
+                  documents: documents,
+                  showDeleteButton: isEditable,
+                  onDocumentDeleted: isEditable ? (int id) => _documentDeletedChanged(id, true) : null,
+                  onDocumentUndeleted: isEditable ? (int id) => _documentDeletedChanged(id, false) : null,
+                ),
+              ));
+            },
+            child: Container(
+              width: 100,
+              margin: const EdgeInsets.only(right: 8),
+              color: Colors.grey[300],
+              child: _buildImageWithDeletionState(document, thumbnailBytes, authStore.baseUrl!, token),
+            ),
+          );
+        });
   }
 
-  Widget _buildImageWithDeletionState(Document document, String baseUrl, String token) {
+  Widget _buildImageWithDeletionState(Document document, Uint8List thumbnailBytes, String baseUrl, String token) {
     if (document.deleted) {
       return ClipRect(
         child: ColorFiltered(
@@ -212,38 +228,27 @@ class DocumentSection extends StatelessWidget {
             Colors.grey,
             BlendMode.saturation,
           ),
-          child: _buildImage(document, baseUrl, token),
+          child: _buildImage(document, thumbnailBytes),
         ),
       );
     } else {
-      return _buildImage(document, baseUrl, token);
+      return _buildImage(document, thumbnailBytes);
     }
   }
 
-  Widget _buildImage(Document document, String baseUrl, String token) {
-    if (document is RemoteDocument) {
-      return FutureBuilder(
-          future: document.thumbnailBinaryData,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return MemoryImageWithAvif(imageData: snapshot.data as Uint8List);
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          });
-    } else {
-      if (Helpers.getMimeType((document as LocalDocument).originalBinaryData) == 'application/pdf') {
+  Widget _buildImage(Document document, Uint8List thumbnailBytes) {
+    if (document is LocalDocument && Helpers.getMimeType(document.originalBinaryData) == 'application/pdf') {
         return Image.asset('/assets/images/icon-picture_as_pdf.png');
-      }
-      return MemoryImageWithAvif(imageData: document.thumbnailBinaryData);
+    } else {
+      return MemoryImageWithAvif(imageData: thumbnailBytes);
     }
   }
 
   void _newDocumentOpened(Uint8List fileData, String filename, BuildContext context, int? entryId) {
     onDocumentsChanged([
-      ...documents,
       LocalDocument(
-          originalFilename: filename, fileBytes: fileData, id: _generateLikelyUniqueDocumentId(), entryId: entryId)
+          originalFilename: filename, fileBytes: fileData, id: _generateLikelyUniqueDocumentId(), entryId: entryId),
+      ...documents
     ]);
   }
 
