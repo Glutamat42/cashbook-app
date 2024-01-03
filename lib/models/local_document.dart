@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:cashbook/models/document.dart';
 import 'package:cashbook/utils/helpers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_avif/flutter_avif.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:logging/logging.dart';
@@ -16,12 +17,6 @@ class LocalDocument extends Document {
 
   Uint8List get originalBinaryData => _fileBytes;
 
-  Map<String, int> _compressionSettings = {
-    'minHeight': 1920,
-    'minWidth': 1920,
-    'quality': 70,
-  };
-
   final List<Future> _compressionFutures = [];
 
   Future get compressionFuture => Future.wait(_compressionFutures);
@@ -35,8 +30,8 @@ class LocalDocument extends Document {
       _logger.info('File is not an image, not compressing');
     } else if (mimeType == 'image/avif' || mimeType == 'image/webp' && originalBinaryData.lengthInBytes < 500000) {
       _logger.info('File is already compressed with a modern format and smaller than 500kB, not recompressing');
-    // } else if (mimeType == 'image/heif') {
-    //   _logger.info('File is in HEIF format, not compressing');
+      // } else if (mimeType == 'image/heif') {
+      //   _logger.info('File is in HEIF format, not compressing');
     } else {
       _logger.fine('Compressing image');
       _logger.finest('File size before compression: ${(originalBinaryData.lengthInBytes / 1024).round()} kilobytes');
@@ -45,25 +40,75 @@ class LocalDocument extends Document {
     }
   }
 
-  Future<void> _executeCompression() async {
-    // TODO: compression settings for avif
-    // Uint8List step1data = await FlutterImageCompress.compressWithList(
-    //   originalBinaryData,
-    //   keepExif: true,
-    //   // rotate: 0,
-    //   // autoCorrectionAngle: true,
-    //   minHeight: _compressionSettings['minHeight']!,
-    //   minWidth: _compressionSettings['minWidth']!,
-    //   quality: 100,
-    //   format: CompressFormat.jpeg,
-    // );
-    // _logger.finer('File size after compression: ${(step1data.lengthInBytes / 1024).round()} kilobytes');
-    Uint8List avifBytes = await encodeAvif(
-        originalBinaryData, maxQuantizer: 30, minQuantizer: 10, maxQuantizerAlpha: 30, minQuantizerAlpha: 10, speed: 6);
-    _logger.finer('File size after AVIF compression: ${(avifBytes.lengthInBytes / 1024).round()} kilobytes');
+  Map<String, Map<String, int?>> _compressionSettings = {
+    'webp': {
+      'minHeight': null,
+      'minWidth': null,
+      'quality': 60,
+    },
+    'avif': {
+      'minHeight': null,
+      'minWidth': null,
+      'minQuantizer': 15,
+      'maxQuantizer': 40,
+      'speed': 6,
+    },
+  };
 
-    _fileBytes = avifBytes;
-    originalFilename = originalFilename!.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '.avif');
+  Future<void> _executeCompression() async {
+    Map<String, int?> profile;
+    String targetFormat;
+    if (kIsWeb) {
+      profile = _compressionSettings['webp']!;
+      targetFormat = 'webp';
+    } else {
+      profile = _compressionSettings['avif']!;
+      targetFormat = 'avif';
+    }
+
+    // resize
+    Uint8List resizedBytes = originalBinaryData;
+    // in case image is above 5MB, i expect it to have a very high resolution and resize it to a maximum of 4000x4000,
+    // even if no minHeight/minWidth are set
+    if (profile['minHeight'] != null && profile['minWidth'] != null || originalBinaryData.lengthInBytes > 5*1024*1024) {
+      resizedBytes = await FlutterImageCompress.compressWithList(
+        originalBinaryData,
+        keepExif: true,
+        // rotate: 0,
+        // autoCorrectionAngle: true,
+        minHeight: profile['minHeight'] ?? 4000,  // default upper limit to prevent insane values
+        minWidth: profile['minWidth'] ?? 4000,
+        quality: 100,
+        format: CompressFormat.jpeg,
+      );
+    }
+
+    // compress
+    Uint8List compressedBytes;
+    if (targetFormat == 'webp') {
+      _logger.finer('File size after resizing: ${(resizedBytes.lengthInBytes / 1024).round()} kilobytes');
+      compressedBytes = await FlutterImageCompress.compressWithList(
+        resizedBytes,
+        keepExif: true,
+        // rotate: 0,
+        // autoCorrectionAngle: true,
+        minHeight: 4000,  // should not rescale here, but compressWithList has default values -> override them
+        minWidth: 4000,
+        quality: profile['quality']!,
+        format: CompressFormat.webp,
+      );
+    } else {
+      compressedBytes = await encodeAvif(originalBinaryData,
+          maxQuantizer: profile['maxQuantizer'],
+          minQuantizer: profile['minQuantizer'],
+          maxQuantizerAlpha: profile['maxQuantizer'],
+          minQuantizerAlpha: profile['minQuantizer'],
+          speed: profile['speed']);
+    }
+
+    _logger.finer('File size after compression: ${(compressedBytes.lengthInBytes / 1024).round()} kilobytes');
+    _fileBytes = compressedBytes;
+    originalFilename = originalFilename!.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$'), '.$targetFormat');
   }
 
   LocalDocument(
@@ -71,7 +116,7 @@ class LocalDocument extends Document {
       entryId,
       required originalFilename,
       required Uint8List fileBytes,
-      Map<String, int>? compressionSettings,
+      Map<String, Map<String, int?>>? compressionSettings,
       bool enableCompression = true})
       : super(id: id, entryId: entryId, originalFilename: originalFilename) {
     _fileBytes = fileBytes;

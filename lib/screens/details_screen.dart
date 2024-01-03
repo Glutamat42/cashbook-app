@@ -137,26 +137,29 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         style: const TextStyle(color: Colors.white, fontSize: 24.0),
                         child: Container(
                           color: Colors.grey,
-                          child: const Column(
+                          child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: <Widget>[
-                              CircularProgressIndicator(
+                              const CircularProgressIndicator(
                                 color: Colors.white,
                               ),
-                              SizedBox(height: 16.0),
-                              Text(
+                              const SizedBox(height: 16.0),
+                              const Text(
                                 'Saving changes...',
                               ),
-                              SizedBox(height: 4.0),
-                              Text(
+                              const SizedBox(height: 4.0),
+                              const Text(
                                 'This might take a bit',
                                 style: TextStyle(fontSize: 16.0),
                               ),
-                              SizedBox(height: 32.0),
-                              Text(
-                                  'Tip: Adding the images before editing the rest of the entry can reduce this waiting time.',
-                                  style: TextStyle(fontSize: 16.0)),
+                              const SizedBox(height: 16.0),
+                              Container(
+                                padding: const EdgeInsets.all(16.0),
+                                child: const Text(
+                                    'Tip: Adding the images before editing the rest of the entry can reduce this waiting time.',
+                                    style: TextStyle(fontSize: 16.0)),
+                              ),
                             ],
                           ),
                         ),
