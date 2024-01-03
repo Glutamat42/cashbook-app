@@ -124,7 +124,7 @@ abstract class _EntryStore with Store {
         }
 
         // For all entries
-        final cacheDirList = Directory('${documentCacheDir.path}/documents/').listSync();
+        final cacheDirList = Directory('${documentCacheDir.path}/').listSync();
         final existingEntryIds = allEntries.map((entry) => entry.id).toSet();
         for (var dir in cacheDirList) {
           if (dir is Directory) {
