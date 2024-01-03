@@ -80,10 +80,9 @@ class _HomeScreenState extends State<HomeScreen> {
           _isSearchVisible ? _buildSearchBar() : Container(),
           _buildFilterInfoBar(),
           Expanded(
-            child: Observer(
-              builder: (_) => RefreshIndicator(
+            child: RefreshIndicator(
                 onRefresh: _onRefresh,
-                child: ListView.builder(
+                child: Observer(builder: (_) => ListView.builder(
                   itemCount: _entryStore.visibleEntries.length + 1,
                   // +1 for the sort criteria bar
                   itemBuilder: (context, index) {

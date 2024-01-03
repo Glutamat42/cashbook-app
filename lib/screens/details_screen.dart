@@ -213,29 +213,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
             label: 'Description',
             validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
           ),
-          DualModeAmountWidget(
-            isEditMode: _isEditMode,
-            amount: _editableEntry.amount,
-            isIncome: _editableEntry.isIncome,
-            onChanged: (amount, isIncome) => setState(() {
-              _editableEntry.amount = amount;
-              _editableEntry.isIncome = isIncome;
-            }),
-          ),
-          DualModeDateWidget(
-            isEditMode: _isEditMode,
-            date: _currentlySelectedDate,
-            onChanged: (date) => setState(() => _currentlySelectedDate = date),
-            validator: (_) {
-              if (_currentlySelectedDate == null) {
-                return 'Please select a date';
-              }
-              if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
-                return 'Date cannot be before year 2000';
-              }
-              return null;
-            },
-          ),
           FutureBuilder(
             future: loadDocumentsFuture,
             builder: (context, data) {
@@ -262,6 +239,29 @@ class _DetailsScreenState extends State<DetailsScreen> {
             isEditMode: _isEditMode,
             noInvoice: _editableEntry.noInvoice,
             onChanged: (val) => setState(() => _editableEntry.noInvoice = val),
+          ),
+          DualModeAmountWidget(
+            isEditMode: _isEditMode,
+            amount: _editableEntry.amount,
+            isIncome: _editableEntry.isIncome,
+            onChanged: (amount, isIncome) => setState(() {
+              _editableEntry.amount = amount;
+              _editableEntry.isIncome = isIncome;
+            }),
+          ),
+          DualModeDateWidget(
+            isEditMode: _isEditMode,
+            date: _currentlySelectedDate,
+            onChanged: (date) => setState(() => _currentlySelectedDate = date),
+            validator: (_) {
+              if (_currentlySelectedDate == null) {
+                return 'Please select a date';
+              }
+              if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
+                return 'Date cannot be before year 2000';
+              }
+              return null;
+            },
           ),
           DualModeCategoryWidget(
             isEditMode: _isEditMode,

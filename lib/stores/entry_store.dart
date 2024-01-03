@@ -68,7 +68,9 @@ abstract class _EntryStore with Store {
   Future<Entry> createEntry(Entry newEntry, List<Document> documents) async {
     try {
       final createdEntry = await _entriesRepository.createEntry(newEntry, documents);
+      allEntries.add(createdEntry);
       visibleEntries.add(createdEntry);
+      _applyFilterAndSort();
       return createdEntry;
     } catch (e) {
       _logger.severe('Failed to create entry: $e');
@@ -82,6 +84,7 @@ abstract class _EntryStore with Store {
       final entry = await _entriesRepository.updateEntry(updatedEntry.id!, updatedEntry, documents);
       final index = visibleEntries.indexWhere((e) => e.id == updatedEntry.id);
       if (index != -1) {
+        allEntries.replaceRange(index, index + 1, [entry]);
         visibleEntries.replaceRange(index, index + 1, [entry]);
       }
       _applyFilterAndSort();
@@ -190,6 +193,7 @@ abstract class _EntryStore with Store {
   @action
   Future<void> deleteEntry(int entryId) async {
     await _entriesRepository.deleteEntry(entryId);
+    allEntries.removeWhere((entry) => entry.id == entryId);
     visibleEntries.removeWhere((entry) => entry.id == entryId);
     _cleanupDocumentCache(entryId: entryId);
   }
