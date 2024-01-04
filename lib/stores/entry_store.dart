@@ -119,7 +119,7 @@ abstract class _EntryStore with Store {
       _logger.info('Cleaning up document cache');
       try {
         // Obtain the temporary directory
-        final tempDir = await getTemporaryDirectory();
+        final tempDir = await getApplicationCacheDirectory();
         final documentCacheDir = Directory('${tempDir.path}/documents');
 
         if (!documentCacheDir.existsSync()) {

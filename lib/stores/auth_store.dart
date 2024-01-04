@@ -103,7 +103,8 @@ abstract class _AuthStore with Store {
 
     // clear cache
     if (!kIsWeb) {
-      final cacheDir = await getTemporaryDirectory();
+      final cacheDir = await getApplicationCacheDirectory();
+      _log.info('Deleting cache directory ${cacheDir.path}');
       await cacheDir.delete(recursive: true);
     }
   }

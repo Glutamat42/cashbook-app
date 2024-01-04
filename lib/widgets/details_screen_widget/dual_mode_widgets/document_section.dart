@@ -81,9 +81,9 @@ class DocumentSection extends StatelessWidget {
   }
 
   Future<void> _addDocument(BuildContext context) async {
-    if (Helpers.isDesktopWebBrowser) {
+    if (Helpers.isDesktopWebBrowser || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       // Directly open file dialog for desktop web platforms
-      final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles();
+      final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(withData: true);
       if (pickedFile != null && context.mounted) {
         _newDocumentOpened(pickedFile.files.single.bytes!, pickedFile.files.single.name, context, entryId);
       }

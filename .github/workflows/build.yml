@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  build-and-push:
+  build-web:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -48,7 +48,6 @@ jobs:
 
 
   build-android:
-    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -72,4 +71,36 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./build/app/outputs/flutter-apk/app-release.apk
           asset_name: Cashbook-app-${{ github.ref_name }}.apk
+          tag: ${{ github.ref }}
+
+  build-linux:
+    runs-on: windows-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v1
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate mobx files
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Build Windows
+        run: flutter build windows
+
+      - name: Archive Release
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: cashbook-${{github.ref_name}}-windows.zip
+          directory: build/windows/runner/Release
+
+      - name: Upload Windows to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/windows/runner/Release/cashbook-${{github.ref_name}}-windows.zip
           tag: ${{ github.ref }}

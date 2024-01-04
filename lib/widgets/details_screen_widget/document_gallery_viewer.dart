@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/stores/auth_store.dart';
@@ -14,6 +13,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import '../../services/locator.dart';
 import '../../models/document.dart';
 import '../../models/remote_document.dart';
+import 'package:image/image.dart' as img;
 
 import 'package:cashbook/utils/downloads/share_mobile.dart'
     if (dart.library.html) 'package:cashbook/utils/downloads/share_web.dart';
@@ -206,15 +206,17 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
 
         final byteData = await image.image.toByteData(format: ImageByteFormat.png);
         final pngBytes = byteData!.buffer.asUint8List();
-        fileBytes = await FlutterImageCompress.compressWithList(pngBytes, format: CompressFormat.jpeg, quality: 90);
+        // fileBytes = await FlutterImageCompress.compressWithList(pngBytes, format: CompressFormat.jpeg, quality: 90);
         // alternative with Image package
-        // final img.Image? imageLibImage = img.decodeImage(pngBytes);
-        // final jpegFileBytes = img.encodeJpg(imageLibImage!, quality: 90);
+        final img.Image? imageLibImage = img.decodeImage(pngBytes);
+        final jpegFileBytes = img.encodeJpg(imageLibImage!, quality: 90);
         mimeType = 'image/jpeg';
 
         codec.dispose();
       } else if (mimeType == 'image/webp') {
-        fileBytes = await FlutterImageCompress.compressWithList(fileBytes, format: CompressFormat.jpeg, quality: 90);
+        img.Image image = img.decodeImage(fileBytes)!;
+        fileBytes = img.encodeJpg(image, quality: 90);
+        // fileBytes = await FlutterImageCompress.compressWithList(fileBytes, format: CompressFormat.jpeg, quality: 90);
         mimeType = 'image/jpeg';
       }
     }

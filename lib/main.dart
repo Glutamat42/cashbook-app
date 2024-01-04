@@ -95,32 +95,34 @@ class _MyAppState extends State<MyApp> {
     // open the details page. This should be sufficient to load the files from the intent.
 
     // For sharing images coming from outside the app while the app is in the memory
-    _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream().listen((List<SharedFile> value) {
-      _log.info("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
-      for (var sharedFile in value) {
-        _entryStore.intentDocuments ??= <LocalDocument>[];
-        File file = File(sharedFile.value!);
-        _entryStore.intentDocuments!.add(LocalDocument(
-          originalFilename: sharedFile.value!.split("/").last,
-          fileBytes: file.readAsBytesSync(),
-        ));
-      }
-    }, onError: (err) {
-      _log.warning("getIntentDataStream error: $err");
-    });
+    if (Platform.isAndroid || Platform.isIOS) {
+      _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream().listen((List<SharedFile> value) {
+        _log.info("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
+        for (var sharedFile in value) {
+          _entryStore.intentDocuments ??= <LocalDocument>[];
+          File file = File(sharedFile.value!);
+          _entryStore.intentDocuments!.add(LocalDocument(
+            originalFilename: sharedFile.value!.split("/").last,
+            fileBytes: file.readAsBytesSync(),
+          ));
+        }
+      }, onError: (err) {
+        _log.warning("getIntentDataStream error: $err");
+      });
 
-    // For sharing images coming from outside the app while the app is closed
-    FlutterSharingIntent.instance.getInitialSharing().then((List<SharedFile> value) {
-      _log.info("Shared: getInitialMedia ${value.map((f) => f.value).join(",")}");
-      for (var sharedFile in value) {
-        _entryStore.intentDocuments ??= <LocalDocument>[];
-        File file = File(sharedFile.value!);
-        _entryStore.intentDocuments!.add(LocalDocument(
-          originalFilename: sharedFile.value!.split("/").last,
-          fileBytes: file.readAsBytesSync(),
-        ));
-      }
-    });
+      // For sharing images coming from outside the app while the app is closed
+      FlutterSharingIntent.instance.getInitialSharing().then((List<SharedFile> value) {
+        _log.info("Shared: getInitialMedia ${value.map((f) => f.value).join(",")}");
+        for (var sharedFile in value) {
+          _entryStore.intentDocuments ??= <LocalDocument>[];
+          File file = File(sharedFile.value!);
+          _entryStore.intentDocuments!.add(LocalDocument(
+            originalFilename: sharedFile.value!.split("/").last,
+            fileBytes: file.readAsBytesSync(),
+          ));
+        }
+      });
+    }
   }
 
   // This widget is the root of your application.

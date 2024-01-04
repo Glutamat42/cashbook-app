@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_avif/flutter_avif.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:logging/logging.dart';
+import 'package:image/image.dart' as img;
 
 class LocalDocument extends Document {
   final Logger _logger = Logger('LocalDocument');
@@ -50,7 +51,7 @@ class LocalDocument extends Document {
       'minHeight': null,
       'minWidth': null,
       'minQuantizer': 15,
-      'maxQuantizer': 40,
+      'maxQuantizer': 38,
       'speed': 6,
     },
   };
@@ -70,17 +71,32 @@ class LocalDocument extends Document {
     Uint8List resizedBytes = originalBinaryData;
     // in case image is above 5MB, i expect it to have a very high resolution and resize it to a maximum of 4000x4000,
     // even if no minHeight/minWidth are set
-    if (profile['minHeight'] != null && profile['minWidth'] != null || originalBinaryData.lengthInBytes > 5*1024*1024) {
-      resizedBytes = await FlutterImageCompress.compressWithList(
-        originalBinaryData,
-        keepExif: true,
-        // rotate: 0,
-        // autoCorrectionAngle: true,
-        minHeight: profile['minHeight'] ?? 4000,  // default upper limit to prevent insane values
-        minWidth: profile['minWidth'] ?? 4000,
-        quality: 100,
-        format: CompressFormat.jpeg,
-      );
+    // if (profile['minHeight'] != null && profile['minWidth'] != null || originalBinaryData.lengthInBytes > 5*1024*1024) {
+    //   resizedBytes = await FlutterImageCompress.compressWithList(
+    //     originalBinaryData,
+    //     keepExif: true,
+    //     // rotate: 0,
+    //     // autoCorrectionAngle: true,
+    //     minHeight: profile['minHeight'] ?? 4000,  // default upper limit to prevent insane values
+    //     minWidth: profile['minWidth'] ?? 4000,
+    //     quality: 100,
+    //     format: CompressFormat.jpeg,
+    //   );
+    // }
+
+    img.Image image = img.decodeImage(originalBinaryData)!;
+    // compress in case: minHeight and minWidth are set and image is larger than either of them or image is larger than 4000x4000 on at least one side
+    if (profile['minHeight'] != null &&
+            profile['minWidth'] != null &&
+            (image.height > profile['minHeight']! || image.width > profile['minWidth']!) ||
+        image.width > 4000 ||
+        image.height > 4000) {
+      if (image.height >= image.width) {
+        image = img.copyResize(image, height: profile['minHeight'] ?? 4000);
+      } else {
+        image = img.copyResize(image, width: profile['minWidth'] ?? 4000);
+      }
+      resizedBytes = img.encodeJpg(image, quality: 100);
     }
 
     // compress
@@ -92,7 +108,8 @@ class LocalDocument extends Document {
         keepExif: true,
         // rotate: 0,
         // autoCorrectionAngle: true,
-        minHeight: 4000,  // should not rescale here, but compressWithList has default values -> override them
+        minHeight: 4000,
+        // should not rescale here, but compressWithList has default values -> override them
         minWidth: 4000,
         quality: profile['quality']!,
         format: CompressFormat.webp,
@@ -103,6 +120,7 @@ class LocalDocument extends Document {
           minQuantizer: profile['minQuantizer'],
           maxQuantizerAlpha: profile['maxQuantizer'],
           minQuantizerAlpha: profile['minQuantizer'],
+          maxThreads: 8,
           speed: profile['speed']);
     }
 
