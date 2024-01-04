@@ -102,5 +102,5 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/windows/runner/Release/cashbook-${{github.ref_name}}-windows.zip
+          file: build/windows/x64/runner/Release/cashbook-${{github.ref_name}}-windows.zip
           tag: ${{ github.ref }}
