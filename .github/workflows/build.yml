@@ -73,7 +73,7 @@ jobs:
           asset_name: Cashbook-app-${{ github.ref_name }}.apk
           tag: ${{ github.ref }}
 
-  build-linux:
+  build-windows:
     runs-on: windows-latest
     steps:
       - name: Check out code
@@ -96,7 +96,7 @@ jobs:
         with:
           type: 'zip'
           filename: cashbook-${{github.ref_name}}-windows.zip
-          directory: build/windows/runner/Release
+          directory: build/windows/x64/runner/Release
 
       - name: Upload Windows to release
         uses: svenstaro/upload-release-action@v2
