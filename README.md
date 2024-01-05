@@ -22,9 +22,7 @@ samples, guidance on mobile development, and a full API reference.
 
 - allow users to select compression level (maybe: source, 4k (8MP), WQHD (3.6MP), FHD (2MP))
 - multi language (i18n)
-- BUG: intent on web throws exceptions in console. disable code on web, web is not supported anyway
 - csv import/export
 
-- avif support: requires image/avif decode support in flutter_avif (feature request submitted)
 - switch lumen to laravel
   - improve auth
