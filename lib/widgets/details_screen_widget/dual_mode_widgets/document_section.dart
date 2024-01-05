@@ -82,7 +82,7 @@ class DocumentSection extends StatelessWidget {
   }
 
   Future<void> _addDocument(BuildContext context) async {
-    if (Helpers.isDesktopWebBrowser || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    if (Helpers.isDesktopWebBrowser || !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       // Directly open file dialog for desktop web platforms
       final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(withData: true);
       if (pickedFile != null && context.mounted) {
@@ -111,17 +111,6 @@ class DocumentSection extends StatelessWidget {
                       _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, entryId);
                     }
                   }),
-              // if (Platform.isIOS || Platform.isAndroid)
-              //   ListTile(
-              //       leading: const Icon(Icons.scanner),
-              //       title: const Text('Camera Scan'),
-              //       onTap: () async {
-              //         Navigator.pop(context);
-              //         File? scannedDoc = await DocumentScannerFlutter.launch(context);
-              //         if (scannedDoc != null && context.mounted) {
-              //           _newDocumentOpened(await scannedDoc.readAsBytes(), scannedDoc.path, context, entryId);
-              //         }
-              //       }),
               ListTile(
                   leading: const Icon(Icons.photo_camera),
                   title: const Text('Camera'),

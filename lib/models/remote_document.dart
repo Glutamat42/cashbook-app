@@ -36,7 +36,9 @@ class RemoteDocument extends Document {
       }
       if (cachedFile != null && cachedFile.existsSync()) {
         _log.fine('File is loaded from cache');
-        return cachedFile.readAsBytes();
+        Uint8List bytes = await cachedFile.readAsBytes();
+        _log.finest('File size: ${(bytes.lengthInBytes / 1024).round()} kilobytes');
+        return bytes;
       } else {
         _log.finer('File is not cached');
       }
