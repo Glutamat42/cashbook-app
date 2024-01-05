@@ -28,10 +28,17 @@ class RemoteDocument extends Document {
   Future<Uint8List> _getBinaryData(String url, {bool cache = true}) async {
     // Check if the file is cached
     if (!kIsWeb) {
-      final cachedFile = await _getCachedFile(url);
+      File? cachedFile;
+      try {
+        cachedFile = await _getCachedFile(url);
+      } catch (e) {
+        _log.severe('Error loading file from cache: $e');
+      }
       if (cachedFile != null && cachedFile.existsSync()) {
         _log.fine('File is loaded from cache');
         return cachedFile.readAsBytes();
+      } else {
+        _log.finer('File is not cached');
       }
     }
 

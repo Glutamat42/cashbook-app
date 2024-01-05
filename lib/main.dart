@@ -7,6 +7,7 @@ import 'package:cashbook/screens/home_screen.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/auth_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
@@ -95,7 +96,8 @@ class _MyAppState extends State<MyApp> {
     // open the details page. This should be sufficient to load the files from the intent.
 
     // For sharing images coming from outside the app while the app is in the memory
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      // kisweb check is required as Platform is not available on web
       _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream().listen((List<SharedFile> value) {
         _log.info("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
         for (var sharedFile in value) {

@@ -5,6 +5,7 @@ import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/models/remote_document.dart';
 import 'package:cashbook/utils/helpers.dart';
 import 'package:cashbook/widgets/memory_image_with_avif.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -190,7 +191,29 @@ class DocumentSection extends StatelessWidget {
         future:
             document is LocalDocument ? document.compressionFuture : (document as RemoteDocument).thumbnailBinaryData,
         builder: (context, data) {
-          if (document is RemoteDocument && !data.hasData) {
+          if (document is RemoteDocument){
+            if (data.hasError) {
+              _log.warning('Error loading thumbnail: ${data.error}');
+              return Container(
+                width: 100,
+                margin: const EdgeInsets.only(right: 8),
+                child: const Center(child: Icon(Icons.error)),
+              );
+            }
+            if (!data.hasData || data.data is! Uint8List) {
+              return Container(
+                width: 100,
+                margin: const EdgeInsets.only(right: 8),
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            }
+          }
+
+          if (document is RemoteDocument && !data.hasData ||
+                  document is RemoteDocument &&
+                      data.data
+                          is! Uint8List // no idea why this happens. When adding an image to an entry that already has images and then discarding the changes, this code is called with Future state "done" and data.data is a List without data.
+              ) {
             return Container(
               width: 100,
               margin: const EdgeInsets.only(right: 8),
@@ -246,7 +269,7 @@ class DocumentSection extends StatelessWidget {
 
   Widget _buildImage(Document document, Uint8List thumbnailBytes) {
     if (document is LocalDocument && Helpers.getMimeType(document.originalBinaryData) == 'application/pdf') {
-      return Image.asset('/assets/images/icon-picture_as_pdf.png');
+      return Image.asset('assets/images/icon-picture_as_pdf.png');
     } else {
       return MemoryImageWithAvif(imageData: thumbnailBytes);
     }

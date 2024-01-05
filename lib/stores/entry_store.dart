@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cashbook/models/remote_document.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
@@ -48,8 +49,8 @@ abstract class _EntryStore with Store {
   @action
   Future<ObservableList<Document>> loadDocumentsForEntry(int entryId) async {
     try {
-      var docs = await _documentsRepository.getDocumentsByEntryId(entryId);
-      entryDocuments[entryId] = ObservableList<Document>.of(docs);
+      List<RemoteDocument> docs = await _documentsRepository.getDocumentsByEntryId(entryId);
+      entryDocuments[entryId] = ObservableList<Document>.of(docs.reversed);
     } catch (e) {
       _logger.severe('Failed to load documents for entry $entryId: $e');
       entryDocuments[entryId] = ObservableList<Document>.of([]);
@@ -104,7 +105,7 @@ abstract class _EntryStore with Store {
     try {
       final docs = await _documentsRepository.getAll();
       entryDocuments = ObservableMap<int, ObservableList<Document>>.of({
-        for (var d in docs) d.entryId!: ObservableList<Document>.of([d])
+        for (var d in docs.reversed) d.entryId!: ObservableList<Document>.of([d])
       });
 
       _cleanupDocumentCache();

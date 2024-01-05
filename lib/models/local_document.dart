@@ -69,32 +69,21 @@ class LocalDocument extends Document {
 
     // resize
     Uint8List resizedBytes = originalBinaryData;
-    // in case image is above 5MB, i expect it to have a very high resolution and resize it to a maximum of 4000x4000,
-    // even if no minHeight/minWidth are set
-    // if (profile['minHeight'] != null && profile['minWidth'] != null || originalBinaryData.lengthInBytes > 5*1024*1024) {
-    //   resizedBytes = await FlutterImageCompress.compressWithList(
-    //     originalBinaryData,
-    //     keepExif: true,
-    //     // rotate: 0,
-    //     // autoCorrectionAngle: true,
-    //     minHeight: profile['minHeight'] ?? 4000,  // default upper limit to prevent insane values
-    //     minWidth: profile['minWidth'] ?? 4000,
-    //     quality: 100,
-    //     format: CompressFormat.jpeg,
-    //   );
-    // }
-
+    _logger.finest('Starting to decode image');
+    // TODO: image commands are blocking on web, so the app freezes during these operations
     img.Image image = img.decodeImage(originalBinaryData)!;
     // compress in case: minHeight and minWidth are set and image is larger than either of them or image is larger than 4000x4000 on at least one side
     if (profile['minHeight'] != null &&
             profile['minWidth'] != null &&
             (image.height > profile['minHeight']! || image.width > profile['minWidth']!) ||
-        image.width > 4000 ||
-        image.height > 4000) {
+        image.width > 4500 ||
+        image.height > 4500) {
+      _logger.info('Resizing image');
+      _logger.finer('Image size before resizing: ${image.width}x${image.height}');
       if (image.height >= image.width) {
-        image = img.copyResize(image, height: profile['minHeight'] ?? 4000);
+        image = img.copyResize(image, height: profile['minHeight'] ?? 4500);
       } else {
-        image = img.copyResize(image, width: profile['minWidth'] ?? 4000);
+        image = img.copyResize(image, width: profile['minWidth'] ?? 4500);
       }
       resizedBytes = img.encodeJpg(image, quality: 100);
     }
@@ -102,7 +91,6 @@ class LocalDocument extends Document {
     // compress
     Uint8List compressedBytes;
     if (targetFormat == 'webp') {
-      _logger.finer('File size after resizing: ${(resizedBytes.lengthInBytes / 1024).round()} kilobytes');
       compressedBytes = await FlutterImageCompress.compressWithList(
         resizedBytes,
         keepExif: true,

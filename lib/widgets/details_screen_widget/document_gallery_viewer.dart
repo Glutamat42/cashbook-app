@@ -99,7 +99,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
               return {'Download/share Original'}.map((String choice) {
                 return PopupMenuItem<String>(
                   value: choice,
-                  child: Text(choice),
+                  child: const Text("Download/share Original"),
                 );
               }).toList();
             },
@@ -122,7 +122,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
             return PhotoViewGalleryPageOptions(
               imageProvider: imageProviders[index],
               minScale: PhotoViewComputedScale.contained * 1.0,
-              maxScale: PhotoViewComputedScale.covered * 2.5,
+              maxScale: PhotoViewComputedScale.covered * 4,
               initialScale: PhotoViewComputedScale.contained,
               heroAttributes: PhotoViewHeroAttributes(tag: index.toString()),
             );
@@ -161,7 +161,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
   }
 
   void _handleMenuSelection(String choice) {
-    if (choice == 'Download Original') {
+    if (choice == 'Download/share Original') {
       _downloadAndShare(QualityType.original);
     }
   }
