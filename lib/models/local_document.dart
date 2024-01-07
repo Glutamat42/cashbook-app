@@ -69,23 +69,27 @@ class LocalDocument extends Document {
 
     // resize
     Uint8List resizedBytes = originalBinaryData;
-    _logger.finest('Starting to decode image');
-    // TODO: image commands are blocking on web, so the app freezes during these operations
-    img.Image image = img.decodeImage(originalBinaryData)!;
-    // compress in case: minHeight and minWidth are set and image is larger than either of them or image is larger than 4000x4000 on at least one side
-    if (profile['minHeight'] != null &&
-            profile['minWidth'] != null &&
-            (image.height > profile['minHeight']! || image.width > profile['minWidth']!) ||
-        image.width > 4500 ||
-        image.height > 4500) {
-      _logger.info('Resizing image');
-      _logger.finer('Image size before resizing: ${image.width}x${image.height}');
-      if (image.height >= image.width) {
-        image = img.copyResize(image, height: profile['minHeight'] ?? 4500);
-      } else {
-        image = img.copyResize(image, width: profile['minWidth'] ?? 4500);
+    if (!kIsWeb) {
+      _logger.finest('Starting to decode image');
+      // TODO: image commands are blocking on web, so the app freezes during these operations
+      img.Image image = img.decodeImage(originalBinaryData)!;
+      // compress in case: minHeight and minWidth are set and image is larger than either of them or image is larger than 4000x4000 on at least one side
+      if (profile['minHeight'] != null &&
+          profile['minWidth'] != null &&
+          (image.height > profile['minHeight']! || image.width > profile['minWidth']!) ||
+          image.width > 4500 ||
+          image.height > 4500) {
+        _logger.info('Resizing image');
+        _logger.finer('Image size before resizing: ${image.width}x${image.height}');
+        if (image.height >= image.width) {
+          image = img.copyResize(image, height: profile['minHeight'] ?? 4500);
+        } else {
+          image = img.copyResize(image, width: profile['minWidth'] ?? 4500);
+        }
+        resizedBytes = img.encodeJpg(image, quality: 100);
       }
-      resizedBytes = img.encodeJpg(image, quality: 100);
+    } else {
+      _logger.warning('Image resizing is disabled on web due to performance issues');
     }
 
     // compress
