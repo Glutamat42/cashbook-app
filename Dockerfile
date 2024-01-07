@@ -1,6 +1,9 @@
 # Builder stage
 FROM ghcr.io/cirruslabs/flutter:latest AS builder
 
+ARG BUILD_NAME
+ARG BUILD_NUMBER
+
 # Set the working directory
 WORKDIR /app
 
@@ -10,7 +13,7 @@ COPY . /app
 # Get dependencies and build the web application
 RUN flutter pub get
 RUN flutter packages pub run build_runner build --delete-conflicting-outputs
-RUN flutter build web
+RUN flutter build web --build-name $BUILD_NAME --build-number $BUILD_NUMBER
 
 # Runner stage
 FROM nginx:alpine

@@ -37,6 +37,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
+          build-args: |
+            BUILD_NUMBER=${{ github.run_number }}
+            BUILD_NAME=${{ github.ref_name }}
           context: .
           file: ./Dockerfile
           push: true
@@ -63,7 +66,7 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build APK
-        run: flutter build apk
+        run: flutter build apk --build-name ${{ github.ref_name }} --build-number ${{ github.run_number }}
 
       - name: Upload APK to release
         uses: svenstaro/upload-release-action@v2
@@ -89,7 +92,7 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Windows
-        run: flutter build windows
+        run: flutter build windows --build-name ${{ github.ref_name }} --build-number ${{ github.run_number }}
 
       - name: Archive Release
         uses: thedoctor0/zip-release@master
