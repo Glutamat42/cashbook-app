@@ -73,7 +73,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./build/app/outputs/flutter-apk/app-release.apk
-          asset_name: Cashbook-app-${{ github.ref_name }}.apk
+          asset_name: cashbook-app-${{ github.ref_name }}.apk
           tag: ${{ github.ref }}
 
   build-windows:
@@ -98,12 +98,13 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          filename: cashbook-windows-${{github.ref_name}}.zip
+          filename: cashbook-windows-release.zip
           directory: build/windows/x64/runner/Release
 
       - name: Upload Windows to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/windows/x64/runner/Release/cashbook-${{github.ref_name}}-windows.zip
+          asset_name: cashbook-windows-${{github.ref_name}}.zip
+          file: build/windows/x64/runner/Release/cashbook-windows-release.zip
           tag: ${{ github.ref }}
