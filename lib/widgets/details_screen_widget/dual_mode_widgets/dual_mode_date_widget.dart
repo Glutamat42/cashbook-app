@@ -4,13 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import '../flexible_detail_item_view.dart';
 
-class DualModeDateWidget extends StatelessWidget {
-  final Logger _log = Logger('DualModeDateWidget');
+class DualModeDateWidget extends StatefulWidget {
   final bool isEditMode;
   final DateTime? date;
   final Function(DateTime?) onChanged;
   final FormFieldValidator<String>? validator;
-  final String dateFormat = "dd.MM.yyyy"; // TODO: get form locale
 
   DualModeDateWidget({
     Key? key,
@@ -21,14 +19,29 @@ class DualModeDateWidget extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<DualModeDateWidget> createState() => _DualModeDateWidgetState();
+}
+
+class _DualModeDateWidgetState extends State<DualModeDateWidget> {
+  final Logger _log = Logger('DualModeDateWidget');
+  final _dateController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _dateController.text = widget.date == null ? "" : DateFormat("dd.MM.yyyy").format(widget.date!);
+  }
+
+  final String dateFormat = "dd.MM.yyyy";
+  @override
   Widget build(BuildContext context) {
-    return isEditMode ? _buildDatePickerEdit(context) : _buildDateDisplay();
+    return widget.isEditMode ? _buildDatePickerEdit(context) : _buildDateDisplay();
   }
 
   Widget _buildDateDisplay() {
     return FlexibleDetailItemView(
       title: 'Date:',
-      rightWidget: Text(date == null ? "" : DateFormat(dateFormat).format(date!)),
+      rightWidget: Text(widget.date == null ? "" : DateFormat(dateFormat).format(widget.date!)),
     );
   }
 
@@ -44,14 +57,14 @@ class DualModeDateWidget extends StatelessWidget {
                   hintText: dateFormat,
               ),
               // onTap: () => _selectDate(context),
-              initialValue: date == null ? "" : DateFormat(dateFormat).format(date!),
+              controller: _dateController,
               keyboardType: TextInputType.datetime,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9-./]')),
               ],
               // onEditingComplete: ,
               onChanged: _handleDateTextInputFieldChange,
-              validator: validator,
+              validator: widget.validator,
             ),
           ),
           IconButton(
@@ -65,28 +78,31 @@ class DualModeDateWidget extends StatelessWidget {
 
   void _handleDateTextInputFieldChange(String value) {
     if (value.isEmpty) {
-      onChanged(null);
+      widget.onChanged(null);
       return;
     }
     try {
       final DateTime parsedDate = DateFormat(dateFormat).parse(value);
       _log.finer('Current user Input "$value" is parse-able to date: $parsedDate');
-      onChanged(parsedDate);
+      widget.onChanged(parsedDate);
     } catch (e) {
       _log.fine('Current user Input is not parse-able to date: $value');
-      onChanged(null);
+      widget.onChanged(null);
     }
   }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: date ?? DateTime.now(),
+      initialDate: widget.date ?? DateTime.now(),
       firstDate: DateTime(2023),
       lastDate: DateTime(2100),
     );
     if (pickedDate != null) {
-      onChanged(pickedDate);
+      widget.onChanged(pickedDate);
+      setState(() {
+        _dateController.text = DateFormat(dateFormat).format(pickedDate);
+      });
     }
   }
 }

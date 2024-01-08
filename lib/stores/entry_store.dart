@@ -42,7 +42,7 @@ abstract class _EntryStore with Store {
   SortField currentSortField = SortField.date;
 
   @observable
-  SortOrder currentSortOrder = SortOrder.ascending;
+  SortOrder currentSortOrder = SortOrder.descending;
 
   @observable
   Map<FilterField, dynamic> currentFilters = {};
