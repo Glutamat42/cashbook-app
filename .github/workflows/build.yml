@@ -66,7 +66,10 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build APK
-        run: flutter build apk --build-name ${{ github.ref_name }} --build-number ${{ github.run_number }}
+        run: |
+          - echo ${{ github.UPLOAD_KEYSTORE }} | base64 -d > upload-keystore.jks
+          - echo ${{ github.KEY_PROPERTIES }} > android/app/key.properties
+          - flutter build apk --build-name ${{ github.ref_name }} --build-number ${{ github.run_number }}
 
       - name: Upload APK to release
         uses: svenstaro/upload-release-action@v2
