@@ -98,7 +98,7 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          filename: cashbook-${{github.ref_name}}-windows.zip
+          filename: cashbook-windows-${{github.ref_name}}.zip
           directory: build/windows/x64/runner/Release
 
       - name: Upload Windows to release
