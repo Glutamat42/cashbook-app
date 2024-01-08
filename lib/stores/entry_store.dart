@@ -78,7 +78,7 @@ abstract class _EntryStore with Store {
       _logger.warning('Failed to create entry: ${e.message}');
       throw Exception('Failed to create entry');
     } on Exception catch (e) {
-      _logger.warning('Non Dio Error occured, likely failed to process response: ${e.toString()}';
+      _logger.warning('Non Dio Error occured, likely failed to process response: ${e.toString()}');
       throw Exception('Failed processing entry, possibly the entry was created but received an invalid response');
     }
   }
