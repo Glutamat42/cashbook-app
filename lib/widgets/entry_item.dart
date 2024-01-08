@@ -68,7 +68,9 @@ class EntryItem extends StatelessWidget {
 
   Color _getBackgroundColor() {
     EntryStore entryStore = locator<EntryStore>();
-    if (entry.noInvoice == false && (entryStore.entryDocuments[entry.id] ?? []).isEmpty) {
+    bool invoiceMissing = entry.noInvoice == false && (entryStore.entryDocuments[entry.id] ?? []).isEmpty;
+    bool notPayed = entry.paymentMethod == 'not_payed';
+    if (invoiceMissing || notPayed) {
       return Colors.orange
           .withOpacity(0.3); // Color for entries with no invoice
     }

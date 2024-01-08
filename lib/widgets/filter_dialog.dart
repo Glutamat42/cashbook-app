@@ -17,6 +17,7 @@ class _FilterDialogState extends State<FilterDialog> {
   late CategoryStore _categoryStore;
   int? _selectedCategoryId;
   bool _isInvoiceMissing = false;
+  bool _isNotPayed = false;
 
   @override
   void initState() {
@@ -25,6 +26,7 @@ class _FilterDialogState extends State<FilterDialog> {
     _selectedFilters = Map.from(widget.currentFilters);
     _selectedCategoryId = _selectedFilters[FilterField.category];
     _isInvoiceMissing = _selectedFilters[FilterField.invoiceMissing] ?? false;
+    _isNotPayed = _selectedFilters[FilterField.notPayed] ?? false;
   }
 
   @override
@@ -53,7 +55,7 @@ class _FilterDialogState extends State<FilterDialog> {
                     child: Text(category.name),
                   );
                 }).toList(),
-              ]
+              ],
             ),
             CheckboxListTile(
               title: const Text('Invoice Missing'),
@@ -61,6 +63,15 @@ class _FilterDialogState extends State<FilterDialog> {
               onChanged: (bool? newValue) {
                 setState(() {
                   _isInvoiceMissing = newValue!;
+                });
+              },
+            ),
+            CheckboxListTile(
+              title: const Text('Not Payed'),
+              value: _isNotPayed,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  _isNotPayed = newValue!;
                 });
               },
             ),
@@ -80,6 +91,7 @@ class _FilterDialogState extends State<FilterDialog> {
             Navigator.of(context).pop({
               FilterField.category: _selectedCategoryId,
               FilterField.invoiceMissing: _isInvoiceMissing,
+              FilterField.notPayed: _isNotPayed,
             });
           },
         ),

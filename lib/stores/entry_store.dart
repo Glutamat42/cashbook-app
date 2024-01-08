@@ -19,7 +19,7 @@ enum SortField { date, amount, recipient }
 
 enum SortOrder { ascending, descending }
 
-enum FilterField { category, invoiceMissing, searchText }
+enum FilterField { category, invoiceMissing, searchText, notPayed }
 
 class EntryStore = _EntryStore with _$EntryStore;
 
@@ -283,6 +283,11 @@ abstract class _EntryStore with Store {
               entry.recipientSender.toLowerCase().contains(searchText) ||
               entry.description.toLowerCase().contains(searchText))
           .toList();
+    }
+
+    // Filter by payment state
+    if (currentFilters.containsKey(FilterField.notPayed) && currentFilters[FilterField.notPayed]) {
+      filteredEntries = filteredEntries.where((entry) => entry.paymentMethod == 'not_payed').toList();
     }
 
     return filteredEntries;

@@ -151,6 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
         if (_entryStore.currentFilters[FilterField.searchText] != null) {
           activeFilters.add('Search: ${_entryStore.currentFilters[FilterField.searchText]}');
         }
+        if (_entryStore.currentFilters[FilterField.notPayed] == true) {
+          activeFilters.add('Not Payed');
+        }
 
         if (activeFilters.isEmpty) {
           return const SizedBox.shrink(); // No active filters
