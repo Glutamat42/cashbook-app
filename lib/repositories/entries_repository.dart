@@ -28,14 +28,8 @@ class EntriesRepository {
   Future<Entry> createEntry(Entry entryData, List<Document> documents) async {
     FormData formData = await _prepareFormData(entryData, documents);
 
-    try {
-      final response = await dio.post('/api/entries', data: formData);
-      return Entry.fromJson(response.data);
-    } on DioException catch (e) {
-      throw Exception('Failed to create entry: ${e.message}');
-    } on Exception catch (e) {
-      throw Exception('Failed to create entry: ${e.toString()}');
-    }
+    final response = await dio.post('/api/entries', data: formData);
+    return Entry.fromJson(response.data);
   }
 
   Future<Entry> updateEntry(int id, Entry entryData, List<Document> documents) async {

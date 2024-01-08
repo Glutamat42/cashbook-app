@@ -85,7 +85,6 @@ flutter:
     - assets/config.json
     - assets/images/icon-hourglass-top.png
     - assets/images/icon-picture_as_pdf.png
-    - assets/pica9.0.1.min.js
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

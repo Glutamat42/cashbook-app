@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cashbook/models/remote_document.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
@@ -73,9 +74,12 @@ abstract class _EntryStore with Store {
       visibleEntries.add(createdEntry);
       _applyFilterAndSort();
       return createdEntry;
-    } catch (e) {
-      _logger.severe('Failed to create entry: $e');
+    } on DioException catch (e) {
+      _logger.warning('Failed to create entry: ${e.message}');
       throw Exception('Failed to create entry');
+    } on Exception catch (e) {
+      _logger.warning('Non Dio Error occured, likely failed to process response: ${e.toString()}';
+      throw Exception('Failed processing entry, possibly the entry was created but received an invalid response');
     }
   }
 
