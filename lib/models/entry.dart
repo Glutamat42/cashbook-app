@@ -8,10 +8,10 @@ class Entry {
   int? categoryId;
   String paymentMethod;
   bool noInvoice;
-  final int? userId;
+  int? userId;
   int? userIdLastModified;
   String? updatedAt;
-  final String? createdAt;
+  String? createdAt;
 
   Entry({
     this.id,
@@ -68,7 +68,9 @@ class Entry {
   void updateFrom(Entry other) {
     id = other.id;
     userIdLastModified = other.userIdLastModified;
+    userId = other.userId;
     updatedAt = other.updatedAt;
+    createdAt = other.createdAt;
     description = other.description;
     recipientSender = other.recipientSender;
     amount = other.amount;
