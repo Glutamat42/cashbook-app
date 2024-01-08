@@ -90,7 +90,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
           IconButton(
             icon: const Icon(kIsWeb ? Icons.download : Icons.share),
             onPressed: () {
-              _downloadAndShare(QualityType.document);
+              _downloadAndShare(QualityType.document, context: context);
             },
           ),
           PopupMenuButton<String>(
@@ -162,11 +162,15 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
 
   void _handleMenuSelection(String choice) {
     if (choice == 'Download/share Original') {
-      _downloadAndShare(QualityType.original);
+      _downloadAndShare(QualityType.original, context: context);
     }
   }
 
-  Future<void> _downloadAndShare(QualityType qualityType, {bool convertToJpeg = true}) async {
+  Future<void> _downloadAndShare(QualityType qualityType, {bool convertToJpeg = true, BuildContext? context}) async {
+    if (context != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Preparing share...')));
+    }
+
     Document document = widget.documents[_currentIndex];
     // Mobile and mobile web browser logic to share the file
     Uint8List fileBytes;
@@ -209,7 +213,7 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
         // fileBytes = await FlutterImageCompress.compressWithList(pngBytes, format: CompressFormat.jpeg, quality: 90);
         // alternative with Image package
         final img.Image? imageLibImage = img.decodeImage(pngBytes);
-        final jpegFileBytes = img.encodeJpg(imageLibImage!, quality: 90);
+        fileBytes = img.encodeJpg(imageLibImage!, quality: 90);
         mimeType = 'image/jpeg';
 
         codec.dispose();
