@@ -67,9 +67,9 @@ jobs:
 
       - name: Build APK
         run: |
-          - echo ${{ github.UPLOAD_KEYSTORE }} | base64 -d > upload-keystore.jks
-          - echo ${{ github.KEY_PROPERTIES }} > android/app/key.properties
-          - flutter build apk --build-name ${{ github.ref_name }} --build-number ${{ github.run_number }}
+          echo ${{ secrets.UPLOAD_KEYSTORE }} | base64 -d > android/app/upload-keystore.jks
+          echo ${{ secrets.KEY_PROPERTIES }} | base64 -d > android/key.properties
+          flutter build apk --build-name ${{ github.ref_name }} --build-number ${{ github.run_number }}
 
       - name: Upload APK to release
         uses: svenstaro/upload-release-action@v2
