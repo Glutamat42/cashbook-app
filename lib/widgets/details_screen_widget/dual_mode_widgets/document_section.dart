@@ -5,6 +5,7 @@ import 'package:cashbook/models/local_document.dart';
 import 'package:cashbook/models/remote_document.dart';
 import 'package:cashbook/utils/helpers.dart';
 import 'package:cashbook/widgets/memory_image_with_avif.dart';
+import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -102,21 +103,32 @@ class DocumentSection extends StatelessWidget {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text('Gallery'),
+                  leading: const Icon(Icons.photo_camera),
+                  title: const Text('Camera Document Scan'),
                   onTap: () async {
                     Navigator.pop(context);
-                    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                    final List<String>? imagesPath = await CunningDocumentScanner.getPictures(true);
+                    if (imagesPath != null && context.mounted) {
+                      final File file = File(imagesPath[0]);
+                      _newDocumentOpened(file.readAsBytesSync(), imagesPath[0].split("/").last, context, entryId);
+                    }
+                  }),
+              ListTile(
+                  leading: const Icon(Icons.photo_camera),
+                  title: const Text('Camera fallback'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
                     if (pickedFile != null && context.mounted) {
                       _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, entryId);
                     }
                   }),
               ListTile(
-                  leading: const Icon(Icons.photo_camera),
-                  title: const Text('Camera'),
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Gallery'),
                   onTap: () async {
                     Navigator.pop(context);
-                    final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
+                    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
                     if (pickedFile != null && context.mounted) {
                       _newDocumentOpened(await pickedFile.readAsBytes(), pickedFile.name, context, entryId);
                     }
