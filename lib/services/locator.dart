@@ -2,6 +2,7 @@ import 'package:cashbook/repositories/categories_repository.dart';
 import 'package:cashbook/repositories/documents_repository.dart';
 import 'package:cashbook/repositories/entries_repository.dart';
 import 'package:cashbook/repositories/users_repository.dart';
+import 'package:cashbook/stores/options_store.dart';
 import 'package:cashbook/stores/user_store.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
@@ -17,7 +18,7 @@ GetIt locator = GetIt.instance;
 void setupLocator() {
   Dio dio = Dio(BaseOptions(
       baseUrl: "http://localhost:8080",
-      connectTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 300))); // document upload 5 minutes timeout
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) {
@@ -43,6 +44,7 @@ void setupLocator() {
   locator.registerLazySingleton(() => EntryStore());
   locator.registerLazySingleton(() => CategoryStore());
   locator.registerLazySingleton(() => UserStore());
+  locator.registerLazySingleton(() => OptionsStore());
 
   locator.registerLazySingleton(() => AuthRepository(locator<Dio>()));
   locator.registerLazySingleton(() => EntriesRepository(locator<Dio>()));

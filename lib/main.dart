@@ -7,6 +7,7 @@ import 'package:cashbook/screens/home_screen.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/auth_store.dart';
 import 'package:cashbook/stores/entry_store.dart';
+import 'package:cashbook/stores/options_store.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -90,6 +91,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+
+    OptionsStore optionsStore = locator<OptionsStore>();
+    optionsStore.loadAppVersion();
 
     // Implementation of intention is not perfect here as it relies on that the files are loaded before the user opens
     // the details page of an entry. Usually that should work fine as the user will at least need a few seconds to
