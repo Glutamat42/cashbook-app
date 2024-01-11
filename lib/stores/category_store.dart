@@ -47,7 +47,6 @@ abstract class _CategoryStore with Store {
     categories.clear();
   }
 
-  @computed
   String findCategoryName(int? categoryId) {
     String categoryName = 'Unknown';
     if (categoryId == null) {
