@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
 import '../models/category.dart';
 import '../repositories/categories_repository.dart';
@@ -9,6 +10,7 @@ part 'category_store.g.dart';
 class CategoryStore = _CategoryStore with _$CategoryStore;
 
 abstract class _CategoryStore with Store {
+  final Logger _log = Logger('_CategoryStore');
   final CategoriesRepository _categoriesRepository = locator<CategoriesRepository>();
 
   @observable
@@ -43,5 +45,22 @@ abstract class _CategoryStore with Store {
   @action
   Future<void> onLogout() async {
     categories.clear();
+  }
+
+  @computed
+  String findCategoryName(int? categoryId) {
+    String categoryName = 'Unknown';
+    if (categoryId == null) {
+      categoryName = "";
+    } else {
+      try {
+        final category =
+        categories.firstWhere((c) => c.id == categoryId);
+        categoryName = category.name;
+      } catch (e) {
+        _log.warning('Category with id $categoryId not found');
+      }
+    }
+    return categoryName;
   }
 }

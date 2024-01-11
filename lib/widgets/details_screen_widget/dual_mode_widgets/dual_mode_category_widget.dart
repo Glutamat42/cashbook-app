@@ -57,7 +57,7 @@ class DualModeCategoryWidget extends StatelessWidget {
   Widget _buildCategoryDisplay() {
     return FlexibleDetailItemView(
       title: 'Category:',
-      rightWidget: Text(_findCategoryName(categoryId)),
+      rightWidget: Text(categoryStore.findCategoryName(categoryId)),
     );
   }
 
@@ -143,22 +143,5 @@ class DualModeCategoryWidget extends StatelessWidget {
         }
       }
     }
-  }
-
-
-  String _findCategoryName(int? categoryId) {
-    String categoryName = 'Unknown';
-    if (categoryId == null) {
-      categoryName = "";
-    } else {
-      try {
-        final category =
-        categoryStore.categories.firstWhere((c) => c.id == categoryId);
-        categoryName = category.name;
-      } catch (e) {
-        _log.warning('Category with id $categoryId not found');
-      }
-    }
-    return categoryName;
   }
 }

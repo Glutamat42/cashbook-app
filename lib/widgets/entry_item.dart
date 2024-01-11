@@ -1,3 +1,4 @@
+import 'package:cashbook/stores/category_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import '../stores/entry_store.dart';
 class EntryItem extends StatelessWidget {
   final Entry entry;
   final EntryStore entryStore = locator<EntryStore>();
+  final CategoryStore categoryStore = locator<CategoryStore>();
 
   EntryItem({Key? key, required this.entry}) : super(key: key);
 
@@ -30,12 +32,18 @@ class EntryItem extends StatelessWidget {
                 ),
               );
             },
+            subtitle: Row(children: [
+              Text(
+                "${categoryStore.findCategoryName(entry.categoryId)} | ",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                entry.recipientSender,
+                overflow: TextOverflow.ellipsis,
+              )
+            ],) ,
             title: Text(
-              entry.recipientSender,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
               entry.description,
               overflow: TextOverflow.ellipsis,
             ),
@@ -47,15 +55,15 @@ class EntryItem extends StatelessWidget {
                   children: [
                     SizedBox(
                       height: 24,
-                      child: invoiceMissing ? const Icon(
-                        Icons.text_snippet_outlined,
+                      child: notPayed ? const Icon(
+                        Icons.attach_money,
                         color: Colors.red,
                       ):null,
                     ),
                     SizedBox(
                       height: 24,
-                      child: notPayed ? const Icon(
-                        Icons.attach_money,
+                      child: invoiceMissing ? const Icon(
+                        Icons.text_snippet_outlined,
                         color: Colors.red,
                       ):null,
                     ),
