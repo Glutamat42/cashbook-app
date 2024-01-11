@@ -1,5 +1,10 @@
 # cashbook
 
+# Install
+## Windows
+requires [Microsoft Visual C++ Redistributable packages for Visual Studio 2015, 2017, 2019, and 2022 (vc_redist.x64.exe)](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+
+
 generate mobx files: flutter packages pub run build_runner build --delete-conflicting-outputs
 
 ## Getting Started
