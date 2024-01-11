@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 import 'package:mobx/mobx.dart';
@@ -55,9 +57,10 @@ abstract class _OptionsStore with Store {
     currentAppBuildNumber = packageInfo.buildNumber;
     _log.info('Current app version: $currentAppVersion+$currentAppBuildNumber');
 
-    await _loadLatestAppVersion("Glutamat42", "cashbook-app");
-
-    _checkUpdateAvailable();
+    if (!kIsWeb && Platform.isWindows || Platform.isAndroid) {
+      await _loadLatestAppVersion("Glutamat42", "cashbook-app");
+      _checkUpdateAvailable();
+    }
   }
 
   Future<void> _loadLatestAppVersion(String repoOwner, String repoName) async {
@@ -67,9 +70,18 @@ abstract class _OptionsStore with Store {
       final response = await Dio().get(url);
 
       if (response.statusCode == 200) {
-        final androidAsset = response.data['assets']
-            .where((dynamic asset) => asset['content_type'] == "application/vnd.android.package-archive")
-            .toList()[0];
+        dynamic asset;
+        if (Platform.isAndroid) {
+          asset = response.data['assets']
+              .where((dynamic asset) => asset['content_type'] == "application/vnd.android.package-archive")
+              .toList()[0];
+        } else if (Platform.isWindows) {
+          asset = response.data['assets']
+              .where((dynamic asset) => asset['name'].toString().toLowerCase().contains("windows"))
+              .toList()[0];
+        } else {
+          throw Exception('Updater: Unsupported platform');
+        }
 
         latestVersionInfo = {
           'latestVersion': response.data['tag_name'],
@@ -77,7 +89,7 @@ abstract class _OptionsStore with Store {
           'createdAt': response.data['created_at'],
           'publishedAt': response.data['published_at'],
           'body': response.data['body'],
-          'androidAssetUrl': androidAsset['browser_download_url'],
+          'assetUrl': asset['browser_download_url'],
         };
         _log.info('Latest version info: ${latestVersionInfo?["latestVersion"]}');
       } else {

@@ -138,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: const Text('Update Available'),
                                 onTap: () {
                                   // Download the latest APK
-                                  launchUrl(Uri.parse(_optionsStore.latestVersionInfo!['androidAssetUrl']!));
+                                  launchUrl(Uri.parse(_optionsStore.latestVersionInfo!['assetUrl']!));
                                 },
                               )
                             : const SizedBox.shrink(),
