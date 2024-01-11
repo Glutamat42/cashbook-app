@@ -24,7 +24,6 @@ samples, guidance on mobile development, and a full API reference.
 - multi language (i18n)
 - csv import/export
 - add filter: not payed
-- add highlight in overview: not payed (yellow entry & trailing column icons for not_payed and documents missing)
 
 - switch lumen to laravel
   - improve auth

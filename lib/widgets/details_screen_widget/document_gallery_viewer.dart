@@ -84,7 +84,8 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text((widget.documents[_currentIndex].deleted ? "DELETE: " : "") + (widget.documents[_currentIndex].originalFilename ?? "Document")),
+        title: Text((widget.documents[_currentIndex].deleted ? "DELETE: " : "") +
+            (widget.documents[_currentIndex].originalFilename ?? "Document")),
         actions: [
           _buildDeleteButton(),
           IconButton(
@@ -204,19 +205,20 @@ class _DocumentGalleryViewerState extends State<DocumentGalleryViewer> {
     // convert
     if (convertToJpeg) {
       if (mimeType == 'image/avif') {
-        final codec = SingleFrameAvifCodec(bytes: fileBytes);
-        await codec.ready();
-        final image = await codec.getNextFrame();
+        final frames = await decodeAvif(fileBytes);
 
-        final byteData = await image.image.toByteData(format: ImageByteFormat.png);
-        final pngBytes = byteData!.buffer.asUint8List();
-        // fileBytes = await FlutterImageCompress.compressWithList(pngBytes, format: CompressFormat.jpeg, quality: 90);
-        // alternative with Image package
-        final img.Image? imageLibImage = img.decodeImage(pngBytes);
-        fileBytes = img.encodeJpg(imageLibImage!, quality: 90);
+        // final byteData = await frames[0].image.toByteData(format: ImageByteFormat.png);
+        // final pngBytes = byteData!.buffer.asUint8List();
+        // // fileBytes = await FlutterImageCompress.compressWithList(pngBytes, format: CompressFormat.jpeg, quality: 90);
+        // // alternative with Image package
+        // final img.Image? imageLibImage = img.decodeImage(pngBytes);
+        final imageLibImage = img.Image.fromBytes(
+            width: frames[0].image.width,
+            height: frames[0].image.height,
+            bytes: (await frames[0].image.toByteData())!.buffer,
+            numChannels: 4);
+        fileBytes = img.encodeJpg(imageLibImage, quality: 90);
         mimeType = 'image/jpeg';
-
-        codec.dispose();
       } else if (mimeType == 'image/webp') {
         img.Image image = img.decodeImage(fileBytes)!;
         fileBytes = img.encodeJpg(image, quality: 90);

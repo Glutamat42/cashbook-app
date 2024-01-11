@@ -290,66 +290,66 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_avif
-      sha256: "68455d49b786c54d146eb730562a49cf3773ee697436f2f42464dbc60cec88c2"
+      sha256: "13cf860fb2a3bd21c74624bcd2b0415ce272d5049dcaee2262367e944853a0a8"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_avif_android:
     dependency: transitive
     description:
       name: flutter_avif_android
-      sha256: "44f18359d3d8f64dae96eba21fc67ec20b6c2302f4eaece17c6f1ebe07863095"
+      sha256: ec457f28ddd6edadce5c949aa43ed880d767e347caacb406af6817d83909ab5d
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_avif_ios:
     dependency: transitive
     description:
       name: flutter_avif_ios
-      sha256: "439e6cbb711eb954ad50ac313f2ef84297e21b19e40e93675701295d4d693985"
+      sha256: bc28b181835d2b92dd48fd7585d1af244dd19c200649890f2c7065cc7d5d3816
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_avif_linux:
     dependency: transitive
     description:
       name: flutter_avif_linux
-      sha256: "728d7678e5267e77041374d17740c850ed191817103d7f1dbd56de6a0048fb30"
+      sha256: cfecc54348304bd22bab087ecd05d0f9325c3d18294c6ad5de5fb66e6a271f5b
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_avif_macos:
     dependency: transitive
     description:
       name: flutter_avif_macos
-      sha256: c18777a820e6ae1b284da9b36db6f8188a8abda349f595b689d5adaa60b95cd7
+      sha256: "97ff526f95e4a39b45d96e62ee463f82c6aab193ebd72731643e6994d35a43eb"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_avif_platform_interface:
     dependency: transitive
     description:
       name: flutter_avif_platform_interface
-      sha256: "39422c0a1ccaef4586013814175d123b19a88da42b2bac193f9b04248124e0b2"
+      sha256: d85ad7ef85327ea08570d3763bfa3c43c165c93d15ae3947a0d6fdbdbc03f6d9
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_avif_web:
     dependency: transitive
     description:
       name: flutter_avif_web
-      sha256: ad9efa2ba30db934d6eb5b419cc2c0ec441e6bc1bcf642fd8bf111641476e826
+      sha256: "64513c5fe083d47af9d062c82d9319d4c11868e0225dd5f85392fb2fc75dd612"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_avif_windows:
     dependency: transitive
     description:
       name: flutter_avif_windows
-      sha256: "93c476b36eedeb601f3ff17f1fed6838b0a575bf7da335a20ad5a89936cb5c0e"
+      sha256: "3efe54ea01f721694ba197e276286c45bb1c2fb5fa4533e05eabef1518a71dfd"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   flutter_image_compress:
     dependency: "direct main"
     description:
