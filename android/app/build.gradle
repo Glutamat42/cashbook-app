@@ -29,7 +29,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.example.cashbook"
+    namespace "dev.markus_heck.cashbook"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 

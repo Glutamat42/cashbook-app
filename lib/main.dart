@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'constants/route_names.dart';
 import 'screens/login_screen.dart';
 
@@ -26,7 +27,7 @@ void main() async {
   runApp(const MyApp());
 }
 
-void _setupLogging(String level) {
+void _setupLogging(String level) async {
   Level logLevel;
   bool invalidLevel = false;
 
@@ -55,19 +56,50 @@ void _setupLogging(String level) {
       break;
   }
 
-  Logger.root.level = logLevel; // Set this level as per your need
-  Logger.root.onRecord.listen((record) {
+  Logger.root.level = logLevel;
+
+  final File? file = await _localFile;
+  Logger.root.onRecord.listen((record) async {
     final timestamp = record.time.toIso8601String();
     final logLevel = record.level.name.padRight(7); // "WARNING" has 7 characters
     final loggerName = record.loggerName;
     final message = record.message;
 
+    final logMessage = '$timestamp | $logLevel | $loggerName | $message';
+
+    // Print log to console
     // ignore: avoid_print
-    print('$timestamp | $logLevel | $loggerName | $message');
+    print(logMessage);
+
+    // Write log to file
+    if (!kIsWeb) {
+      await file!.writeAsString("$logMessage\n", mode: FileMode.append);
+    }
   });
+
+  if (file != null) {
+    Logger.root.info('Logging to file: ${file.path}');
+  }
 
   if (invalidLevel) {
     Logger.root.warning('Invalid log level: $level. Defaulting to INFO.');
+  }
+}
+
+Future<File?> get _localFile async {
+  if (kIsWeb) {
+    return null;
+  } else if (Platform.isAndroid || Platform.isIOS || Platform.isWindows) {
+    // TODO: logrotate
+    final directory = await getApplicationDocumentsDirectory();
+    // create subdirectory dev.markus_heck.cashbook if it does not exist
+    final subDirectory = Directory('${directory.path}/dev.markus_heck.cashbook');
+    if (!subDirectory.existsSync()) {
+      subDirectory.createSync();
+    }
+    return File('${subDirectory.path}/app_logs.txt');
+  } else {
+    throw UnsupportedError('This platform is not supported for file logging');
   }
 }
 
@@ -139,7 +171,6 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Cashbook',
       initialRoute: initialRoute,
-      restorationScopeId: 'cashbook',
       scrollBehavior: AppScrollBehavior(),
       routes: {
         RouteNames.loginScreen: (context) => const LoginScreen(),
@@ -171,8 +202,7 @@ class _MyAppState extends State<MyApp> {
 
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
-  Set<PointerDeviceKind> get dragDevices =>
-      {
+  Set<PointerDeviceKind> get dragDevices => {
         PointerDeviceKind.touch,
         PointerDeviceKind.mouse,
         PointerDeviceKind.trackpad,

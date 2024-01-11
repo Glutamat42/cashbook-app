@@ -39,7 +39,7 @@ class _AutoCompleteTextEditState extends State<AutoCompleteTextEdit> {
             return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
           }).toList();
         }
-        _logger.fine("optionsBuilder suggestions: $suggestions");
+        _logger.finest("optionsBuilder suggestions: $suggestions");
         return suggestions;
       },
       onSelected: (String selection) {
