@@ -29,7 +29,7 @@ class DualModeAmountWidget extends StatelessWidget {
       return null;
     }
     if (amountInEuros.endsWith(',') || amountInEuros.endsWith('.')) {
-      amountInEuros = amountInEuros + '0';
+      amountInEuros = '${amountInEuros}0';
     }
     if (amountInEuros.contains(',')) {
       amountInEuros = amountInEuros.replaceAll(',', '.');

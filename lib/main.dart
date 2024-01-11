@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:cashbook/config/app_config.dart';
@@ -24,7 +23,7 @@ void main() async {
   setupLocator();
   final AuthStore authStore = locator<AuthStore>();
   await authStore.loadAuthTokenFuture;
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 void _setupLogging(String level) {
@@ -73,7 +72,7 @@ void _setupLogging(String level) {
 }
 
 class MyApp extends StatefulWidget {
-  MyApp({super.key});
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -85,7 +84,6 @@ class _MyAppState extends State<MyApp> {
   final AuthStore _authStore = locator<AuthStore>();
   final EntryStore _entryStore = locator<EntryStore>();
 
-  late StreamSubscription _intentDataStreamSubscription;
   List<SharedFile>? list;
 
   @override
@@ -102,7 +100,7 @@ class _MyAppState extends State<MyApp> {
     // For sharing images coming from outside the app while the app is in the memory
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       // kisweb check is required as Platform is not available on web
-      _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream().listen((List<SharedFile> value) {
+      FlutterSharingIntent.instance.getMediaStream().listen((List<SharedFile> value) {
         _log.info("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
         for (var sharedFile in value) {
           _entryStore.intentDocuments ??= <LocalDocument>[];
@@ -142,8 +140,8 @@ class _MyAppState extends State<MyApp> {
       initialRoute: initialRoute,
       scrollBehavior: AppScrollBehavior(),
       routes: {
-        RouteNames.loginScreen: (context) => LoginScreen(),
-        RouteNames.homeScreen: (context) => HomeScreen(),
+        RouteNames.loginScreen: (context) => const LoginScreen(),
+        RouteNames.homeScreen: (context) => const HomeScreen(),
         // Define other routes
       },
       theme: ThemeData(

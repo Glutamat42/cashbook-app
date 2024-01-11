@@ -10,7 +10,7 @@ class DualModeDateWidget extends StatefulWidget {
   final Function(DateTime?) onChanged;
   final FormFieldValidator<String>? validator;
 
-  DualModeDateWidget({
+  const DualModeDateWidget({
     Key? key,
     required this.isEditMode,
     required this.date,

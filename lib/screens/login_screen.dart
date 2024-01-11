@@ -7,6 +7,8 @@ import '../services/locator.dart';
 import '../constants/route_names.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }

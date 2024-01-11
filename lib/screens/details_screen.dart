@@ -332,10 +332,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
         Entry updatedEntry;
         if (_isNew) {
           updatedEntry = await _entryStore.createEntry(_editableEntry, documents);
-          _showSnackbar(context, 'Entry created successfully', Colors.green);
+          if (context.mounted) _showSnackbar(context, 'Entry created successfully', Colors.green);
         } else {
           updatedEntry = await _entryStore.updateEntry(_editableEntry, documents);
-          _showSnackbar(context, 'Changes saved successfully', Colors.green);
+          if (context.mounted) _showSnackbar(context, 'Changes saved successfully', Colors.green);
         }
 
         // As _editableEntry might get updated from entry it has to be updated
@@ -353,7 +353,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         // TODO: show correct error message if request is too large
         // glaube da war ein error code der da kommen kann (wenn nginx wert zu klein)
         // oder das: {"errors":{"document.0":["The document.0 failed to upload."]}}
-        _showSnackbar(context, 'Failed to save changes: ${error.toString()}', Colors.red);
+        if (context.mounted) _showSnackbar(context, 'Failed to save changes: ${error.toString()}', Colors.red);
         _log.warning('Error saving entry: $error');
         return false;
       }

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -41,9 +40,9 @@ abstract class _OptionsStore with Store {
       _log.fine('No latest version available');
       isUpdateAvailable = false;
     } else {
-      bool _isUpdateAvailable = _isNewerVersion(currentAppVersion!, latestVersion);
-      _log.info('Update available: $_isUpdateAvailable');
-      isUpdateAvailable = _isUpdateAvailable;
+      bool isUpdateAvailable = _isNewerVersion(currentAppVersion!, latestVersion);
+      _log.info('Update available: $isUpdateAvailable');
+      isUpdateAvailable = isUpdateAvailable;
     }
   }
 

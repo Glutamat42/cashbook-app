@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen);
             },
           ),
-          Divider(),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.description),
             title: const Text('Licenses'),
@@ -172,9 +172,12 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           Observer(
-              builder: (_) =>
-                  Text('Version: ${_optionsStore.currentAppVersion}+${_optionsStore.currentAppBuildNumber}', style: TextStyle(color: Colors.grey))),
-          SizedBox(height: 8),
+            builder: (_) => Text(
+              'Version: ${_optionsStore.currentAppVersion}+${_optionsStore.currentAppBuildNumber}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -236,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(8.0),
       child: TextField(
         decoration: const InputDecoration(
           labelText: 'Search',
