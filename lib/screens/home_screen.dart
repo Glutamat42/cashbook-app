@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   accountName: Text(_authStore.user?.username ?? 'User'),
                   accountEmail: const Text(''),
                 ),
-                (!kIsWeb && Platform.isAndroid)
+                (!kIsWeb && (Platform.isAndroid || Platform.isWindows))
                     ? Observer(
                         builder: (_) {
                           _log.finer('Update available: ${_optionsStore.isUpdateAvailable}');

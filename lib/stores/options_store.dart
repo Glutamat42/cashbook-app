@@ -64,7 +64,7 @@ abstract class _OptionsStore with Store {
     currentAppBuildNumber = packageInfo.buildNumber;
     _log.info('Current app version: $currentAppVersion+$currentAppBuildNumber');
 
-    if (!kIsWeb && Platform.isWindows || Platform.isAndroid) {
+    if (!kIsWeb && (Platform.isWindows || Platform.isAndroid)) {
       await _loadLatestAppVersion("Glutamat42", "cashbook-app");
       _checkUpdateAvailable();
     }

@@ -23,6 +23,7 @@ samples, guidance on mobile development, and a full API reference.
 - allow users to select compression level (maybe: source, 4k (8MP), WQHD (3.6MP), FHD (2MP))
 - multi language (i18n)
 - csv import/export
+- maybe fix image rotation on avif compression with regular camera (https://stackoverflow.com/questions/60176001/how-to-fix-wrong-rotation-of-photo-from-camera-in-flutter)
 
 - switch lumen to laravel
   - improve auth
