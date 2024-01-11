@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:logging/logging.dart';
+import 'package:mobx/mobx.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/entry.dart';
 import '../stores/category_store.dart';
@@ -16,6 +17,7 @@ import '../stores/auth_store.dart';
 import '../services/locator.dart';
 import '../constants/route_names.dart';
 import '../widgets/filter_dialog.dart';
+import '../widgets/update_notification_dialog.dart';
 import 'details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -49,6 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _log.info('User is not logged in. Redirecting to login screen.');
       Future.microtask(() => Navigator.of(context).pushReplacementNamed(RouteNames.loginScreen));
     }
+
+    reaction((_) => _optionsStore.notifyUpdateAvailable, (UpdateNotificationStatus updateNotificationStatus) {
+      if (_optionsStore.notifyUpdateAvailable == UpdateNotificationStatus.notify) {
+        _optionsStore.notifyUpdateAvailable = UpdateNotificationStatus.alreadyNotified;
+        showDialog(context: context, builder: (_) => UpdateNotificationDialog());
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -130,7 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 (!kIsWeb && Platform.isAndroid)
                     ? Observer(
-                        builder: (_) => _optionsStore.isUpdateAvailable
+                        builder: (_) {
+                          _log.finer('Update available: ${_optionsStore.isUpdateAvailable}');
+                          return _optionsStore.isUpdateAvailable
                             ? ListTile(
                                 textColor: Colors.red,
                                 iconColor: Colors.red,
@@ -141,7 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   launchUrl(Uri.parse(_optionsStore.latestVersionInfo!['assetUrl']!));
                                 },
                               )
-                            : const SizedBox.shrink(),
+                            : const SizedBox.shrink();
+                        },
                       )
                     : const SizedBox.shrink(),
               ],

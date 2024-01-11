@@ -83,6 +83,8 @@ class _MyAppState extends State<MyApp> {
 
   final AuthStore _authStore = locator<AuthStore>();
   final EntryStore _entryStore = locator<EntryStore>();
+  final OptionsStore _optionsStore = locator<OptionsStore>();
+  late final Future<void> loadUpdateInfoFuture;
 
   List<SharedFile>? list;
 
@@ -90,8 +92,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    OptionsStore optionsStore = locator<OptionsStore>();
-    optionsStore.loadAppVersion();
+    loadUpdateInfoFuture = _optionsStore.loadAppVersion();
 
     // Implementation of intention is not perfect here as it relies on that the files are loaded before the user opens
     // the details page of an entry. Usually that should work fine as the user will at least need a few seconds to
@@ -169,7 +170,8 @@ class _MyAppState extends State<MyApp> {
 
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
-  Set<PointerDeviceKind> get dragDevices => {
+  Set<PointerDeviceKind> get dragDevices =>
+      {
         PointerDeviceKind.touch,
         PointerDeviceKind.mouse,
         PointerDeviceKind.trackpad,

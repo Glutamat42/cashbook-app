@@ -12,6 +12,8 @@ part 'options_store.g.dart';
 
 class OptionsStore = _OptionsStore with _$OptionsStore;
 
+enum UpdateNotificationStatus { noUpdate, notify, alreadyNotified }
+
 abstract class _OptionsStore with Store {
   final Logger _log = Logger('_OptionsStore');
 
@@ -27,6 +29,9 @@ abstract class _OptionsStore with Store {
   @observable
   bool isUpdateAvailable = false;
 
+  @observable
+  UpdateNotificationStatus notifyUpdateAvailable = UpdateNotificationStatus.noUpdate;
+
   @action
   void _checkUpdateAvailable() {
     if (latestVersionInfo == null) {
@@ -40,9 +45,12 @@ abstract class _OptionsStore with Store {
       _log.fine('No latest version available');
       isUpdateAvailable = false;
     } else {
-      bool isUpdateAvailable = _isNewerVersion(currentAppVersion!, latestVersion);
+      bool updateAvail = _isNewerVersion(currentAppVersion!, latestVersion);
       _log.info('Update available: $isUpdateAvailable');
-      isUpdateAvailable = isUpdateAvailable;
+      if (updateAvail) {
+        notifyUpdateAvailable = UpdateNotificationStatus.notify;
+        isUpdateAvailable = true;
+      }
     }
   }
 
@@ -62,6 +70,7 @@ abstract class _OptionsStore with Store {
     }
   }
 
+  @action
   Future<void> _loadLatestAppVersion(String repoOwner, String repoName) async {
     final url = 'https://api.github.com/repos/$repoOwner/$repoName/releases/latest';
 

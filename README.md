@@ -23,7 +23,6 @@ samples, guidance on mobile development, and a full API reference.
 - allow users to select compression level (maybe: source, 4k (8MP), WQHD (3.6MP), FHD (2MP))
 - multi language (i18n)
 - csv import/export
-- add filter: not payed
 
 - switch lumen to laravel
   - improve auth

@@ -1,7 +1,10 @@
+import 'package:cashbook/stores/options_store.dart';
 import 'package:cashbook/widgets/auto_complete_text_edit.dart';
+import 'package:cashbook/widgets/update_notification_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:logging/logging.dart';
+import 'package:mobx/mobx.dart';
 import '../stores/auth_store.dart';
 import '../services/locator.dart';
 import '../constants/route_names.dart';
@@ -16,6 +19,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final Logger _log = Logger('_LoginScreenState');
   final AuthStore _authStore = locator<AuthStore>();
+  final OptionsStore _optionsStore = locator<OptionsStore>();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -52,6 +56,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    reaction((_) => _optionsStore.notifyUpdateAvailable, (UpdateNotificationStatus updateNotificationStatus) {
+      if (_optionsStore.notifyUpdateAvailable == UpdateNotificationStatus.notify) {
+        _optionsStore.notifyUpdateAvailable = UpdateNotificationStatus.alreadyNotified;
+        showDialog(context: context, builder: (_) => UpdateNotificationDialog());
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: Padding(
