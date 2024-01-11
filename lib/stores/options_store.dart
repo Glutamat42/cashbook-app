@@ -46,7 +46,7 @@ abstract class _OptionsStore with Store {
       isUpdateAvailable = false;
     } else {
       bool updateAvail = _isNewerVersion(currentAppVersion!, latestVersion);
-      _log.info('Update available: $isUpdateAvailable');
+      _log.info('Update available: $updateAvail');
       if (updateAvail) {
         notifyUpdateAvailable = UpdateNotificationStatus.notify;
         isUpdateAvailable = true;

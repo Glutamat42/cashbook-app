@@ -24,6 +24,7 @@ abstract class _CategoryStore with Store {
     } catch (e) {
       // Handle errors, e.g., show a message
     }
+    _log.info('Loaded ${categories.length} categories');
   }
 
   Category getCategoryById(int id) {
@@ -57,7 +58,7 @@ abstract class _CategoryStore with Store {
         categories.firstWhere((c) => c.id == categoryId);
         categoryName = category.name;
       } catch (e) {
-        _log.warning('Category with id $categoryId not found');
+        _log.warning('Category with id $categoryId not found. This is expected before the categories are loaded.');
       }
     }
     return categoryName;

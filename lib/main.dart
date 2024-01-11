@@ -139,6 +139,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Cashbook',
       initialRoute: initialRoute,
+      restorationScopeId: 'cashbook',
       scrollBehavior: AppScrollBehavior(),
       routes: {
         RouteNames.loginScreen: (context) => const LoginScreen(),
