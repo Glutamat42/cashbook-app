@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cashbook/config/app_config.dart';
 import 'package:cashbook/models/local_document.dart';
+import 'package:cashbook/screens/export_screen.dart';
 import 'package:cashbook/screens/home_screen.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/auth_store.dart';
@@ -175,7 +176,7 @@ class _MyAppState extends State<MyApp> {
       routes: {
         RouteNames.loginScreen: (context) => const LoginScreen(),
         RouteNames.homeScreen: (context) => const HomeScreen(),
-        // Define other routes
+        RouteNames.exportScreen: (context) => ExportScreen(),
       },
       theme: ThemeData(
         // This is the theme of your application.
@@ -208,3 +209,52 @@ class AppScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.trackpad,
       };
 }
+
+
+
+
+// import 'dart:io';
+// import 'package:intl/intl.dart';
+// import 'package:path_provider/path_provider.dart';
+//
+// Future<File> get _localFile async {
+//   if (kIsWeb) {
+//     throw UnsupportedError('File logging is not supported on Web');
+//   }
+//
+//   final directory = await getApplicationDocumentsDirectory();
+//   final subDirectory = Directory('${directory.path}/dev.markus_heck.cashbook');
+//
+//   if (!subDirectory.existsSync()) {
+//     subDirectory.createSync();
+//   }
+//
+//   // Get today's date to name the file
+//   final String formattedDate = DateFormat('yyyyMMdd').format(DateTime.now());
+//   final logFile = File('${subDirectory.path}/app_logs_$formattedDate.txt');
+//
+//   // Call log rotation
+//   await _rotateLogs(subDirectory);
+//
+//   return logFile;
+// }
+//
+// Future<void> _rotateLogs(Directory directory) async {
+//   try {
+//     final logFiles = directory.listSync()
+//         .where((entity) => entity.path.endsWith('.txt'))
+//         .map((entity) => File(entity.path))
+//         .toList();
+//
+//     // Sort log files by modified date, latest first
+//     logFiles.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+//
+//     // Keep only the latest 7 log files
+//     if (logFiles.length > 7) {
+//       logFiles.sublist(7).forEach((file) => file.deleteSync());
+//     }
+//   } catch (e) {
+//     // Handle exceptions, maybe log this error
+//     print('Error during log rotation: $e');
+//   }
+// }

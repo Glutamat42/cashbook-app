@@ -1,7 +1,9 @@
 import 'package:cashbook/repositories/categories_repository.dart';
 import 'package:cashbook/repositories/documents_repository.dart';
 import 'package:cashbook/repositories/entries_repository.dart';
+import 'package:cashbook/repositories/export_repository.dart';
 import 'package:cashbook/repositories/users_repository.dart';
+import 'package:cashbook/stores/export_store.dart';
 import 'package:cashbook/stores/options_store.dart';
 import 'package:cashbook/stores/user_store.dart';
 import 'package:get_it/get_it.dart';
@@ -45,12 +47,14 @@ void setupLocator() {
   locator.registerLazySingleton(() => CategoryStore());
   locator.registerLazySingleton(() => UserStore());
   locator.registerLazySingleton(() => OptionsStore());
+  locator.registerLazySingleton(() => ExportStore());
 
   locator.registerLazySingleton(() => AuthRepository(locator<Dio>()));
   locator.registerLazySingleton(() => EntriesRepository(locator<Dio>()));
   locator.registerLazySingleton(() => CategoriesRepository(locator<Dio>()));
   locator.registerLazySingleton(() => UsersRepository(locator<Dio>()));
   locator.registerLazySingleton(() => DocumentsRepository(locator<Dio>()));
+  locator.registerLazySingleton(() => ExportRepository(locator<Dio>()));
 
   // Create a reaction to update Dio's base URL when AuthStore's baseUrl changes
   reaction(

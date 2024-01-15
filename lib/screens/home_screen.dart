@@ -156,6 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       )
                     : const SizedBox.shrink(),
+                ListTile(
+                  leading: const Icon(Icons.import_export),
+                  title: const Text('Export'),
+                  onTap: () {
+                    Navigator.of(context).pushNamed(RouteNames.exportScreen);
+                  },
+                ),
               ],
             ),
           ),
