@@ -3,7 +3,7 @@ class Entry {
   String description;
   String recipientSender;
   int? amount;
-  bool isIncome;
+  bool? isIncome;
   DateTime date;
   int? categoryId;
   String paymentMethod;
@@ -18,7 +18,7 @@ class Entry {
     this.description = "",
     this.recipientSender = "",
     this.amount,
-    this.isIncome = false,
+    this.isIncome,
     required this.date,
     this.categoryId,
     this.paymentMethod = "not_payed",

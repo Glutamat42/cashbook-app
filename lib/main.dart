@@ -97,7 +97,7 @@ Future<File?> get _localFile async {
     if (!subDirectory.existsSync()) {
       subDirectory.createSync();
     }
-    return File('${subDirectory.path}/app_logs.txt');
+    return File('${subDirectory.path}/app_logs.log');
   } else {
     throw UnsupportedError('This platform is not supported for file logging');
   }

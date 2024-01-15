@@ -74,11 +74,11 @@ class EntryItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Text(_formatAmount(entry.amount, entry.isIncome),
+                    Text(_formatAmount(entry.amount, entry.isIncome!),
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: entry.isIncome ? Colors.green : Colors.red)),
+                            color: entry.isIncome! ? Colors.green : Colors.red)),
                     const SizedBox(height: 4),
                     Text(_formatDate(entry.date)),
                   ],

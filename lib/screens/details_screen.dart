@@ -244,10 +244,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
             isEditMode: _isEditMode,
             amount: _editableEntry.amount,
             isIncome: _editableEntry.isIncome,
-            onChanged: (amount, isIncome) => setState(() {
+            onChanged: (int? amount, bool isIncome) => setState(() {
               _editableEntry.amount = amount;
               _editableEntry.isIncome = isIncome;
             }),
+            isIncomeValidator: (bool? value) {
+              if (value == null) return 'Please select transaction type';
+              return null; // No error
+            },
           ),
           DualModeDateWidget(
             isEditMode: _isEditMode,
