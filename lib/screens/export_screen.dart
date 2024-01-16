@@ -1,8 +1,12 @@
+import 'package:cashbook/models/export.dart';
+import 'package:cashbook/stores/auth_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:cashbook/stores/export_store.dart';
 import 'package:cashbook/services/locator.dart';
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ExportScreen extends StatefulWidget {
   @override
@@ -12,8 +16,15 @@ class ExportScreen extends StatefulWidget {
 class _ExportScreenState extends State<ExportScreen> {
   final _log = Logger('_ExportScreenState');
   final ExportStore _exportStore = locator<ExportStore>();
+  final AuthStore _authStore = locator<AuthStore>();
   bool _exportDocuments = true;
   bool _convertToJpeg = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _exportStore.fetchExports(refresh: true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +32,12 @@ class _ExportScreenState extends State<ExportScreen> {
       appBar: AppBar(
         title: const Text('Export Management'),
         leading: const BackButton(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _exportStore.fetchExports(refresh: true),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -28,11 +45,58 @@ class _ExportScreenState extends State<ExportScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildCreateSection(),
-            // Placeholder for the future list of exports
+            const SizedBox(height: 16.0),
+            const Divider(),
+            const SizedBox(height: 16.0),
+            Expanded(child: _buildExportList()),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildExportList() {
+    return Observer(
+      builder: (_) {
+        final exports = _exportStore.exports;
+        if (exports == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (exports.isEmpty) {
+          return const Center(child: Text("No exports available"));
+        }
+        return RefreshIndicator(
+          onRefresh: () => _exportStore.fetchExports(refresh: true),
+          child: ListView.builder(
+            itemCount: exports.length,
+            itemBuilder: (context, index) {
+              final export = exports[index];
+              return ListTile(
+                title: Text(DateFormat('dd.MM.yyyy HH:mm').format(export.createdTimestamp)),
+                subtitle: Text(_buildExportSubtitle(export)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.file_download),
+                  onPressed: () => _downloadExport(export.downloadParameter),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _downloadExport(String downloadParameter) async {
+    final baseUrl = _authStore.baseUrl;
+    await launchUrl(Uri.parse('$baseUrl/api/export/download?$downloadParameter'));
+  }
+
+  String _buildExportSubtitle(Export export) {
+    return "${export.containsDocuments ? 'With Documents' : 'Without Documents'}, ${export.imagesConvertedToJpeg ? 'JPEG Conversion enabled' : 'No JPEG Conversion'}, ${_formatFileSize(export.filesize)} MB";
+  }
+
+  String _formatFileSize(int filesize) {
+    return (filesize / (1024 * 1024)).toStringAsFixed(2);
   }
 
   Widget _buildCreateSection() {
@@ -66,10 +130,16 @@ class _ExportScreenState extends State<ExportScreen> {
                 : null,
           ),
         ),
-        ElevatedButton(
-          onPressed: _createExport,
-          child: const Text('Create Export'),
-        ),
+        const SizedBox(height: 16.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ElevatedButton(
+              onPressed: _createExport,
+              child: const Text('Create Export'),
+            ),
+          ],
+        )
       ],
     );
   }
