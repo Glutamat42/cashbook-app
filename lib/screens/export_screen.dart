@@ -92,11 +92,16 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 
   String _buildExportSubtitle(Export export) {
-    return "${export.containsDocuments ? 'With Documents' : 'Without Documents'}, ${export.imagesConvertedToJpeg ? 'JPEG Conversion enabled' : 'No JPEG Conversion'}, ${_formatFileSize(export.filesize)} MB";
+    return "Achive format: ${export.archiveFormat.toUpperCase()}, ${export.containsDocuments ? 'With Documents${export.imagesConvertedToJpeg ? ' (JPEG)' : ''}' : 'No Documents'}, ${_formatFileSize(export.filesize)}MB";
   }
 
   String _formatFileSize(int filesize) {
-    return (filesize / (1024 * 1024)).toStringAsFixed(2);
+    final fileSizeInMB = (filesize / (1024 * 1024)).toStringAsFixed(2);
+    if (fileSizeInMB == '0.00') {
+      return '<0.01';
+    } else {
+      return fileSizeInMB;
+    }
   }
 
   Widget _buildCreateSection() {

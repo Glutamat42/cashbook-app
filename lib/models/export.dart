@@ -5,6 +5,7 @@ class Export {
   final bool containsDocuments;
   final bool imagesConvertedToJpeg;
   final String downloadParameter;
+  final String archiveFormat;
 
   Export({
     required this.filename,
@@ -13,6 +14,7 @@ class Export {
     required this.containsDocuments,
     required this.imagesConvertedToJpeg,
     required this.downloadParameter,
+    required this.archiveFormat,
   });
 
   factory Export.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class Export {
       containsDocuments: json['contains_documents'],
       imagesConvertedToJpeg: json['images_converted_to_jpeg'],
       downloadParameter: json['download_parameter'],
+      archiveFormat: json['archive_format'],
     );
   }
 }
