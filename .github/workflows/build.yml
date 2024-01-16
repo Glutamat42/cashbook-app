@@ -100,15 +100,15 @@ jobs:
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
-          command: 'mkdir -p build/windows/x64/runner/upload/cashbook ; cp -r build/windows/x64/runner/Release/* build/windows/x64/runner/upload/cashbook/'
           type: 'zip'
           filename: cashbook-windows-release.zip
-          directory: build/windows/x64/runner/upload/
+          directory: build/windows/x64/runner/
+          path: Release
 
       - name: Upload Windows to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           asset_name: cashbook-windows-${{github.ref_name}}.zip
-          file: build/windows/x64/runner/upload/cashbook-windows-release.zip
+          file: build/windows/x64/runner/cashbook-windows-release.zip
           tag: ${{ github.ref }}
