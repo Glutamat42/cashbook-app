@@ -10,8 +10,8 @@ class Entry {
   bool noInvoice;
   int? userId;
   int? userIdLastModified;
-  String? updatedAt;
-  String? createdAt;
+  DateTime? updatedAt;
+  DateTime? createdAt;
 
   Entry({
     this.id,
@@ -42,8 +42,8 @@ class Entry {
       noInvoice: json['no_invoice'],
       userId: json['user_id'],
       userIdLastModified: json['user_id_last_modified'],
-      updatedAt: json['updated_at'],
-      createdAt: json['created_at'],
+      updatedAt: json['updated_at'] == null ? null : DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] == null ? null : DateTime.parse(json['created_at']),
     );
   }
 
@@ -60,8 +60,8 @@ class Entry {
       'no_invoice': noInvoice,
       'user_id': userId,
       'user_id_last_modified': userIdLastModified,
-      'updated_at': updatedAt,
-      'created_at': createdAt,
+      'updated_at': updatedAt?.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
     };
   }
 
@@ -69,8 +69,6 @@ class Entry {
     id = other.id;
     userIdLastModified = other.userIdLastModified;
     userId = other.userId;
-    updatedAt = other.updatedAt;
-    createdAt = other.createdAt;
     description = other.description;
     recipientSender = other.recipientSender;
     amount = other.amount;
@@ -78,5 +76,7 @@ class Entry {
     categoryId = other.categoryId;
     paymentMethod = other.paymentMethod;
     noInvoice = other.noInvoice;
+    updatedAt = other.updatedAt;
+    createdAt = other.createdAt;
   }
 }

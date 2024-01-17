@@ -101,7 +101,7 @@ class EntryItem extends StatelessWidget {
     if (date == null) {
       return "";
     }
-    return DateFormat('dd.MM.yyyy').format(date);
+    return DateFormat('dd.MM.yyyy').format(date.toLocal());
   }
 
   Color _getBackgroundColor(bool invoiceMissing, bool notPayed) {

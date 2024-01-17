@@ -10,8 +10,8 @@ import 'package:path_provider/path_provider.dart';
 class RemoteDocument extends Document {
   final Logger _log = Logger('RemoteDocument');
 
-  String? createdAt;
-  String? updatedAt;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   RemoteDocument({id, entryId, originalFilename, this.createdAt, this.updatedAt}) : super(id: id, entryId: entryId, originalFilename: originalFilename);
 
@@ -114,8 +114,8 @@ class RemoteDocument extends Document {
       id: json['id'],
       entryId: json['entry_id'],
       originalFilename: json['original_filename'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
     );
   }
 
@@ -125,8 +125,8 @@ class RemoteDocument extends Document {
     data['id'] = id;
     data['entry_id'] = entryId;
     data['original_filename'] = originalFilename;
-    data['created_at'] = createdAt;
-    data['updated_at'] = updatedAt;
+    data['created_at'] = createdAt!.toIso8601String();
+    data['updated_at'] = updatedAt!.toIso8601String();
     return data;
   }
 }

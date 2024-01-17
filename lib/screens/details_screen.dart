@@ -405,9 +405,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
     }
   }
 
-  String _formatDateTime(String? dateTime) {
+  String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'N/A';
-    return DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.parse(dateTime));
+    return DateFormat('dd.MM.yyyy HH:mm').format(dateTime.toLocal());
   }
 
   String _findUserName(int? userId) {

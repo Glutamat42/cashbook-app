@@ -21,7 +21,7 @@ class Export {
     return Export(
       filename: json['filename'],
       filesize: json['filesize'],
-      createdTimestamp: DateTime.parse(json['created_timestamp']),
+      createdTimestamp: DateTime.parse(json['created_timestamp']+"Z"),
       containsDocuments: json['contains_documents'],
       imagesConvertedToJpeg: json['images_converted_to_jpeg'],
       downloadParameter: json['download_parameter'],

@@ -29,7 +29,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
   @override
   void initState() {
     super.initState();
-    _dateController.text = widget.date == null ? "" : DateFormat("dd.MM.yyyy").format(widget.date!);
+    _dateController.text = widget.date == null ? "" : DateFormat("dd.MM.yyyy").format(widget.date!.toLocal());
   }
 
   final String dateFormat = "dd.MM.yyyy";
@@ -41,7 +41,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
   Widget _buildDateDisplay() {
     return FlexibleDetailItemView(
       title: 'Date:',
-      rightWidget: Text(widget.date == null ? "" : DateFormat(dateFormat).format(widget.date!)),
+      rightWidget: Text(widget.date == null ? "" : DateFormat(dateFormat).format(widget.date!.toLocal())),
     );
   }
 
@@ -82,7 +82,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
       return;
     }
     try {
-      final DateTime parsedDate = DateFormat(dateFormat).parse(value);
+      final DateTime parsedDate = DateFormat(dateFormat).parse(value).toUtc();
       _log.finer('Current user Input "$value" is parse-able to date: $parsedDate');
       widget.onChanged(parsedDate);
     } catch (e) {
@@ -92,16 +92,17 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final DateTime now = DateTime.now();
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: widget.date ?? DateTime.now(),
+      initialDate: widget.date ?? DateTime(now.year, now.month, now.day),
       firstDate: DateTime(2023),
       lastDate: DateTime(2100),
     );
     if (pickedDate != null) {
       widget.onChanged(pickedDate);
       setState(() {
-        _dateController.text = DateFormat(dateFormat).format(pickedDate);
+        _dateController.text = DateFormat(dateFormat).format(pickedDate.toLocal());
       });
     }
   }

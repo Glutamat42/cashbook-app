@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cashbook/models/export.dart';
 import 'package:cashbook/stores/auth_store.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +74,7 @@ class _ExportScreenState extends State<ExportScreen> {
             itemBuilder: (context, index) {
               final export = exports[index];
               return ListTile(
-                title: Text(DateFormat('dd.MM.yyyy HH:mm').format(export.createdTimestamp)),
+                title: Text(DateFormat('dd.MM.yyyy HH:mm').format(export.createdTimestamp.toLocal())),
                 subtitle: Text(_buildExportSubtitle(export)),
                 trailing: IconButton(
                   icon: const Icon(Icons.file_download),
@@ -154,9 +156,12 @@ class _ExportScreenState extends State<ExportScreen> {
       await _exportStore.createExport(_exportDocuments, _convertToJpeg);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Creating export in Background. This will take a while')),
+          const SnackBar(content: Text('Creating export in Background. This might take a while')),
         );
         _log.info('Started creating export');
+        Timer.periodic(const Duration(seconds: 10), (timer) {
+          _exportStore.fetchExports(refresh: false);
+        });
       }
     } catch (e) {
       if (context.mounted) {
