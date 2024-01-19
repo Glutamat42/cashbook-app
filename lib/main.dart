@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cashbook/config/app_config.dart';
 import 'package:cashbook/models/local_document.dart';
+import 'package:cashbook/screens/csv_import_screen.dart';
 import 'package:cashbook/screens/export_screen.dart';
 import 'package:cashbook/screens/home_screen.dart';
 import 'package:cashbook/services/locator.dart';
@@ -177,6 +178,7 @@ class _MyAppState extends State<MyApp> {
         RouteNames.loginScreen: (context) => const LoginScreen(),
         RouteNames.homeScreen: (context) => const HomeScreen(),
         RouteNames.exportScreen: (context) => ExportScreen(),
+        RouteNames.importScreen: (context) => CsvImportScreen(),
       },
       theme: ThemeData(
         // This is the theme of your application.

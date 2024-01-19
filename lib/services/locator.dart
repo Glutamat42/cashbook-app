@@ -3,6 +3,7 @@ import 'package:cashbook/repositories/documents_repository.dart';
 import 'package:cashbook/repositories/entries_repository.dart';
 import 'package:cashbook/repositories/export_repository.dart';
 import 'package:cashbook/repositories/users_repository.dart';
+import 'package:cashbook/stores/csv_import_store.dart';
 import 'package:cashbook/stores/export_store.dart';
 import 'package:cashbook/stores/options_store.dart';
 import 'package:cashbook/stores/user_store.dart';
@@ -48,6 +49,7 @@ void setupLocator() {
   locator.registerLazySingleton(() => UserStore());
   locator.registerLazySingleton(() => OptionsStore());
   locator.registerLazySingleton(() => ExportStore());
+  locator.registerLazySingleton(() => CsvImportStore());
 
   locator.registerLazySingleton(() => AuthRepository(locator<Dio>()));
   locator.registerLazySingleton(() => EntriesRepository(locator<Dio>()));
