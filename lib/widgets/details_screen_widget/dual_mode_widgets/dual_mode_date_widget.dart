@@ -47,7 +47,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
 
   Widget _buildDatePickerEdit(BuildContext context) {
     return FlexibleDetailItemView(
-      title: 'Date:',
+      title: 'Invoice date:',
       rightWidget: Row(
         children: [
           Expanded(
