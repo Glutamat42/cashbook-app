@@ -73,8 +73,8 @@ class LocalDocument extends Document {
       img.Image image = img.decodeImage(originalBinaryData)!;
       // compress in case: minHeight and minWidth are set and image is larger than either of them or image is larger than 4000x4000 on at least one side
       if (profile['minHeight'] != null &&
-          profile['minWidth'] != null &&
-          (image.height > profile['minHeight']! || image.width > profile['minWidth']!) ||
+              profile['minWidth'] != null &&
+              (image.height > profile['minHeight']! || image.width > profile['minWidth']!) ||
           image.width > 4500 ||
           image.height > 4500) {
         _logger.info('Resizing image');
@@ -92,26 +92,32 @@ class LocalDocument extends Document {
 
     // compress
     Uint8List compressedBytes;
-    if (targetFormat == 'webp') {
-      compressedBytes = await FlutterImageCompress.compressWithList(
-        resizedBytes,
-        keepExif: true,
-        // rotate: 0,
-        // autoCorrectionAngle: true,
-        minHeight: 4000,
-        // should not rescale here, but compressWithList has default values -> override them
-        minWidth: 4000,
-        quality: profile['quality']!,
-        format: CompressFormat.webp,
-      );
-    } else {
-      compressedBytes = await encodeAvif(originalBinaryData,
-          maxQuantizer: profile['maxQuantizer'],
-          minQuantizer: profile['minQuantizer'],
-          maxQuantizerAlpha: profile['maxQuantizer'],
-          minQuantizerAlpha: profile['minQuantizer'],
-          maxThreads: 8,
-          speed: profile['speed']);
+    try {
+      if (targetFormat == 'webp') {
+        compressedBytes = await FlutterImageCompress.compressWithList(
+          resizedBytes,
+          keepExif: true,
+          // rotate: 0,
+          // autoCorrectionAngle: true,
+          minHeight: 4000,
+          // should not rescale here, but compressWithList has default values -> override them
+          minWidth: 4000,
+          quality: profile['quality']!,
+          format: CompressFormat.webp,
+        );
+      } else {
+        compressedBytes = await encodeAvif(originalBinaryData,
+            maxQuantizer: profile['maxQuantizer'],
+            minQuantizer: profile['minQuantizer'],
+            maxQuantizerAlpha: profile['maxQuantizer'],
+            minQuantizerAlpha: profile['minQuantizer'],
+            maxThreads: 8,
+            speed: profile['speed']);
+      }
+    } catch (e) {
+      _logger.severe(
+          'Failed to compress image, using original file. This is expected on web with aggressive fingerprinting protection. $e');
+      compressedBytes = resizedBytes;
     }
 
     _logger.finer('File size after compression: ${(compressedBytes.lengthInBytes / 1024).round()} kilobytes');
