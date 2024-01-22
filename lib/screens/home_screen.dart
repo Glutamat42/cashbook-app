@@ -157,14 +157,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       )
                     : const SizedBox.shrink(),
                 ListTile(
-                  leading: const Icon(Icons.import_export),
+                  leading: const Icon(Icons.arrow_upward),
                   title: const Text('Export'),
                   onTap: () {
                     Navigator.of(context).pushNamed(RouteNames.exportScreen);
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.import_export),
+                  leading: const Icon(Icons.arrow_downward),
                   title: const Text('Import'),
                   onTap: () {
                     Navigator.of(context).pushNamed(RouteNames.importScreen);
