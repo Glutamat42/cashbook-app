@@ -142,17 +142,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_) {
                           _log.finer('Update available: ${_optionsStore.isUpdateAvailable}');
                           return _optionsStore.isUpdateAvailable
-                            ? ListTile(
-                                textColor: Colors.red,
-                                iconColor: Colors.red,
-                                leading: const Icon(Icons.system_update),
-                                title: const Text('Update Available'),
-                                onTap: () {
-                                  // Download the latest APK
-                                  launchUrl(Uri.parse(_optionsStore.latestVersionInfo!['assetUrl']!));
-                                },
-                              )
-                            : const SizedBox.shrink();
+                              ? ListTile(
+                                  textColor: Colors.red,
+                                  iconColor: Colors.red,
+                                  leading: const Icon(Icons.system_update),
+                                  title: const Text('Update Available'),
+                                  onTap: () {
+                                    // Download the latest APK
+                                    launchUrl(Uri.parse(_optionsStore.latestVersionInfo!['assetUrl']!));
+                                  },
+                                )
+                              : const SizedBox.shrink();
                         },
                       )
                     : const SizedBox.shrink(),
@@ -163,13 +163,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.of(context).pushNamed(RouteNames.exportScreen);
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.arrow_downward),
-                  title: const Text('Import'),
-                  onTap: () {
-                    Navigator.of(context).pushNamed(RouteNames.importScreen);
-                  },
-                ),
+                if (kDebugMode)
+                  ListTile(
+                    leading: const Icon(Icons.arrow_downward),
+                    title: const Text('Import'),
+                    onTap: () {
+                      Navigator.of(context).pushNamed(RouteNames.importScreen);
+                    },
+                  ),
               ],
             ),
           ),
