@@ -27,8 +27,9 @@ samples, guidance on mobile development, and a full API reference.
 
 - allow users to select compression level (maybe: source, 4k (8MP), WQHD (3.6MP), FHD (2MP))
 - multi language (i18n)
-- csv import/export
+- csv import
 - maybe fix image rotation on avif compression with regular camera (https://stackoverflow.com/questions/60176001/how-to-fix-wrong-rotation-of-photo-from-camera-in-flutter)
+- Bug: Windows create entry with document -> directly after creation shown as document mission on home screen.
 
 - switch lumen to laravel
   - improve auth

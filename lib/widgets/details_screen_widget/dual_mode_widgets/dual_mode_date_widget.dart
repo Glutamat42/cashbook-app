@@ -40,7 +40,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
 
   Widget _buildDateDisplay() {
     return FlexibleDetailItemView(
-      title: 'Date:',
+      title: 'Invoice Date:',
       rightWidget: Text(widget.date == null ? "" : DateFormat(dateFormat).format(widget.date!.toLocal())),
     );
   }
