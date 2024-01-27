@@ -82,7 +82,7 @@ class _DualModeDateWidgetState extends State<DualModeDateWidget> {
       return;
     }
     try {
-      final DateTime parsedDate = DateFormat(dateFormat).parse(value).toUtc();
+      final DateTime parsedDate = DateFormat(dateFormat).parseStrict(value, true);
       _log.finer('Current user Input "$value" is parse-able to date: $parsedDate');
       widget.onChanged(parsedDate);
     } catch (e) {

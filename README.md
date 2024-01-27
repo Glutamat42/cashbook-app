@@ -30,6 +30,7 @@ samples, guidance on mobile development, and a full API reference.
 - csv import
 - maybe fix image rotation on avif compression with regular camera (https://stackoverflow.com/questions/60176001/how-to-fix-wrong-rotation-of-photo-from-camera-in-flutter)
 - Bug: Windows create entry with document -> directly after creation shown as document mission on home screen.
+- Bug: Windows change date with text input field: failed to update entry
 
 - switch lumen to laravel
   - improve auth

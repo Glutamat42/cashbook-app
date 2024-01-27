@@ -259,7 +259,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             onChanged: (date) => setState(() => _currentlySelectedDate = date),
             validator: (_) {
               if (_currentlySelectedDate == null) {
-                return 'Please select a date';
+                return 'Please select a valid date';
               }
               if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
                 return 'Date cannot be before year 2000';
