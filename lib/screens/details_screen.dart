@@ -213,6 +213,20 @@ class _DetailsScreenState extends State<DetailsScreen> {
             label: 'Description',
             validator: (value) => value!.isEmpty ? 'This field cannot be empty' : null,
           ),
+          DualModeDateWidget(
+            isEditMode: _isEditMode,
+            date: _currentlySelectedDate,
+            onChanged: (date) => setState(() => _currentlySelectedDate = date),
+            validator: (_) {
+              if (_currentlySelectedDate == null) {
+                return 'Please select a valid date';
+              }
+              if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
+                return 'Date cannot be before year 2000';
+              }
+              return null;
+            },
+          ),
           FutureBuilder(
             future: loadDocumentsFuture,
             builder: (context, data) {
@@ -253,20 +267,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
               return null; // No error
             },
           ),
-          DualModeDateWidget(
-            isEditMode: _isEditMode,
-            date: _currentlySelectedDate,
-            onChanged: (date) => setState(() => _currentlySelectedDate = date),
-            validator: (_) {
-              if (_currentlySelectedDate == null) {
-                return 'Please select a valid date';
-              }
-              if (_currentlySelectedDate!.isBefore(DateTime(2000))) {
-                return 'Date cannot be before year 2000';
-              }
-              return null;
-            },
-          ),
           DualModeCategoryWidget(
             isEditMode: _isEditMode,
             categoryId: _editableEntry.categoryId,
@@ -278,7 +278,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             paymentMethod: _editableEntry.paymentMethod,
             onChanged: (val) => setState(() => _editableEntry.paymentMethod = val),
           ),
-          ..._buildCreatedModifiedInfo(),
+          if (!_isEditMode) ..._buildCreatedModifiedInfo(),
         ],
       ),
     );
