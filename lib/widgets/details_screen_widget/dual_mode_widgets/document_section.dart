@@ -85,7 +85,11 @@ class DocumentSection extends StatelessWidget {
   Future<void> _addDocument(BuildContext context) async {
     if (Helpers.isDesktopWebBrowser || !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       // Directly open file dialog for desktop web platforms
-      final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(withData: true);
+      final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          // heic, heif only work on ios and maybe other apple devices
+          allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'avif', 'heic', 'heif'],
+          withData: true);
       if (pickedFile != null && context.mounted) {
         _newDocumentOpened(pickedFile.files.single.bytes!, pickedFile.files.single.name, context, entryId);
       }
@@ -140,12 +144,27 @@ class DocumentSection extends StatelessWidget {
                     Navigator.pop(context);
                     try {
                       final FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(
-                        type: FileType.custom,
-                        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'avif'],
-                      );
+                          type: FileType.custom,
+                          // heic, heif only work on ios and maybe other apple devices
+                          allowedExtensions: [
+                            'pdf',
+                            'jpg',
+                            'jpeg',
+                            'png',
+                            'gif',
+                            'bmp',
+                            'tiff',
+                            'tif',
+                            'webp',
+                            'avif',
+                            'heic',
+                            'heif'
+                          ],
+                          withData: true);
                       if (pickedFile != null &&
                           (pickedFile.files.single.bytes != null || pickedFile.files.single.path != null) &&
                           context.mounted) {
+                        // TODO: File(...) part might be redundant now as i added withData:true
                         Uint8List bytes =
                             pickedFile.files.single.bytes ?? File(pickedFile.files.single.path!).readAsBytesSync();
                         _newDocumentOpened(bytes, pickedFile.files.single.name, context, entryId);
@@ -192,7 +211,7 @@ class DocumentSection extends StatelessWidget {
         future:
             document is LocalDocument ? document.compressionFuture : (document as RemoteDocument).thumbnailBinaryData,
         builder: (context, data) {
-          if (document is RemoteDocument){
+          if (document is RemoteDocument) {
             if (data.hasError) {
               _log.warning('Error loading thumbnail: ${data.error}');
               return Container(

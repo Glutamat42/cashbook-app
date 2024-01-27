@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cashbook/dialogs/new_category_dialog.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/utils/csv_processor.dart';
@@ -57,7 +58,8 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
   }
 
   void pickCsvFile(BuildContext context) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv']);
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv'], withData: true);
     Uint8List? csvSourceData = result?.files.single.bytes;
 
     if (result != null) {
@@ -122,8 +124,14 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
           buildDropdown("paymentMethod", "Payment Method", selectableHeaders),
           buildDropdown("noInvoice", "No Invoice", selectableHeaders),
 
-          // buildDropdown("category", "Category", selectableHeaders, enabled: false),
-          buildDropdown("category", "Category (default)", categories, required: true),
+          buildDropdown("category", "Category", selectableHeaders, enabled: true),
+          buildDropdown(
+            "category_default",
+            "Category (default)",
+            categories,
+            required: true,
+            trailing: _buildAddCategoryButton(context),
+          ),
 
           // Special handling for the isIncome field
           buildDropdown("amount", "Amount", selectableHeaders, required: true),
@@ -144,8 +152,27 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
     );
   }
 
+  Widget _buildAddCategoryButton(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.add),
+      onPressed: () {
+        _log.fine('Add new category');
+        NewCategoryDialog(
+          context,
+          onChanged: (int? newCategoryId) {
+            if (newCategoryId != null) {
+              setState(() {
+                fieldMappings["category_default"] = _categoryStore.findCategoryName(newCategoryId);
+              });
+            }
+          },
+        ).showCategoryDialog();
+      },
+    );
+  }
+
   Widget buildDropdown(String fieldValue, String title, List<String> headers,
-      {bool enabled = true, bool required = false}) {
+      {bool enabled = true, bool required = false, Widget? trailing}) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
@@ -160,33 +187,39 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
           ),
           Expanded(
             flex: 2,
-            child: DropdownButtonFormField<String>(
-              isExpanded: true,
-              // Ensure the dropdown fits within the available space
-              value: fieldMappings[fieldValue] ?? "---",
-              decoration: const InputDecoration(
-                // labelText: "---",
-                border: OutlineInputBorder(),
-              ),
-              onChanged: enabled
-                  ? (String? newValue) {
-                      updateFieldMapping(fieldValue, newValue);
-                    }
-                  : null,
-              validator: (value) {
-                if (required &&
-                    (!fieldMappings.containsKey(fieldValue) ||
-                        fieldMappings[fieldValue] == null || fieldMappings[fieldValue]!.isEmpty)) {
-                  return 'Please select a value for $title';
-                }
-                return null;
-              },
-              items: headers.map<DropdownMenuItem<String>>((String header) {
-                return DropdownMenuItem<String>(
-                  value: header,
-                  child: Text(header),
-                );
-              }).toList(),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    value: fieldMappings[fieldValue] ?? "---",
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: enabled
+                        ? (String? newValue) {
+                            updateFieldMapping(fieldValue, newValue);
+                          }
+                        : null,
+                    validator: (value) {
+                      if (required &&
+                          (!fieldMappings.containsKey(fieldValue) ||
+                              fieldMappings[fieldValue] == null ||
+                              fieldMappings[fieldValue]!.isEmpty)) {
+                        return 'Please select a value for $title';
+                      }
+                      return null;
+                    },
+                    items: headers.map<DropdownMenuItem<String>>((String header) {
+                      return DropdownMenuItem<String>(
+                        value: header,
+                        child: Text(header),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                if (trailing != null) trailing
+              ],
             ),
           ),
         ],

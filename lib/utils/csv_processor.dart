@@ -12,7 +12,7 @@ class CsvParser {
       rawCsv = utf8.decode(data);
       log.info('CSV file decoded with UTF-8.');
     } on FormatException catch (fe) {
-      log.warning('UTF-8 decoding failed, trying ISO-8859-1. Error: ${fe.message}');
+      log.info('UTF-8 decoding failed, trying ISO-8859-1. Error: ${fe.message}');
       try {
         rawCsv = latin1.decode(data);
         log.info('CSV file decoded with ISO-8859-1.');
