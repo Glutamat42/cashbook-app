@@ -1,12 +1,15 @@
 import 'dart:typed_data';
 
 import 'package:cashbook/dialogs/new_category_dialog.dart';
+import 'package:cashbook/models/category.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/utils/csv_processor.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:logging/logging.dart';
+
+enum MergeStrategy { fillEmpty, overrideExisting }
 
 class CsvImportScreen extends StatefulWidget {
   @override
@@ -19,8 +22,20 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
   List<String>? csvHeaders;
   String? selectedFileName;
   Map<String, String?> fieldMappings = {};
+  Map<String, MergeStrategy> mergeStrategy = {
+    "description": MergeStrategy.fillEmpty,
+    "recipientSender": MergeStrategy.fillEmpty,
+    "date": MergeStrategy.fillEmpty,
+    "paymentMethod": MergeStrategy.fillEmpty,
+    "category": MergeStrategy.fillEmpty,
+    "category_default": MergeStrategy.fillEmpty,
+    "amount": MergeStrategy.fillEmpty,
+    "isIncome": MergeStrategy.fillEmpty,
+  };
   final _formKey = GlobalKey<FormState>();
   final CategoryStore _categoryStore = locator<CategoryStore>();
+  bool showMergeStrategyOptions = false;
+  final List<String> incomeOptions = ["---", "Positive amount as Income", "Negative amount as Income"];
 
   @override
   void initState() {
@@ -41,19 +56,139 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              csvHeaders != null
-                  ? Text("Selected File: $selectedFileName")
-                  : ElevatedButton(
-                      onPressed: () => pickCsvFile(context),
-                      child: const Text('Pick CSV File'),
-                    ),
-              Divider(),
-              if (csvHeaders != null) buildFieldMappingArea(context),
-              // Additional option fields go here, enabled based on isFilePicked
+              _buildCsvSelectionArea(csvHeaders != null),
+              const Divider(),
+              if (csvHeaders != null) ...[
+                _buildTemplateSelectionArea(),
+                const Divider(),
+                buildFieldMappingArea(context),
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTemplateSelectionArea() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Text("Select a template"),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              OutlinedButton(
+                  onPressed: () {
+                    String? defaultCategoryName;
+                    try {
+                      defaultCategoryName = _categoryStore.categories.firstWhere((element) => element.name == "Imported").name;
+                    } catch (e) {
+                      _log.info("Failed to find category 'Imported'. This is expected if it was not yet manually created: ${e.toString()}");
+                      defaultCategoryName = null;
+                      // show snackbar
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Category 'Imported' not found. Please create it manually or select another category as default."),
+                          ),
+                        );
+                      }
+                    }
+                    setState(() {
+                      fieldMappings = {
+                        "description": "Verwendungszweck",
+                        "recipientSender": "Beguenstigter/Zahlungspflichtiger",
+                        "date": "Buchungstag",
+                        "paymentMethod_default": "bank_transfer",
+                        "category": null,
+                        "category_default": defaultCategoryName,
+                        "amount": "Betrag",
+                        "isIncome": incomeOptions[1],
+                      };
+                    });
+                  },
+                  child: Text("Sparkasse")),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCsvSelectionArea(bool csvSelected) {
+    if (csvSelected) {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Text("Selected File: $selectedFileName"),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Expanded(child: Text("Show Merge Strategy Options. Default: Only fill empty fields")),
+                Switch(
+                    value: showMergeStrategyOptions,
+                    onChanged: (bool state) => setState(() => showMergeStrategyOptions = state)),
+              ],
+            )
+          ],
+        ),
+      );
+    } else {
+      return ElevatedButton(
+        onPressed: () => pickCsvFile(context),
+        child: const Text('Pick CSV File'),
+      );
+    }
+  }
+
+  Widget _buildMergeStrategyRadioButtons(MergeStrategy state, Function(MergeStrategy) onChanged) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Expanded(
+          child: Row(children: [
+            Radio<MergeStrategy>(
+              value: MergeStrategy.fillEmpty,
+              groupValue: state,
+              onChanged: (MergeStrategy? value) {
+                onChanged(value!);
+              },
+            ),
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  onChanged(MergeStrategy.fillEmpty);
+                },
+                child: const Text('Fill Empty', style: TextStyle(fontSize: 16.0)),
+              ),
+            ),
+          ]),
+        ),
+        Expanded(
+          child: Row(children: [
+            Radio<MergeStrategy>(
+              value: MergeStrategy.overrideExisting,
+              groupValue: state,
+              onChanged: (MergeStrategy? value) {
+                onChanged(value!);
+              },
+            ),
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  onChanged(MergeStrategy.overrideExisting);
+                },
+                child: const Text('Override', style: TextStyle(fontSize: 16.0)),
+              ),
+            ),
+          ]),
+        ),
+      ],
     );
   }
 
@@ -110,19 +245,46 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
     }
     categories.insert(0, "---");
 
-    List<String> incomeOptions = ["---", "Positive amount as Income", "Negative amount as Income"];
 
-//todo make dropdown values unique
+
     return Form(
       key: _formKey, // Define this key in your state class
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           buildDropdown("description", "Description", selectableHeaders, required: true),
+          if (showMergeStrategyOptions)
+            _buildMergeStrategyRow(mergeStrategy["description"]!, (MergeStrategy state) {
+              setState(() {
+                mergeStrategy["description"] = state;
+              });
+            }),
+          const Divider(),
           buildDropdown("recipientSender", "Recipient/Sender", selectableHeaders, required: true),
+          if (showMergeStrategyOptions)
+            _buildMergeStrategyRow(mergeStrategy["recipientSender"]!, (MergeStrategy state) {
+              setState(() {
+                mergeStrategy["recipientSender"] = state;
+              });
+            }),
+          const Divider(),
           buildDropdown("date", "Date", selectableHeaders),
-          buildDropdown("paymentMethod", "Payment Method", selectableHeaders),
-          buildDropdown("noInvoice", "No Invoice", selectableHeaders),
+          if (showMergeStrategyOptions)
+            _buildMergeStrategyRow(mergeStrategy["date"]!, (MergeStrategy state) {
+              setState(() {
+                mergeStrategy["date"] = state;
+              });
+            }),
+          const Divider(),
+          buildDropdown("paymentMethod_default", "Payment Method (default)", ['cash', 'bank_transfer', 'not_payed']),
+          if (showMergeStrategyOptions)
+            _buildMergeStrategyRow(mergeStrategy["paymentMethod"]!, (MergeStrategy state) {
+              setState(() {
+                mergeStrategy["paymentMethod"] = state;
+              });
+            }),
+          const Divider(),
+          // buildDropdown("noInvoice", "No Invoice", selectableHeaders),
 
           buildDropdown("category", "Category", selectableHeaders, enabled: true),
           buildDropdown(
@@ -132,21 +294,63 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
             required: true,
             trailing: _buildAddCategoryButton(context),
           ),
+          if (showMergeStrategyOptions)
+            _buildMergeStrategyRow(mergeStrategy["category"]!, (MergeStrategy state) {
+              setState(() {
+                mergeStrategy["category"] = state;
+              });
+            }),
+          const Divider(),
 
           // Special handling for the isIncome field
           buildDropdown("amount", "Amount", selectableHeaders, required: true),
+          if (showMergeStrategyOptions)
+            _buildMergeStrategyRow(mergeStrategy["amount"]!, (MergeStrategy state) {
+              setState(() {
+                mergeStrategy["amount"] = state;
+              });
+            }),
+          const Divider(),
           buildDropdown("isIncome", "Is Income", incomeOptions, required: true),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                _log.info("Form validated");
-                // Handle form submission
-              } else {
-                _log.info("Form validation failed");
-              }
-            },
-            child: const Text('Continue'),
+          if (showMergeStrategyOptions)
+            _buildMergeStrategyRow(mergeStrategy["isIncome"]!, (MergeStrategy state) {
+              setState(() {
+                mergeStrategy["isIncome"] = state;
+              });
+            }),
+          const Divider(),
+
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _log.info("Form validated");
+                      // Handle form submission
+                    } else {
+                      _log.info("Form validation failed");
+                    }
+                  },
+                  child: const Text('Continue'),
+                ),
+              ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMergeStrategyRow(MergeStrategy state, Function(MergeStrategy) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8.0, 4, 8.0, 4),
+      child: Row(
+        children: [
+          const Expanded(flex: 1, child: Text("merge strategy")),
+          Expanded(flex: 2, child: _buildMergeStrategyRadioButtons(state, onChanged)),
         ],
       ),
     );
@@ -174,7 +378,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
   Widget buildDropdown(String fieldValue, String title, List<String> headers,
       {bool enabled = true, bool required = false, Widget? trailing}) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.fromLTRB(8.0, 4, 8.0, 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -206,7 +410,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                           (!fieldMappings.containsKey(fieldValue) ||
                               fieldMappings[fieldValue] == null ||
                               fieldMappings[fieldValue]!.isEmpty)) {
-                        return 'Please select a value for $title';
+                        return 'Please select a value.';
                       }
                       return null;
                     },
