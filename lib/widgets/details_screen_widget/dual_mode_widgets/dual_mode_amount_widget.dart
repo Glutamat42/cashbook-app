@@ -10,7 +10,7 @@ class DualModeAmountWidget extends StatelessWidget {
   final bool isEditMode;
   final bool? isIncome;
   final int? amount;
-  final Function(int?, bool) onChanged;
+  final Function(int?, bool?) onChanged;
   final FormFieldValidator<String>? validator;
   final FormFieldValidator<bool>? isIncomeValidator;
 
@@ -42,11 +42,7 @@ class DualModeAmountWidget extends StatelessWidget {
   }
 
   void _updateAmount(String? value) {
-    if (isIncome == null) {
-      _log.warning('isIncome is null');
-      return;
-    }
-    onChanged(_euroToCent(value), isIncome!);
+    onChanged(_euroToCent(value), isIncome);
   }
 
   void _updateIsIncome(bool value) {

@@ -258,7 +258,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             isEditMode: _isEditMode,
             amount: _editableEntry.amount,
             isIncome: _editableEntry.isIncome,
-            onChanged: (int? amount, bool isIncome) => setState(() {
+            onChanged: (int? amount, bool? isIncome) => setState(() {
               _editableEntry.amount = amount;
               _editableEntry.isIncome = isIncome;
             }),
