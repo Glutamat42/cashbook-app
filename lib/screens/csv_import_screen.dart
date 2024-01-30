@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cashbook/dialogs/new_category_dialog.dart';
+import 'package:cashbook/models/entry.dart';
 import 'package:cashbook/services/locator.dart';
 import 'package:cashbook/stores/category_store.dart';
 import 'package:cashbook/stores/csv_import_store.dart';
@@ -101,6 +102,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                     };
                   },
                   child: const Text("Sparkasse")),
+              const SizedBox(width: 10),
               OutlinedButton(
                   onPressed: () {
                     _csvImportStore.fieldMappings = {
@@ -142,9 +144,14 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
         ),
       );
     } else {
-      return ElevatedButton(
-        onPressed: () => pickCsvFile(context),
-        child: const Text('Pick CSV File'),
+      return Column(
+        children: [
+          ElevatedButton(
+            onPressed: () => pickCsvFile(context),
+            child: const Text('Pick CSV File'),
+          ),
+          const Text("CSV file has to have unique column titles as the first row.")
+        ],
       );
     }
   }
@@ -205,7 +212,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
     if (result != null) {
       List<String>? parsedData;
       try {
-        parsedData = CsvParser.processCsv(csvSourceData!);
+        (parsedData, _) = CsvParser.processCsv(csvSourceData!);
       } catch (e) {
         _log.warning("Failed to parse CSV file: ${e.toString()}");
         // show snackbar
@@ -266,14 +273,16 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                 _csvImportStore.mergeStrategy["recipientSender"] = state;
               }),
             const Divider(),
-            buildDropdown("date", "Date", selectableHeaders),
+            buildDropdown("date", "Date", selectableHeaders, required: true),
             if (showMergeStrategyOptions)
               _buildMergeStrategyRow(_csvImportStore.mergeStrategy["date"]!, (MergeStrategy state) {
                 _csvImportStore.mergeStrategy["date"] = state;
               }),
+            // TODO show detected date format
             const Divider(),
             buildDropdown(
-                "paymentMethod_default", "Payment Method (default)", ['---', 'cash', 'bank_transfer', 'not_payed']),
+                "paymentMethod_default", "Payment Method (default)", ['---', 'cash', 'bank_transfer', 'not_payed'],
+                required: true),
             if (showMergeStrategyOptions)
               _buildMergeStrategyRow(_csvImportStore.mergeStrategy["paymentMethod"]!, (MergeStrategy state) {
                 _csvImportStore.mergeStrategy["paymentMethod"] = state;
@@ -281,6 +290,11 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
             const Divider(),
             // buildDropdown("noInvoice", "No Invoice", selectableHeaders),
 
+            const Padding(
+              padding: EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+              child: Text(
+                  "Only existing categories can be imported, it will fallback to default category if not existing."),
+            ),
             buildDropdown("category", "Category", selectableHeaders, enabled: true),
             buildDropdown(
               "category_default",
@@ -322,6 +336,10 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                       } else {
                         _log.info("Form validation failed");
                       }
+
+                      List<Entry> entries =
+                          CsvParser.loadEntriesFromCsv(_csvImportStore.csvData!, _csvImportStore.fieldMappings);
+                      print(entries.length);
                     },
                     child: const Text('Continue'),
                   ),

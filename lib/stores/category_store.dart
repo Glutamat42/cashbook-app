@@ -31,6 +31,10 @@ abstract class _CategoryStore with Store {
     return categories.firstWhere((category) => category.id == id);
   }
 
+  int? getCategoryIdByName(String name) {
+    return categories.firstWhere((category) => category.name == name).id;
+  }
+
   @action createCategory(String category) async {
     try {
       final newCategory = await _categoriesRepository.createCategory(Category(name: category));
