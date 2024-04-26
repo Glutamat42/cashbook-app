@@ -111,7 +111,7 @@ class DocumentSection extends StatelessWidget {
                   title: const Text('Camera Document Scan'),
                   onTap: () async {
                     Navigator.pop(context);
-                    final List<String>? imagesPath = await CunningDocumentScanner.getPictures(true);
+                    final List<String>? imagesPath = await CunningDocumentScanner.getPictures(isGalleryImportAllowed: true);
                     if (imagesPath != null && context.mounted) {
                       final File file = File(imagesPath[0]);
                       _newDocumentOpened(file.readAsBytesSync(), imagesPath[0].split("/").last, context, entryId);
