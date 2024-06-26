@@ -39,3 +39,4 @@ samples, guidance on mobile development, and a full API reference.
 known bugs:
 - filter, then sort -> filter is not applied anymore
 - create entry, first set amount, then "income" -> amount is not set
+- Some apple images cannot be uploaded
