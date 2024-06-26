@@ -109,6 +109,7 @@ class CsvParser {
 
       int categoryId = -1;
       if (categoryIndex != null && row[categoryIndex].isNotEmpty) {
+        log.fine('Trying to use category from current CSV row.');
         if (categoryStore.getCategoryIdByName(row[categoryIndex]) == null) {
           log.warning('Category "${row[categoryIndex]}" does not exist, falling back to default category.');
           // categoryStore.createCategory(row[categoryIndex]);
@@ -116,7 +117,7 @@ class CsvParser {
           categoryId = categoryStore.getCategoryIdByName(row[categoryIndex])!;
         }
       } else {
-        log.info('Using default category.');
+        log.finer('Using default category.');
         if (categoryStore.getCategoryIdByName(fieldMappings['category_default']!) == null) {
           throw "Default category does not exist.";
         }

@@ -1,3 +1,4 @@
+import 'package:cashbook/utils/helpers.dart';
 import 'package:cashbook/widgets/details_screen_widget/flexible_detail_item_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,10 +24,6 @@ class DualModeAmountWidget extends StatelessWidget {
     this.validator,
     this.isIncomeValidator,
   }) : super(key: key);
-
-  double? _centToEuro(int? amountInCents) {
-    return amountInCents == null ? null : amountInCents / 100;
-  }
 
   int? _euroToCent(String? amountInEuros) {
     if (amountInEuros == null || amountInEuros.isEmpty) {
@@ -56,7 +53,7 @@ class DualModeAmountWidget extends StatelessWidget {
         : FlexibleDetailItemView(
             title: 'Amount:',
             rightWidget: Text(
-              isIncome != null ? (isIncome! ? "+" : "-") + _formatAmount(_centToEuro(amount)) : "-",
+              isIncome != null ? '${isIncome! ? "+" : "-"}${Helpers.formatAmountOfCents(amount)}€' : "-",
               style: isIncome != null ? TextStyle(color: isIncome! ? Colors.green : Colors.red) : null,
             ),
           );
@@ -109,7 +106,7 @@ class DualModeAmountWidget extends StatelessWidget {
           },
         ),
         TextFormField(
-          initialValue: _centToEuro(amount) == null ? "" : _centToEuro(amount)!.toStringAsFixed(2),
+          initialValue: Helpers.formatAmountOfCents(amount),
           decoration: const InputDecoration(labelText: 'Amount (€)'),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: _updateAmount,
@@ -121,9 +118,5 @@ class DualModeAmountWidget extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatAmount(double? amountInEuros) {
-    return amountInEuros == null ? "" : '${amountInEuros.toStringAsFixed(2)}€';
   }
 }

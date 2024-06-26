@@ -20,6 +20,7 @@ class LocalDocument extends Document {
 
   Future get compressionFuture => Future.wait(_compressionFutures);
 
+  // TODO: as of flutter_avif 2.4.0 there is a new feature: Option to keep exif data while encoding
   void _compress() {
     String? mimeType = Helpers.getMimeType(originalBinaryData.toList());
     if (mimeType == null) {

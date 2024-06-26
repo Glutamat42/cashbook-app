@@ -1,4 +1,5 @@
 import 'package:cashbook/stores/category_store.dart';
+import 'package:cashbook/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:intl/intl.dart';
@@ -23,7 +24,6 @@ class EntryItem extends StatelessWidget {
       builder: (_) => Container(
         color: _getBackgroundColor(invoiceMissing, notPayed), // Highlight for no invoice
         child: ListTile(
-            // In your ListView.builder:
             onTap: () {
               Navigator.push(
                 context,
@@ -74,7 +74,7 @@ class EntryItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Text(_formatAmount(entry.amount, entry.isIncome!),
+                    Text(entry.amount == null ? "" : '${entry.isIncome! ? '+' : '-'}${Helpers.formatAmountOfCents(entry.amount)}€',
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -87,14 +87,6 @@ class EntryItem extends StatelessWidget {
             )),
       ),
     );
-  }
-
-  String _formatAmount(int? amount, bool isIncome) {
-    if (amount == null) {
-      return "";
-    }
-    final double amountInEuros = amount / 100;
-    return '${isIncome ? '+' : '-'}${amountInEuros.toStringAsFixed(2)}€';
   }
 
   String _formatDate(DateTime? date) {

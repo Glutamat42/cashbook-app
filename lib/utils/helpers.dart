@@ -22,4 +22,15 @@ class Helpers {
     // Empty string for the file name because it's not relevant.
     return resolver.lookup('', headerBytes: header);
   }
+
+  /// Formats the amount in cents to a string with the format "+/-X.YY".
+  /// If the amount is null, an empty string is returned.
+  static String formatAmountOfCents(int? amountInCents) {
+    if (amountInCents == null) {
+      return "";
+    }
+
+    double amountInEuros = amountInCents / 100;
+    return '${amountInEuros.toStringAsFixed(2)}';
+  }
 }

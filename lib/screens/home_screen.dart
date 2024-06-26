@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cashbook/stores/options_store.dart';
+import 'package:cashbook/utils/helpers.dart';
 import 'package:cashbook/widgets/sorting_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -93,27 +94,56 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: <Widget>[
           _isSearchVisible ? _buildSearchBar() : Container(),
+          _buildSortCriteriaBar(),
           _buildFilterInfoBar(),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _onRefresh,
               child: Observer(
                 builder: (_) => ListView.builder(
-                  itemCount: _entryStore.visibleEntries.length + 1,
-                  // +1 for the sort criteria bar
+                  itemCount: _entryStore.visibleEntries.length,
                   itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildSortCriteriaBar(); // Sort criteria at the top
-                    }
-                    final entry = _entryStore.visibleEntries[index - 1];
+                    final entry = _entryStore.visibleEntries[index];
                     return EntryItem(entry: entry);
                   },
                 ),
               ),
             ),
           ),
+          _buildVisibleItemsSummary(),
         ],
       ),
+    );
+  }
+
+  Widget _buildVisibleItemsSummary() {
+    return Observer(
+      builder: (_) {
+        int amount = _entryStore.totalAmountOfVisibleEntries;
+        return Column(
+          children: [
+            const Divider(),
+            Container(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  const Text('Total amount of visible items:', style: TextStyle(fontSize: 16)),
+                  const Spacer(),
+                  Text(
+                    '${Helpers.formatAmountOfCents(amount)}€',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: amount >= 0 ? Colors.green : Colors.red,
+                    ),
+                  ),
+                  const SizedBox(width: 70),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+          ],
+        );
+      },
     );
   }
 
@@ -163,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.of(context).pushNamed(RouteNames.exportScreen);
                   },
                 ),
-                if (kDebugMode)
+                if (kDebugMode) // Feature gate: only in debug mode
                   ListTile(
                     leading: const Icon(Icons.arrow_downward),
                     title: const Text('Import'),
@@ -252,6 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSortCriteriaBar() {
     return Container(
+      width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.all(8),
       color: Colors.blue[100], // Just an example color
       child: Observer(

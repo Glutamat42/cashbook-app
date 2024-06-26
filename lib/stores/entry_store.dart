@@ -293,6 +293,20 @@ abstract class _EntryStore with Store {
     return filteredEntries;
   }
 
+  @computed
+  int get totalAmountOfVisibleEntries {
+    return visibleEntries.fold<int>(0, (previousValue, element) {
+      if (element.amount == null) {
+        return previousValue;
+      }
+      if (element.isIncome == true) {
+        return previousValue + (element.amount ?? 0);
+      } else {
+        return previousValue - (element.amount ?? 0);
+      }
+    });
+  }
+
   @action
   Future<void> onLogout() async {
     allEntries.clear();

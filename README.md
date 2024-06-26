@@ -34,3 +34,8 @@ samples, guidance on mobile development, and a full API reference.
 
 - switch lumen to laravel
   - improve auth
+
+
+known bugs:
+- filter, then sort -> filter is not applied anymore
+- create entry, first set amount, then "income" -> amount is not set
